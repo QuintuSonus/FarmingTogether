@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3 uid="uid://cykkbk3sjbrw3"]
+
+[ext_resource type="Script" path="res://scripts/Player.gd" id="1_8yfgv"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_01bbd"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_6kvam"]
+size = Vector3(0.1, 0.1, 0.5)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_3uv8d"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_3kxu8"]
+radius = 1.5
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_8yfgv")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_01bbd")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.198105, 0.259848, 0.52371)
+mesh = SubResource("BoxMesh_6kvam")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.195936, 0.259848, 0.52371)
+mesh = SubResource("BoxMesh_6kvam")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_3uv8d")
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_3kxu8")
+
+[node name="InteractionRaycast" type="RayCast3D" parent="."]

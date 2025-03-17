@@ -1,0 +1,90 @@
+[gd_scene load_steps=14 format=3 uid="uid://dc3iajov3ejjf"]
+
+[ext_resource type="Material" uid="uid://bespvujd6cgt5" path="res://assets/materials/regular_ground.tres" id="1_gewny"]
+[ext_resource type="Material" uid="uid://dd8hndmooc1o" path="res://assets/materials/dirt_ground.tres" id="2_0wu6n"]
+[ext_resource type="Material" uid="uid://b75cw47lvw8pe" path="res://assets/materials/soil.tres" id="3_1nm1n"]
+[ext_resource type="Material" uid="uid://dcffy47gdki1k" path="res://assets/materials/water.tres" id="4_e7r6u"]
+[ext_resource type="Material" uid="uid://doopkbxy0unne" path="res://assets/materials/mud.tres" id="5_g1vam"]
+[ext_resource type="Material" uid="uid://c8c8fnbvo4yad" path="res://assets/materials/delivery.tres" id="6_rp8ur"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_dtc2a"]
+material = ExtResource("1_gewny")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vt10d"]
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2h0v5"]
+material = ExtResource("2_0wu6n")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_catg5"]
+material = ExtResource("3_1nm1n")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gkdr2"]
+material = ExtResource("4_e7r6u")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_di4or"]
+material = ExtResource("5_g1vam")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_qfyo7"]
+material = ExtResource("6_rp8ur")
+size = Vector3(1, 0.5, 1)
+
+[node name="Tiles" type="Node3D"]
+
+[node name="regular_ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.224, 0, 0)
+mesh = SubResource("BoxMesh_dtc2a")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="regular_ground"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="regular_ground/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="dirt_ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.47008, 0, 0)
+mesh = SubResource("BoxMesh_2h0v5")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="dirt_ground"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="dirt_ground/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="soil" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.76003, 0, 0)
+mesh = SubResource("BoxMesh_catg5")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="soil"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="soil/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.96172, 0, 0)
+mesh = SubResource("BoxMesh_gkdr2")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="water"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="water/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="mud" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.9344, 0, 0)
+mesh = SubResource("BoxMesh_di4or")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="mud"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="mud/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="delivery" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_qfyo7")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="delivery"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="delivery/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")

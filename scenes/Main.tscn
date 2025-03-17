@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://bpr653sxwfe1t"]
+
+[ext_resource type="Script" path="res://scripts/LevelManager.gd" id="1_et6yy"]
+[ext_resource type="Script" path="res://scripts/Main.gd" id="1_sl04e"]
+[ext_resource type="PackedScene" uid="uid://cd84u8mftwl3" path="res://scenes/GridMap.tscn" id="2_ugdbk"]
+[ext_resource type="PackedScene" uid="uid://cykkbk3sjbrw3" path="res://scenes/Player.tscn" id="3_y1os3"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_sl04e")
+camera_angle = 0.0
+
+[node name="LevelManager" type="Node3D" parent="."]
+script = ExtResource("1_et6yy")
+
+[node name="GridMap" parent="LevelManager" instance=ExtResource("2_ugdbk")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.571716, 0.820451, 0, -0.820451, 0.571716, 0, 0, 17.6625)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.233734, 0.972301, 0, -0.972301, 0.233734, 6, 5.265, 6)
+
+[node name="Player" parent="." instance=ExtResource("3_y1os3")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.51281, 2.507)

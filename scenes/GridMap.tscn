@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cd84u8mftwl3"]
+
+[ext_resource type="MeshLibrary" uid="uid://cim6abm7w2i5u" path="res://assets/tiles/tile_library.tres" id="1_p0krx"]
+
+[node name="GridMap" type="GridMap"]
+mesh_library = ExtResource("1_p0krx")
+cell_size = Vector3(1, 0.5, 1)

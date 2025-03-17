@@ -1,0 +1,26 @@
+[gd_scene load_steps=7 format=3 uid="uid://npde65n8w5bp"]
+
+[ext_resource type="PackedScene" uid="uid://bi06l7peyni80" path="res://scenes/tools/Tool.tscn" id="1_xwovm"]
+[ext_resource type="Script" path="res://scripts/tools/SeedBag.gd" id="2_hdbk7"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_vqwcm"]
+size = Vector3(0.2, 0.2, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2d82r"]
+size = Vector3(0.2, 0.2, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_asbnw"]
+albedo_color = Color(0.645149, 0.422428, 0.172477, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gdy07"]
+albedo_color = Color(0.826428, 0.23073, 0.224033, 1)
+
+[node name="SeedBag" instance=ExtResource("1_xwovm")]
+script = ExtResource("2_hdbk7")
+seed_type = 0
+planting_effect_scene = null
+seed_mesh_carrots = SubResource("BoxMesh_vqwcm")
+seed_mesh_tomatoes = SubResource("BoxMesh_2d82r")
+material_carrots = SubResource("StandardMaterial3D_asbnw")
+material_tomatoes = SubResource("StandardMaterial3D_gdy07")
+tool_name = "Seed bag"

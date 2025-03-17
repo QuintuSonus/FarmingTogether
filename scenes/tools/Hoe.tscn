@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://csc3fnhg1qgdc"]
+
+[ext_resource type="PackedScene" uid="uid://bi06l7peyni80" path="res://scenes/tools/Tool.tscn" id="1_ckxmb"]
+[ext_resource type="Script" path="res://scripts/tools/Hoe.gd" id="2_aq6f5"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rr33x"]
+top_radius = 0.02
+bottom_radius = 0.02
+height = 1.5
+
+[node name="Hoe" instance=ExtResource("1_ckxmb")]
+script = ExtResource("2_aq6f5")
+till_effect_scene = null
+tool_name = "Hoe"
+
+[node name="MeshInstance3D" parent="." index="0"]
+mesh = SubResource("CylinderMesh_rr33x")
+
+[node name="InteractionArea" parent="." index="1"]
+collision_layer = 2
