@@ -13,8 +13,8 @@ size = Vector3(0.1, 0.1, 0.5)
 radius = 0.4
 height = 1.8
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_3kxu8"]
-radius = 1.5
+[sub_resource type="BoxShape3D" id="BoxShape3D_m56ex"]
+size = Vector3(1, 2.04773, 1)
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_8yfgv")
@@ -34,9 +34,13 @@ mesh = SubResource("BoxMesh_6kvam")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_3uv8d")
 
-[node name="Area3D" type="Area3D" parent="."]
+[node name="InteractionArea" type="Area3D" parent="."]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
-shape = SubResource("SphereShape3D_3kxu8")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.200231, 0.739627)
+shape = SubResource("BoxShape3D_m56ex")
 
 [node name="InteractionRaycast" type="RayCast3D" parent="."]
+
+[connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
+[connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]
