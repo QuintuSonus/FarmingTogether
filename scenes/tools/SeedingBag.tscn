@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://bvtce7c1opcsk"]
+
+[ext_resource type="Script" path="res://scripts/tools/SeedBag.gd" id="1_kmb7f"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfejb"]
+albedo_color = Color(1, 0.697869, 0.268207, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lnlv4"]
+material = SubResource("StandardMaterial3D_wfejb")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_w4wxe"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="SeedingBag" type="RigidBody3D"]
+script = ExtResource("1_kmb7f")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_lnlv4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_w4wxe")

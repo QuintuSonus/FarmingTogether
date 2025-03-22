@@ -139,7 +139,7 @@ func drop_tool():
 		
 		# Position the tool in front of the player
 		var drop_pos = global_position + global_transform.basis.z * 1.0
-		drop_pos.y = 0.3  # Slightly above ground to prevent clipping
+		drop_pos.y = 1  # Slightly above ground to prevent clipping
 		tool_obj.global_position = drop_pos
 		
 		# Re-enable physics

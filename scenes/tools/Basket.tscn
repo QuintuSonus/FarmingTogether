@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://dte7i6vc4ohbf"]
+
+[ext_resource type="Script" path="res://scripts/tools/Basket.gd" id="1_iugtt"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ykiie"]
+albedo_color = Color(0.474108, 0.286657, 0.19824, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_g5dny"]
+material = SubResource("StandardMaterial3D_ykiie")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x7hak"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="Basket" type="RigidBody3D"]
+script = ExtResource("1_iugtt")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_g5dny")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_x7hak")

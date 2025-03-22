@@ -1,0 +1,22 @@
+[gd_scene load_steps=5 format=3 uid="uid://37i3fwe8cg5w"]
+
+[ext_resource type="Script" path="res://scripts/tools/WateringCan.gd" id="1_rj3b4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wpvrd"]
+albedo_color = Color(0.291599, 0.410489, 0.672252, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_p05bo"]
+material = SubResource("StandardMaterial3D_wpvrd")
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vv5ey"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="WateringCan" type="RigidBody3D"]
+script = ExtResource("1_rj3b4")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_p05bo")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_vv5ey")
