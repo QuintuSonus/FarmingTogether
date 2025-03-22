@@ -14,9 +14,15 @@ size = Vector3(0.5, 0.5, 0.5)
 
 [node name="WateringCan" type="RigidBody3D"]
 script = ExtResource("1_rj3b4")
+water_capacity = 10.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_p05bo")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_vv5ey")
+
+[node name="WaterLevelLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+text = "10/10"
+font_size = 64

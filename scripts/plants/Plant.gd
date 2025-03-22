@@ -22,13 +22,21 @@ var is_watered: bool = false
 # Called when the node enters the scene tree for the first time
 func _ready():
 	add_to_group("interactables")
+	add_to_group("plants")
 	# Set to interaction layer (2)
 	set_collision_layer_value(2, true)
+	
+	# Debug output
+	print("Plant initialized: " + crop_type)
 
 func _process(delta):
 	# Only grow if watered
 	if is_watered and current_stage == GrowthStage.GROWING:
 		growth_progress += delta / growth_time
+		
+		# Update appearance more frequently during growth
+		if Engine.get_frames_drawn() % 5 == 0:  # Only update every 5 frames for performance
+			update_appearance()
 		
 		if growth_progress >= 1.0:
 			# Plant is fully grown
@@ -59,8 +67,8 @@ func _on_spoil_timer_timeout():
 
 func update_appearance():
 	# Update the mesh/material based on growth stage
-	# This would be implemented in subclasses
-	pass
+	# This should be implemented in subclasses
+	push_warning("Plant.update_appearance() called on base class. This should be overridden in subclasses.")
 
 # Interactable implementation
 func can_interact(actor):
