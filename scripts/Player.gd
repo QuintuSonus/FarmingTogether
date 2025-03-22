@@ -133,6 +133,9 @@ func _input(event):
 		interaction_manager.start_interaction("interact")
 	
 	# Tool usage (Space key)
+	# Replace the progress tracking part of the tool usage in _input function with this updated version:
+
+# Tool usage (Space key)
 	if event.is_action_pressed("use_tool"):
 		print("Player: USE TOOL button pressed (Space)")
 		# Only handle tool usage if we have a tool
@@ -148,73 +151,70 @@ func _input(event):
 				if current_tool.has_method("get_interaction_type") and current_tool.get_interaction_type() == Interactable.InteractionType.PROGRESS_BASED:
 					print("Player: Starting progress-based tool use")
 					
-					# Show progress feedback
+					# Get tool use duration
+					var duration = current_tool.get_interaction_duration() if current_tool.has_method("get_interaction_duration") else 1.0
+					
+					# Show initial progress (0%)
 					if interaction_feedback:
 						interaction_feedback.show_progress(0.0)
 					
-					# Create a timer for tool use
-					var duration = current_tool.get_interaction_duration() if current_tool.has_method("get_interaction_duration") else 1.0
+					# Start tracking the progress
+					var start_time = Time.get_ticks_msec()
+					var is_tracking = true
 					
-					# Create a timer to handle progress
-					var progress_timer = Timer.new()
-					progress_timer.wait_time = 0.05  # Update roughly 20 times per second
-					progress_timer.autostart = true
-					add_child(progress_timer)
+					# Remove any existing process callback
+					if has_meta("process_callback"):
+						var existing_callback = get_meta("process_callback")
+						if get_tree().process_frame.is_connected(existing_callback):
+							get_tree().process_frame.disconnect(existing_callback)
+						remove_meta("process_callback")
 					
-					# Create a timer for completion
-					var completion_timer = Timer.new()
-					completion_timer.wait_time = duration
-					completion_timer.one_shot = true
-					completion_timer.autostart = true
-					add_child(completion_timer)
+					# Create a process callback function
+					var process_callback = func():
+						if is_tracking:
+							var elapsed = (Time.get_ticks_msec() - start_time) / 1000.0
+							var progress = clamp(elapsed / duration, 0.0, 1.0)
+							
+							# Update progress bar
+							if interaction_feedback:
+								interaction_feedback.update_progress(progress)
+							
+							# Check if complete
+							if progress >= 1.0:
+								is_tracking = false
+								_on_tool_use_completed(pos)
 					
-					# Track elapsed time
-					var elapsed_time = 0.0
+					# Connect to process frame
+					get_tree().process_frame.connect(process_callback)
 					
-					# Connect signals
-					progress_timer.timeout.connect(func():
-						elapsed_time += progress_timer.wait_time
-						var progress = min(elapsed_time / duration, 1.0)
-						if interaction_feedback:
-							interaction_feedback.update_progress(progress)
-					)
-					
-					completion_timer.timeout.connect(func():
-						# Clean up timers
-						progress_timer.queue_free()
-						completion_timer.queue_free()
-						# Complete the tool use
-						_on_tool_use_completed(pos)
-					)
-					
-					# Store the timers for potential cancellation
-					set_meta("progress_timer", progress_timer)
-					set_meta("completion_timer", completion_timer)
+					# Store callback reference for cleanup
+					set_meta("process_callback", process_callback)
+					set_meta("progress_tracking", is_tracking)
+					set_meta("tool_use_position", pos)
 				else:
 					# Instant tools like watering can
 					print("Player: Completing instantaneous tool use")
 					current_tool.complete_use(pos)
-	
+
 	# Cancel interaction if key released (for canceling ongoing tool use)
 	if event.is_action_released("use_tool"):
 		# Only cancel if we were in the middle of using a tool
-		if interaction_feedback and interaction_feedback.progress_bar.visible:
+		if has_meta("progress_tracking") and get_meta("progress_tracking"):
 			print("Player: Tool use canceled")
 			
-			# Clean up timers if they exist
-			if has_meta("progress_timer"):
-				var progress_timer = get_meta("progress_timer")
-				if is_instance_valid(progress_timer):
-					progress_timer.queue_free()
-				remove_meta("progress_timer")
-				
-			if has_meta("completion_timer"):
-				var completion_timer = get_meta("completion_timer")
-				if is_instance_valid(completion_timer):
-					completion_timer.queue_free()
-				remove_meta("completion_timer")
-				
-			interaction_feedback.hide_progress()
+			# Stop tracking
+			set_meta("progress_tracking", false)
+			
+			# Clean up process callback
+			if has_meta("process_callback"):
+				var callback = get_meta("process_callback")
+				if get_tree().process_frame.is_connected(callback):
+					get_tree().process_frame.disconnect(callback)
+				remove_meta("process_callback")
+			
+			# Hide progress bar
+			if interaction_feedback:
+				interaction_feedback.hide_progress()
 
 # New function to handle tool use completion
 func _on_tool_use_completed(position):

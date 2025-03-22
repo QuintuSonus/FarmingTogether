@@ -12,9 +12,15 @@ grow_vertical = 2
 script = ExtResource("1_e40xj")
 
 [node name="ProgressBar" type="ProgressBar" parent="."]
-layout_mode = 0
-offset_right = 119.0
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -59.5
+offset_right = 59.5
 offset_bottom = 27.0
+grow_horizontal = 2
+show_percentage = false
 
 [node name="PromptLabel" type="Label" parent="."]
 layout_mode = 0
