@@ -34,6 +34,12 @@ func _process(delta):
 	if is_watered and current_stage == GrowthStage.GROWING:
 		growth_progress += delta / growth_time
 		
+		# Log growing state periodically
+		if Engine.get_frames_drawn() % 30 == 0:  # Log every 30 frames
+			print("Plant at ", global_position, " - growing: ", 
+				int(growth_progress * 100), "%, time left: ", 
+				int((1.0 - growth_progress) * growth_time), "s")
+		
 		# Update appearance more frequently during growth
 		if Engine.get_frames_drawn() % 5 == 0:  # Only update every 5 frames for performance
 			update_appearance()
@@ -41,6 +47,8 @@ func _process(delta):
 		if growth_progress >= 1.0:
 			# Plant is fully grown
 			current_stage = GrowthStage.HARVESTABLE
+			print("Plant at ", global_position, " is now HARVESTABLE!")
+			
 			# Start spoil timer
 			var timer = Timer.new()
 			timer.wait_time = spoil_time
