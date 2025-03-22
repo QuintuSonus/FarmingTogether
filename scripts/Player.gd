@@ -1,4 +1,4 @@
-# Player.gd
+# scripts/Player.gd
 extends CharacterBody3D
 
 # Player movement parameters
@@ -10,20 +10,25 @@ extends CharacterBody3D
 # Node references
 var level_manager: Node
 var current_tool = null
+@onready var interaction_manager = $InteractionManager
+@onready var interaction_feedback = $InteractionFeedback
+
+@onready var tool_holder = $ToolHolder
 
 # Track current tile information
 var current_tile_type = null
 var current_grid_position: Vector3i = Vector3i(0, 0, 0)
 
-# Interaction parameters
-@export var interaction_range: float = 1.5
-@export var interaction_angle_degrees: float = 120.0
-@export var interaction_visual_feedback: bool = true
-
 # Called when the node enters the scene tree for the first time
 func _ready():
 	# Get a reference to the level manager
 	level_manager = get_node("../LevelManager")
+	
+	# Connect signals
+	interaction_manager.connect("interaction_started", _on_interaction_started)
+	interaction_manager.connect("interaction_completed", _on_interaction_completed)
+	interaction_manager.connect("interaction_canceled", _on_interaction_canceled)
+	interaction_manager.connect("potential_interactable_changed", _on_potential_interactable_changed)
 
 # Handle physics updates
 func _physics_process(delta):
@@ -57,79 +62,29 @@ func _physics_process(delta):
 	
 	# Apply movement
 	move_and_slide()
+	
+	# Update interaction progress if in progress
+	if Input.is_action_pressed("interact") or Input.is_action_pressed("use_tool"):
+		interaction_manager.update_interaction(delta)
 
 # Handle input events
 func _input(event):
 	# Tool pickup/drop interaction
 	if event.is_action_pressed("interact"):
-		# Try to interact with nearby objects
-		interact()
+		interaction_manager.start_interaction("interact")
 	
 	# Tool usage
 	if event.is_action_pressed("use_tool"):
-		# Try to use the currently held tool
-		use_tool()
-
-# Get the interactable object with highest priority in range
-func get_best_interactable():
-	# Cast a ray forward to find interactable objects
-	var space_state = get_world_3d().direct_space_state
-	var ray_origin = global_position + Vector3(0, 0.5, 0)  # Start ray from slightly above player center
-	var forward_dir = -global_transform.basis.z  # Player's forward direction
+		if current_tool and current_tool.has_method("use"):
+			if current_tool.use(current_grid_position):
+				# Start a progress-based interaction for tool use
+				var interaction_type = current_tool.get_interaction_type()
+				if interaction_type == Interactable.InteractionType.PROGRESS_BASED:
+					interaction_manager.start_interaction("use_tool")
 	
-	# Calculate interaction directions within the cone
-	var interaction_angle_rad = deg_to_rad(interaction_angle_degrees / 2)
-	var interactables = []
-	
-	# Create a physics ray query
-	var query = PhysicsRayQueryParameters3D.new()
-	query.from = ray_origin
-	query.to = ray_origin + forward_dir * interaction_range
-	query.collision_mask = 2  # Assuming interactable objects are on layer 2
-	
-	var result = space_state.intersect_ray(query)
-	
-	if result:
-		var obj = result.collider
-		if obj.has_method("can_interact"):
-			# Calculate angle between forward vector and object direction
-			var dir_to_obj = (obj.global_position - global_position).normalized()
-			var dot_product = forward_dir.dot(dir_to_obj)
-			var angle = acos(dot_product)
-			
-			if angle <= interaction_angle_rad:
-				# Calculate priority based on distance and angle
-				var distance = global_position.distance_to(obj.global_position)
-				var priority = 1.0 / (distance + 0.001)  # Avoid division by zero
-				
-				interactables.append({
-					"object": obj,
-					"distance": distance,
-					"priority": priority
-				})
-	
-	# Sort by priority and return the best one
-	if interactables.size() > 0:
-		interactables.sort_custom(func(a, b): return a.priority > b.priority)
-		return interactables[0].object
-	
-	return null
-
-# Interact with objects in range
-func interact():
-	var interactable = get_best_interactable()
-	
-	if interactable:
-		if interactable.has_method("interact"):
-			interactable.interact(self)
-	elif current_tool:
-		# Drop the current tool if no interactable is found
-		drop_tool()
-
-# Use the currently held tool
-func use_tool():
-	if current_tool and current_tool.has_method("use"):
-		current_tool.use(self, current_grid_position)
+	# Cancel interaction if key released during progress-based interaction
+	if event.is_action_released("interact") or event.is_action_released("use_tool"):
+		interaction_manager.cancel_interaction()
 
 # Pick up a tool
 func pick_up_tool(tool_obj):
@@ -137,30 +92,97 @@ func pick_up_tool(tool_obj):
 		# First drop the current tool
 		drop_tool()
 	
-	# Attach the new tool to the player
-	current_tool = tool_obj
+	# Get the original parent to restore when dropping
+	tool_obj.original_parent = tool_obj.get_parent()
+	
+	# Disable physics on the tool
+	if tool_obj is RigidBody3D:
+		# Store original physics properties to restore later
+		tool_obj.original_freeze = tool_obj.freeze
+		tool_obj.freeze = true
+		
+		# Store original collision settings
+		tool_obj.original_collision_layer = tool_obj.collision_layer
+		tool_obj.original_collision_mask = tool_obj.collision_mask
+		
+		# Disable collision
+		tool_obj.collision_layer = 0
+		tool_obj.collision_mask = 0
+	
+	# Attach the tool to the tool holder
 	tool_obj.get_parent().remove_child(tool_obj)
-	add_child(tool_obj)
-	tool_obj.position = Vector3(0, 0.5, 0)  # Position the tool slightly above the player
+	tool_holder.add_child(tool_obj)
+	
+	# Reset transform relative to holder
+	tool_obj.position = Vector3.ZERO
+	tool_obj.rotation = Vector3.ZERO
+	
+	# Store reference to current tool
+	current_tool = tool_obj
 	
 	print("Picked up: ", tool_obj.name)
 
-# Drop the currently held tool
+# Replace the drop_tool function with this corrected version:
 func drop_tool():
 	if current_tool:
 		var tool_obj = current_tool
-		remove_child(tool_obj)
-		get_parent().add_child(tool_obj)
+		current_tool = null
 		
-		# Place tool on the ground in front of the player
-		var drop_pos = global_position - global_transform.basis.z * 1.0
-		drop_pos.y = 0.1  # Place slightly above ground
+		# Remove from tool holder
+		tool_holder.remove_child(tool_obj)
+		
+		# Add back to original parent or main scene
+		var target_parent = tool_obj.get("original_parent")
+		if target_parent == null:
+			target_parent = get_parent()
+		target_parent.add_child(tool_obj)
+		
+		# Position the tool in front of the player
+		var drop_pos = global_position + global_transform.basis.z * 1.0
+		drop_pos.y = 0.3  # Slightly above ground to prevent clipping
 		tool_obj.global_position = drop_pos
 		
-		current_tool = null
+		# Re-enable physics
+		if tool_obj is RigidBody3D:
+			# Restore original freeze state if property exists
+			if "original_freeze" in tool_obj:
+				tool_obj.freeze = tool_obj.original_freeze
+			else:
+				tool_obj.freeze = false
+				
+			# Restore original collision settings
+			if "original_collision_layer" in tool_obj:
+				tool_obj.collision_layer = tool_obj.original_collision_layer
+			else:
+				tool_obj.collision_layer = 1 << 1  # Layer 2
+				
+			if "original_collision_mask" in tool_obj:
+				tool_obj.collision_mask = tool_obj.original_collision_mask
+			else:
+				tool_obj.collision_mask = 1  # Layer 1
+			
+			# Add a small upward impulse to prevent clipping with the ground
+			tool_obj.apply_central_impulse(Vector3(0, 0.5, 0))
+		
 		print("Dropped tool")
 
-# Called when player enters a tile
-func _on_area_entered(area):
-	# This could be used for additional interactions when moving onto specific tiles
-	pass
+# Signal handlers
+func _on_interaction_started(actor, interactable):
+	if interactable.has_method("get_interaction_duration"):
+		interaction_feedback.show_progress(0.0)
+
+func _on_interaction_completed(actor, interactable):
+	interaction_feedback.hide_progress()
+	
+	# Special handling for tool use completion
+	if interactable == current_tool and current_tool.has_method("complete_use"):
+		current_tool.complete_use(current_grid_position)
+
+func _on_interaction_canceled(actor, interactable):
+	interaction_feedback.hide_progress()
+
+func _on_potential_interactable_changed(interactable):
+	if interactable and interactable.has_method("get_interaction_prompt"):
+		interaction_feedback.show_prompt(interactable.get_interaction_prompt())
+	else:
+		interaction_feedback.hide_prompt()

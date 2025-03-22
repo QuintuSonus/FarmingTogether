@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_sl04e"]
 [ext_resource type="PackedScene" uid="uid://cd84u8mftwl3" path="res://scenes/GridMap.tscn" id="2_ugdbk"]
 [ext_resource type="PackedScene" uid="uid://cykkbk3sjbrw3" path="res://scenes/Player.tscn" id="3_y1os3"]
-[ext_resource type="PackedScene" uid="uid://csc3fnhg1qgdc" path="res://scenes/tools/Hoe.tscn" id="5_5tuyd"]
+[ext_resource type="PackedScene" uid="uid://7pq2ir7ov7l3" path="res://scenes/tools/Hoe.tscn" id="5_5tuyd"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_sl04e")
@@ -25,4 +25,4 @@ transform = Transform3D(1, 0, 0, 0, 0.233734, 0.972301, 0, -0.972301, 0.233734, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 2.507)
 
 [node name="Hoe" parent="." instance=ExtResource("5_5tuyd")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0626698, 1.83808, 5.66756)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.205209, 1.68012, 4.08998)
