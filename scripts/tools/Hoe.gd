@@ -6,6 +6,8 @@ func _ready():
 	super._ready()
 	print("Hoe initialized")
 
+# This should only apply to the use of the tool, not pickup
+# We need to distinguish between pickup and use actions
 func use(target_position):
 	# Get the level manager
 	var level_manager = get_node("/root/Main/LevelManager")
@@ -21,8 +23,13 @@ func use(target_position):
 	else:
 		print("ERROR: Level manager not found!")
 		return false
-	
+
+# IMPORTANT: We're overriding this for using the hoe, not for pickup
+# Make sure Tool.gd has this returning INSTANTANEOUS for pickup
 func get_interaction_type():
+	# We need to distinguish between pickup and "use" action
+	# The parent class (Tool) already returns INSTANTANEOUS for pickup
+	# This function is called for the "use_tool" action, not pickup
 	return Interactable.InteractionType.PROGRESS_BASED
 	
 func get_interaction_duration():

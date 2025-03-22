@@ -130,6 +130,14 @@ func start_interaction(action_name: String = "interact"):
 		
 	# For interact actions (picking up tools, etc.)
 	if action_name == "interact":
+		# IMPORTANT FIX: Tool pickup should ALWAYS be instantaneous
+		if interactable is Tool:
+			print("InteractionManager: Picking up tool - always instantaneous")
+			if interactable.interact(actor):
+				emit_signal("interaction_completed", actor, interactable)
+			return
+			
+		# For non-tool interactions, respect their interaction type
 		var interaction_type = interactable.get_interaction_type()
 		print("InteractionManager: Interaction type: ", interaction_type)
 		
