@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://cykkbk3sjbrw3"]
+[gd_scene load_steps=9 format=3 uid="uid://cykkbk3sjbrw3"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_8yfgv"]
 [ext_resource type="Script" path="res://scripts/interaction/InteractionManager.gd" id="2_ljt2q"]
 [ext_resource type="PackedScene" uid="uid://xbimmd14id3y" path="res://scenes/ui/InteractionFeedback.tscn" id="3_sxwei"]
+[ext_resource type="PackedScene" uid="uid://3ypmhllqy7ns" path="res://scenes/ui/TileHighlighter.tscn" id="4_pfgso"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_01bbd"]
 radius = 0.4
@@ -49,6 +50,9 @@ script = ExtResource("2_ljt2q")
 
 [node name="ToolHolder" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, -0.18679, 0.2192, 0.671672)
+
+[node name="TileHighlighter" parent="." instance=ExtResource("4_pfgso")]
+highlight_height = 1.0
 
 [connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
 [connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]

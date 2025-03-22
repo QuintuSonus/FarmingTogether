@@ -12,12 +12,13 @@ var level_manager: Node
 var current_tool = null
 @onready var interaction_manager = $InteractionManager
 @onready var interaction_feedback = $InteractionFeedback
-
 @onready var tool_holder = $ToolHolder
 
-# Track current tile information
+# Tile highlighter and position tracking
+var tile_highlighter = null
 var current_tile_type = null
 var current_grid_position: Vector3i = Vector3i(0, 0, 0)
+var front_grid_position: Vector3i = Vector3i(0, 0, 0)
 
 # Called when the node enters the scene tree for the first time
 func _ready():
@@ -29,6 +30,18 @@ func _ready():
 	interaction_manager.connect("interaction_completed", _on_interaction_completed)
 	interaction_manager.connect("interaction_canceled", _on_interaction_canceled)
 	interaction_manager.connect("potential_interactable_changed", _on_potential_interactable_changed)
+	
+	# Setup tile highlighter
+	tile_highlighter = $TileHighlighter
+	
+	if not tile_highlighter:
+		# Create and add the TileHighlighter node if it doesn't exist
+		var highlighter_scene = load("res://scenes/ui/TileHighlighter.tscn")
+		if highlighter_scene:
+			tile_highlighter = highlighter_scene.instantiate()
+			add_child(tile_highlighter)
+	
+	print("Player initialized")
 
 # Handle physics updates
 func _physics_process(delta):
@@ -64,30 +77,169 @@ func _physics_process(delta):
 	move_and_slide()
 	
 	# Update interaction progress if in progress
-	if Input.is_action_pressed("interact") or Input.is_action_pressed("use_tool"):
+	if Input.is_action_pressed("interact"):
 		interaction_manager.update_interaction(delta)
+	
+	# Update tile highlighting
+	if tile_highlighter:
+		update_tile_highlight()
+
+# Update the tile highlight based on player position and direction
+func update_tile_highlight():
+	if !level_manager:
+		return
+	
+	# Get the forward direction
+	var forward_dir = global_transform.basis.z.normalized()
+	
+	# Calculate a position in front of the player
+	var front_pos = global_position + forward_dir * 1.5  # Look 1.5 units ahead
+	
+	# Convert to grid position
+	front_grid_position = level_manager.world_to_grid(front_pos)
+	
+	# Make sure the detected tile is different from the player's current tile
+	if front_grid_position == current_grid_position:
+		# Try looking further ahead
+		front_pos = global_position + forward_dir * 2.0
+		front_grid_position = level_manager.world_to_grid(front_pos)
+	
+	# Check if this tile is within bounds
+	if level_manager.is_within_bounds(front_grid_position):
+		# Get world position of this grid cell for highlighting
+		var highlight_pos = level_manager.grid_to_world(front_grid_position)
+		
+		# Check if the current tool can interact with this tile
+		var can_interact = false
+		if current_tool and current_tool.has_method("use"):
+			# Make sure position is Vector3i
+			var pos = Vector3i(front_grid_position.x, front_grid_position.y, front_grid_position.z)
+			can_interact = current_tool.use(pos)
+			
+			# Update highlighter with interaction status
+			tile_highlighter.highlight_tile(highlight_pos, can_interact)
+		else:
+			# No tool, use neutral highlight
+			tile_highlighter.highlight_neutral(highlight_pos)
+	else:
+		# Hide highlighter if no valid tile in front
+		tile_highlighter.hide_highlight()
 
 # Handle input events
 func _input(event):
-	# Tool pickup/drop interaction
+	# Tool pickup/drop interaction (E key)
 	if event.is_action_pressed("interact"):
+		print("Player: INTERACT button pressed (E)")
 		interaction_manager.start_interaction("interact")
 	
-	# Tool usage
+	# Tool usage (Space key)
 	if event.is_action_pressed("use_tool"):
+		print("Player: USE TOOL button pressed (Space)")
+		# Only handle tool usage if we have a tool
 		if current_tool and current_tool.has_method("use"):
-			if current_tool.use(current_grid_position):
-				# Start a progress-based interaction for tool use
-				var interaction_type = current_tool.get_interaction_type()
-				if interaction_type == Interactable.InteractionType.PROGRESS_BASED:
-					interaction_manager.start_interaction("use_tool")
+			# Make sure position is Vector3i
+			var pos = Vector3i(front_grid_position.x, front_grid_position.y, front_grid_position.z)
+			var can_use = current_tool.use(pos)
+			
+			print("Player: Tool can be used: ", can_use, " at position ", pos)
+			
+			if can_use:
+				# For progress-based tools like Hoe
+				if current_tool.has_method("get_interaction_type") and current_tool.get_interaction_type() == Interactable.InteractionType.PROGRESS_BASED:
+					print("Player: Starting progress-based tool use")
+					
+					# Show progress feedback
+					if interaction_feedback:
+						interaction_feedback.show_progress(0.0)
+					
+					# Create a timer for tool use
+					var duration = current_tool.get_interaction_duration() if current_tool.has_method("get_interaction_duration") else 1.0
+					
+					# Create a timer to handle progress
+					var progress_timer = Timer.new()
+					progress_timer.wait_time = 0.05  # Update roughly 20 times per second
+					progress_timer.autostart = true
+					add_child(progress_timer)
+					
+					# Create a timer for completion
+					var completion_timer = Timer.new()
+					completion_timer.wait_time = duration
+					completion_timer.one_shot = true
+					completion_timer.autostart = true
+					add_child(completion_timer)
+					
+					# Track elapsed time
+					var elapsed_time = 0.0
+					
+					# Connect signals
+					progress_timer.timeout.connect(func():
+						elapsed_time += progress_timer.wait_time
+						var progress = min(elapsed_time / duration, 1.0)
+						if interaction_feedback:
+							interaction_feedback.update_progress(progress)
+					)
+					
+					completion_timer.timeout.connect(func():
+						# Clean up timers
+						progress_timer.queue_free()
+						completion_timer.queue_free()
+						# Complete the tool use
+						_on_tool_use_completed(pos)
+					)
+					
+					# Store the timers for potential cancellation
+					set_meta("progress_timer", progress_timer)
+					set_meta("completion_timer", completion_timer)
+				else:
+					# Instant tools like watering can
+					print("Player: Completing instantaneous tool use")
+					current_tool.complete_use(pos)
 	
-	# Cancel interaction if key released during progress-based interaction
-	if event.is_action_released("interact") or event.is_action_released("use_tool"):
-		interaction_manager.cancel_interaction()
+	# Cancel interaction if key released (for canceling ongoing tool use)
+	if event.is_action_released("use_tool"):
+		# Only cancel if we were in the middle of using a tool
+		if interaction_feedback and interaction_feedback.progress_bar.visible:
+			print("Player: Tool use canceled")
+			
+			# Clean up timers if they exist
+			if has_meta("progress_timer"):
+				var progress_timer = get_meta("progress_timer")
+				if is_instance_valid(progress_timer):
+					progress_timer.queue_free()
+				remove_meta("progress_timer")
+				
+			if has_meta("completion_timer"):
+				var completion_timer = get_meta("completion_timer")
+				if is_instance_valid(completion_timer):
+					completion_timer.queue_free()
+				remove_meta("completion_timer")
+				
+			interaction_feedback.hide_progress()
+
+# New function to handle tool use completion
+func _on_tool_use_completed(position):
+	print("Player: Tool use completed at position ", position)
+	
+	# Hide progress bar
+	if interaction_feedback:
+		interaction_feedback.hide_progress()
+	
+	# Complete the tool use
+	if current_tool and current_tool.has_method("complete_use"):
+		var success = current_tool.complete_use(position)
+		print("Player: Tool use completion result: ", success)
+	else:
+		print("Player: No tool or no complete_use method")
+
+# Update interaction progress callback
+func update_interaction_progress(progress):
+	if interaction_feedback:
+		interaction_feedback.update_progress(progress)
 
 # Pick up a tool
 func pick_up_tool(tool_obj):
+	print("Player: Picking up tool: ", tool_obj.name)
+	
 	if current_tool:
 		# First drop the current tool
 		drop_tool()
@@ -122,9 +274,11 @@ func pick_up_tool(tool_obj):
 	
 	print("Picked up: ", tool_obj.name)
 
-# Replace the drop_tool function with this corrected version:
+# Drop the current tool
 func drop_tool():
 	if current_tool:
+		print("Player: Dropping tool: ", current_tool.name)
+		
 		var tool_obj = current_tool
 		current_tool = null
 		
@@ -168,17 +322,16 @@ func drop_tool():
 
 # Signal handlers
 func _on_interaction_started(actor, interactable):
+	print("Player: Interaction started with ", interactable.name)
 	if interactable.has_method("get_interaction_duration"):
 		interaction_feedback.show_progress(0.0)
 
 func _on_interaction_completed(actor, interactable):
+	print("Player: Interaction completed with ", interactable.name)
 	interaction_feedback.hide_progress()
-	
-	# Special handling for tool use completion
-	if interactable == current_tool and current_tool.has_method("complete_use"):
-		current_tool.complete_use(current_grid_position)
 
 func _on_interaction_canceled(actor, interactable):
+	print("Player: Interaction canceled with ", interactable.name if interactable else "null")
 	interaction_feedback.hide_progress()
 
 func _on_potential_interactable_changed(interactable):
@@ -186,3 +339,12 @@ func _on_potential_interactable_changed(interactable):
 		interaction_feedback.show_prompt(interactable.get_interaction_prompt())
 	else:
 		interaction_feedback.hide_prompt()
+
+# Optional area detection functions (if you're using Area3D for interaction)
+func _on_interaction_area_body_entered(body):
+	# Additional interaction logic if needed
+	pass
+
+func _on_interaction_area_body_exited(body):
+	# Additional interaction logic if needed
+	pass

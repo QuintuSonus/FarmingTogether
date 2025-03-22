@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3682o52t1ulf"]
+
+[ext_resource type="Script" path="res://scripts/debug/GridDebugger.gd" id="1_5ybca"]
+
+[node name="GridDebugger" type="Node3D"]
+script = ExtResource("1_5ybca")

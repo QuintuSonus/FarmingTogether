@@ -14,6 +14,7 @@ var potential_interactable = null
 var current_interaction_progress: float = 0.0
 var is_interaction_in_progress: bool = false
 var actor = null
+var current_action_name = ""
 
 # Signals
 signal interaction_started(actor, interactable)
@@ -97,26 +98,49 @@ func get_best_interactable():
 	return null
 
 func start_interaction(action_name: String = "interact"):
+	print("InteractionManager: start_interaction called with action: ", action_name)
+	
+	# Store the action name for later use
+	current_action_name = action_name
+	
 	if is_interaction_in_progress:
+		print("InteractionManager: Interaction already in progress, ignoring")
 		return
 		
 	var interactable = potential_interactable
+	
+	# Special case for "interact" action: if no interactable and player has tool, drop it
+	if action_name == "interact" and (not interactable) and actor and actor.has_method("drop_tool") and actor.current_tool:
+		print("InteractionManager: No interactable but player has tool, dropping tool")
+		actor.drop_tool()
+		return
+	
+	# Exit if no interactable found
 	if not interactable:
-		# If no interactable is found and we're holding a tool, drop it
-		if actor and actor.has_method("drop_tool") and actor.current_tool:
-			actor.drop_tool()
-			return
-			
-	# Continue with normal interaction if there's an interactable
-	if interactable:
+		print("InteractionManager: No potential interactable found")
+		return
+	
+	print("InteractionManager: Interacting with: ", interactable.name, " for action: ", action_name)
+	
+	# Don't use the interaction manager for "use_tool" actions
+	# This is handled directly by the Player script
+	if action_name == "use_tool":
+		print("InteractionManager: Tool use action, letting Player script handle it")
+		return
+		
+	# For interact actions (picking up tools, etc.)
+	if action_name == "interact":
 		var interaction_type = interactable.get_interaction_type()
+		print("InteractionManager: Interaction type: ", interaction_type)
 		
 		if interaction_type == Interactable.InteractionType.INSTANTANEOUS:
 			# Handle instantaneous interaction
+			print("InteractionManager: Performing instantaneous interaction")
 			if interactable.interact(actor):
 				emit_signal("interaction_completed", actor, interactable)
 		else:
 			# Start progress-based interaction
+			print("InteractionManager: Starting progress-based interaction")
 			current_interactable = interactable
 			current_interaction_progress = 0.0
 			is_interaction_in_progress = true
@@ -127,13 +151,23 @@ func update_interaction(delta: float):
 		return
 		
 	if not current_interactable.can_interact(actor):
+		print("InteractionManager: Can no longer interact, canceling")
 		cancel_interaction()
 		return
-		
-	var duration = current_interactable.get_interaction_duration()
+	
+	var duration = 1.0
+	if current_interactable.has_method("get_interaction_duration"):
+		duration = current_interactable.get_interaction_duration()
+	
+	print("InteractionManager: Updating interaction progress: ", current_interaction_progress)
 	current_interaction_progress += delta / duration
 	
+	# Update progress bar or other UI
+	if actor and actor.has_method("update_interaction_progress"):
+		actor.update_interaction_progress(current_interaction_progress)
+	
 	if current_interaction_progress >= 1.0:
+		print("InteractionManager: Interaction complete")
 		complete_interaction()
 		
 func cancel_interaction():
@@ -142,11 +176,20 @@ func cancel_interaction():
 	
 	is_interaction_in_progress = false
 	current_interactable = null
+	current_action_name = ""
 	
 func complete_interaction():
 	if current_interactable:
-		current_interactable.interact(actor, 1.0)
+		print("InteractionManager: Completing interaction with ", current_interactable.name, " for action: ", current_action_name)
+		
+		if current_action_name == "interact":
+			# Handle normal interact action
+			current_interactable.interact(actor, 1.0)
+		
 		emit_signal("interaction_completed", actor, current_interactable)
+	else:
+		print("InteractionManager: No current interactable to complete")
 	
 	is_interaction_in_progress = false
 	current_interactable = null
+	current_action_name = ""

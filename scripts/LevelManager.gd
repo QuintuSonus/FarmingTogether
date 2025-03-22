@@ -38,31 +38,38 @@ func _ready():
 	
 	# Initialize our level
 	initialize_level()
+	
+	# Print debug info about tile states
+	print_all_tile_states()
 
 # Set up initial level layout
 func initialize_level():
 	# Clear any existing tiles
 	grid_map.clear()
+	tile_states.clear()  # Make sure to clear the states too
+	
+	print("Initializing level with dimensions: ", level_width, "x", level_height)
 	
 	# Create a simple level layout
 	# First, fill the entire level with regular ground
 	for x in range(level_width):
 		for z in range(level_height):
-			grid_map.set_cell_item(Vector3i(x, 0, z), REGULAR_GROUND_MESH_ID)
-			
-			# Track the state of each tile
-			tile_states[Vector3i(x, 0, z)] = TileType.REGULAR_GROUND
+			var pos = Vector3i(x, 0, z)
+			grid_map.set_cell_item(pos, REGULAR_GROUND_MESH_ID)
+			tile_states[pos] = TileType.REGULAR_GROUND
 	
 	# Add some dirt tiles for farming
 	for x in range(2, 6):
 		for z in range(2, 6):
-			grid_map.set_cell_item(Vector3i(x, 0, z), DIRT_GROUND_MESH_ID)
-			tile_states[Vector3i(x, 0, z)] = TileType.DIRT_GROUND
+			var pos = Vector3i(x, 0, z)
+			grid_map.set_cell_item(pos, DIRT_GROUND_MESH_ID)
+			tile_states[pos] = TileType.DIRT_GROUND
 	
 	# Add water tiles on the right side
 	for z in range(3, 5):
-		grid_map.set_cell_item(Vector3i(8, 0, z), WATER_MESH_ID)
-		tile_states[Vector3i(8, 0, z)] = TileType.WATER
+		var pos = Vector3i(8, 0, z)
+		grid_map.set_cell_item(pos, WATER_MESH_ID)
+		tile_states[pos] = TileType.WATER
 	
 	# Add a few mud tiles as obstacles
 	grid_map.set_cell_item(Vector3i(6, 0, 1), MUD_MESH_ID)
@@ -75,9 +82,16 @@ func initialize_level():
 	tile_states[Vector3i(10, 0, 4)] = TileType.DELIVERY
 	
 	print("Level initialized with %d tiles" % tile_states.size())
+	
+	# Print a debug view of our level
+	print_level_state()
 
 # Function to change a dirt tile to soil (will be called when using hoe)
 func convert_to_soil(grid_position: Vector3i) -> bool:
+	print("convert_to_soil called for position: ", grid_position)
+	print("Current tile type: ", get_tile_type(grid_position))
+	print("Is dirt? ", is_tile_type(grid_position, TileType.DIRT_GROUND))
+	
 	if tile_states.has(grid_position) and tile_states[grid_position] == TileType.DIRT_GROUND:
 		var old_type = tile_states[grid_position]
 		grid_map.set_cell_item(grid_position, SOIL_MESH_ID)
@@ -85,21 +99,36 @@ func convert_to_soil(grid_position: Vector3i) -> bool:
 		
 		# Emit signal that tile has changed
 		emit_signal("tile_changed", grid_position, old_type, TileType.SOIL)
+		print("Successfully converted to soil!")
 		return true
+	
+	print("Failed to convert to soil.")
 	return false
 
 # Function to get the type of tile at a given position
 func get_tile_type(grid_position: Vector3i) -> int:
+	var type = TileType.REGULAR_GROUND  # Default
 	if tile_states.has(grid_position):
-		return tile_states[grid_position]
-	# Default to regular ground if position is not in our dictionary
-	return TileType.REGULAR_GROUND
+		type = tile_states[grid_position]
+	else:
+		print("WARNING: No tile state for position ", grid_position)
+	
+	# Debug output
+	if type != TileType.REGULAR_GROUND:
+		print("get_tile_type at ", grid_position, " = ", type, " (", TileType.keys()[type], ")")
+	
+	return type
 
 # Function to check if a tile is of a specific type
 func is_tile_type(grid_position: Vector3i, type: int) -> bool:
+	var is_type = false
 	if tile_states.has(grid_position):
-		return tile_states[grid_position] == type
-	return false
+		is_type = tile_states[grid_position] == type
+	else:
+		print("WARNING: No tile state for position ", grid_position)
+	
+	print("is_tile_type at ", grid_position, ", type=", type, " (", TileType.keys()[type], ") = ", is_type)
+	return is_type
 
 # Function to check if a position is within the bounds of our level
 func is_within_bounds(grid_position: Vector3i) -> bool:
@@ -108,17 +137,44 @@ func is_within_bounds(grid_position: Vector3i) -> bool:
 
 # Function to get grid position from world position
 func world_to_grid(world_position: Vector3) -> Vector3i:
-	# GridMap has built-in methods for this
-	return grid_map.local_to_map(world_position)
+	# Method 1: Direct floor calculation
+	var grid_x = int(floor(world_position.x + 0.5))
+	var grid_z = int(floor(world_position.z + 0.5))
+	var result = Vector3i(grid_x, 0, grid_z)
+	
+	# Method 2: GridMap's built-in method
+	var gridmap_result = grid_map.local_to_map(world_position)
+	
+	# Debug output to compare methods
+	print("world_to_grid: ", world_position)
+	print("  Direct method: ", result)
+	print("  GridMap method: ", gridmap_result)
+	
+	# Use the method that actually has a tile state
+	if !tile_states.has(result) and tile_states.has(gridmap_result):
+		print("  Using GridMap result instead")
+		return gridmap_result
+	
+	return result
 
 # Function to get world position from grid position
 func grid_to_world(grid_position: Vector3i) -> Vector3:
-	# GridMap has built-in methods for this
-	return grid_map.map_to_local(grid_position)
+	# First try the GridMap method
+	var world_pos = grid_map.map_to_local(grid_position)
+	
+	# Fallback to direct calculation if needed
+	if world_pos == Vector3.ZERO:
+		world_pos = Vector3(float(grid_position.x), 0.0, float(grid_position.z))
+	
+	print("grid_to_world: ", grid_position, " -> ", world_pos)
+	return world_pos
 
 # Set a tile to a specific type
 func set_tile_type(grid_position: Vector3i, type: int) -> bool:
+	print("set_tile_type called for position: ", grid_position, " type: ", type)
+	
 	if !is_within_bounds(grid_position):
+		print("Position out of bounds")
 		return false
 		
 	var old_type = get_tile_type(grid_position)
@@ -143,14 +199,20 @@ func set_tile_type(grid_position: Vector3i, type: int) -> bool:
 	grid_map.set_cell_item(grid_position, mesh_id)
 	tile_states[grid_position] = type
 	
+	print("Tile type set successfully. Old: ", old_type, " New: ", type)
+	
 	# Emit signal that tile has changed
 	emit_signal("tile_changed", grid_position, old_type, type)
 	return true
 
 # Reset a soil tile back to dirt (e.g., after harvesting or when a plant withers)
 func reset_soil_to_dirt(grid_position: Vector3i) -> bool:
+	print("reset_soil_to_dirt called for position: ", grid_position)
+	
 	if is_tile_type(grid_position, TileType.SOIL):
 		return set_tile_type(grid_position, TileType.DIRT_GROUND)
+	
+	print("Tile is not soil, cannot reset")
 	return false
 
 # Get neighboring tiles of a specific type
@@ -212,6 +274,29 @@ func get_nearest_tile_of_type(world_position: Vector3, type: int) -> Vector3i:
 	
 	return nearest_tile if nearest_tile else Vector3i(-1, -1, -1)  # Return invalid position if none found
 
+# Print all tile states for debugging
+func print_all_tile_states():
+	print("===== ALL TILE STATES =====")
+	print("Total tiles tracked: ", tile_states.size())
+	var type_counts = {
+		TileType.REGULAR_GROUND: 0,
+		TileType.DIRT_GROUND: 0,
+		TileType.SOIL: 0,
+		TileType.WATER: 0,
+		TileType.MUD: 0,
+		TileType.DELIVERY: 0
+	}
+	
+	for pos in tile_states.keys():
+		var type = tile_states[pos]
+		if type_counts.has(type):
+			type_counts[type] += 1
+	
+	for type in type_counts.keys():
+		var type_name = TileType.keys()[type]
+		print("Type ", type_name, " (", type, "): ", type_counts[type], " tiles")
+	print("==========================")
+
 # Debug function to print the current state of the level
 func print_level_state():
 	print("Level State:")
@@ -235,5 +320,7 @@ func print_level_state():
 					row_string += "M "
 				TileType.DELIVERY:
 					row_string += "X "
+				_:
+					row_string += "? "
 		
 		print(row_string)
