@@ -107,25 +107,21 @@ func convert_to_soil(grid_position: Vector3i) -> bool:
 
 # Function to get the type of tile at a given position
 func get_tile_type(grid_position: Vector3i) -> int:
-	var type = TileType.REGULAR_GROUND  # Default
 	if tile_states.has(grid_position):
-		type = tile_states[grid_position]
+		return tile_states[grid_position]
 	else:
-		print("WARNING: No tile state for position ", grid_position)
-	
+		# Fallback to direct check from grid_map
+		var direct_type = get_tile_type_direct(grid_position)
 		
-	return type
+		# Update tile_states dictionary to match reality
+		if direct_type >= 0:
+			tile_states[grid_position] = direct_type
+			
+		return direct_type
 
 # Function to check if a tile is of a specific type
 func is_tile_type(grid_position: Vector3i, type: int) -> bool:
-	var is_type = false
-	if tile_states.has(grid_position):
-		is_type = tile_states[grid_position] == type
-	else:
-		print("WARNING: No tile state for position ", grid_position)
-	
-	print("is_tile_type at ", grid_position, ", type=", type, " (", TileType.keys()[type], ") = ", is_type)
-	return is_type
+	return get_tile_type(grid_position) == type
 
 # Function to check if a position is within the bounds of our level
 func is_within_bounds(grid_position: Vector3i) -> bool:
@@ -134,32 +130,20 @@ func is_within_bounds(grid_position: Vector3i) -> bool:
 
 # Function to get grid position from world position
 func world_to_grid(world_position: Vector3) -> Vector3i:
-	# Method 1: Direct floor calculation
-	var grid_x = int(floor(world_position.x + 0.5))
-	var grid_z = int(floor(world_position.z + 0.5))
-	var result = Vector3i(grid_x, 0, grid_z)
+	# Use consistent grid mapping based on actual tile size
+	var grid_x = int(floor(world_position.x))
+	var grid_z = int(floor(world_position.z))
 	
-	# Method 2: GridMap's built-in method
-	var gridmap_result = grid_map.local_to_map(world_position)
+	# Debug output
+	print("Converting world pos ", world_position, " to grid pos ", Vector3i(grid_x, 0, grid_z))
+	print("Tile type at this position: ", get_tile_type_direct(Vector3i(grid_x, 0, grid_z)))
 	
-	# Use the method that actually has a tile state
-	if !tile_states.has(result) and tile_states.has(gridmap_result):
-		print("  Using GridMap result instead")
-		return gridmap_result
-	
-	return result
+	return Vector3i(grid_x, 0, grid_z)
 
 # Function to get world position from grid position
 func grid_to_world(grid_position: Vector3i) -> Vector3:
 	# First try the GridMap method
-	var world_pos = grid_map.map_to_local(grid_position)
-	
-	# Fallback to direct calculation if needed
-	if world_pos == Vector3.ZERO:
-		world_pos = Vector3(float(grid_position.x), 0.0, float(grid_position.z))
-	
-	print("grid_to_world: ", grid_position, " -> ", world_pos)
-	return world_pos
+	return grid_map.map_to_local(grid_position)
 
 # Set a tile to a specific type
 func set_tile_type(grid_position: Vector3i, type: int) -> bool:
@@ -316,3 +300,17 @@ func print_level_state():
 					row_string += "? "
 		
 		print(row_string)
+		
+# Get tile type directly using the grid_map item
+func get_tile_type_direct(grid_position: Vector3i) -> int:
+	var item = grid_map.get_cell_item(grid_position)
+	
+	match item:
+		REGULAR_GROUND_MESH_ID: return TileType.REGULAR_GROUND
+		DIRT_GROUND_MESH_ID: return TileType.DIRT_GROUND
+		SOIL_MESH_ID: return TileType.SOIL
+		WATER_MESH_ID: return TileType.WATER
+		MUD_MESH_ID: return TileType.MUD
+		DELIVERY_MESH_ID: return TileType.DELIVERY
+		-1: return -1  # No tile at this position
+		_: return TileType.REGULAR_GROUND  # Default

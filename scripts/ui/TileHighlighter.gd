@@ -26,7 +26,8 @@ func highlight_tile(position: Vector3, can_interact: bool = false):
 	# Position the highlighter
 	global_position = position
 	global_position.y = highlight_height  # Set to fixed height above ground
-	
+	# Reset rotation to align with grid (important fix)
+	global_rotation = Vector3.ZERO
 	# Set the color based on interaction possibility
 	if can_interact:
 		current_material.albedo_color = can_interact_color
@@ -39,6 +40,8 @@ func highlight_tile(position: Vector3, can_interact: bool = false):
 func highlight_neutral(position: Vector3):
 	global_position = position
 	global_position.y = highlight_height
+	
+	global_rotation = Vector3.ZERO
 	
 	current_material.albedo_color = neutral_color
 	

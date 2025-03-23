@@ -117,34 +117,33 @@ func update_tile_highlight():
 	if !level_manager or !tile_targeting_point:
 		return
 	
-	# Get the global position of the targeting point
-	var target_pos = tile_targeting_point.global_position
+	# Calculate the forward point more precisely
+	var forward_point = global_position + (global_transform.basis.z.normalized() * 1.0)
 	
 	# Convert directly to grid position - this is the tile we want to interact with
-	front_grid_position = level_manager.world_to_grid(target_pos)
+	front_grid_position = level_manager.world_to_grid(forward_point)
 	
 	# Also get player's current grid position
 	current_grid_position = level_manager.world_to_grid(global_position)
 	
 	# Optional: Don't highlight the tile we're standing on
-	if front_grid_position == current_grid_position:
-		if tile_highlighter:
-			tile_highlighter.hide_highlight()
-		return
+	#if front_grid_position == current_grid_position:
+		#if tile_highlighter:
+			#tile_highlighter.hide_highlight()
+		#return
 	
 	# Check if this tile is within bounds
 	if level_manager.is_within_bounds(front_grid_position):
 		# Get world position of this grid cell for highlighting
 		var highlight_pos = level_manager.grid_to_world(front_grid_position)
 		# Center the highlight on the tile
-		highlight_pos.x += 0.5
-		highlight_pos.z += 0.5
+		highlight_pos.x += 0
+		highlight_pos.z += 0
 		
 		# Check if the current tool can interact with this tile
 		var can_interact = false
 		if current_tool and current_tool.has_method("use"):
-			var pos = Vector3i(front_grid_position.x, front_grid_position.y, front_grid_position.z)
-			can_interact = current_tool.use(pos)
+			can_interact = current_tool.use(front_grid_position)
 			
 			# Update highlighter with interaction status
 			tile_highlighter.highlight_tile(highlight_pos, can_interact)
