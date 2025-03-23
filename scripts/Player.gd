@@ -9,6 +9,8 @@ extends CharacterBody3D
 @export var rotation_speed: float = 10.0
 @export var controller_deadzone: float = 0.2  # Deadzone for controller input
 
+var movement_disabled = false
+
 # Node references
 var level_manager: Node
 var current_tool = null
@@ -56,6 +58,26 @@ func _ready():
 
 # Handle physics updates
 func _physics_process(delta):
+	# Skip movement processing if disabled
+	if movement_disabled:
+		# Still update interaction progress if in progress
+		if Input.is_action_pressed("interact"):
+			interaction_manager.update_interaction(delta)
+		
+		# Update tool use progress if in progress
+		if is_tool_use_in_progress and not tool_use_completed:
+			update_tool_use_progress(delta)
+		
+		# Make sure velocity is zero while interactions are in progress
+		velocity = Vector3.ZERO
+		
+		# Update tile highlighting
+		if tile_highlighter:
+			update_tile_highlight()
+			
+		return  # Skip the rest of movement processing
+	
+	# Regular movement processing (existing code)
 	# Get input direction - works with both keyboard and controller
 	var input_dir = get_movement_vector()
 	var direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
@@ -107,6 +129,7 @@ func _physics_process(delta):
 	if tile_highlighter:
 		update_tile_highlight()
 
+
 # Get movement vector from input (keyboard or controller)
 func get_movement_vector() -> Vector2:
 	var input_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -143,7 +166,7 @@ func update_tile_highlight():
 		return
 	
 	# Calculate the forward point more precisely
-	var forward_point = global_position + (global_transform.basis.z.normalized() * 1.0)
+	var forward_point = tile_targeting_point.global_position
 	
 	# Convert directly to grid position - this is the tile we want to interact with
 	front_grid_position = level_manager.world_to_grid(forward_point)
@@ -151,13 +174,15 @@ func update_tile_highlight():
 	# Also get player's current grid position
 	current_grid_position = level_manager.world_to_grid(global_position)
 		
-	# Check if this tile is within bounds
+	# Check if this tile is within bounds - using the improved is_within_bounds function
 	if level_manager.is_within_bounds(front_grid_position):
 		# Get world position of this grid cell for highlighting
 		var highlight_pos = level_manager.grid_to_world(front_grid_position)
-		# Center the highlight on the tile
-		highlight_pos.x += 0
-		highlight_pos.z += 0
+		
+		# Important: Center the highlight on the tile exactly for visual consistency
+		# We'll add 0.5 to X and Z to center on the tile (since grid cells are 1x1)
+		highlight_pos.x = float(front_grid_position.x) + 0.5
+		highlight_pos.z = float(front_grid_position.z) + 0.5
 		
 		# Check if the current tool can interact with this tile
 		var can_interact = false
@@ -209,6 +234,8 @@ func _on_tool_use_completed(position):
 	is_tool_use_in_progress = false
 	# Keep tool_use_completed as true since it was actually completed
 	tool_use_position = null
+	
+	movement_disabled=false
 
 
 # Get the current tool being held
@@ -248,6 +275,9 @@ func start_tool_use():
 			tool_use_position = target_pos
 			tool_use_duration = duration
 			
+			# Disable movement during progress-based tool use
+			movement_disabled = true
+			
 			# Show initial progress
 			if interaction_feedback:
 				interaction_feedback.show_progress(0.0)
@@ -257,11 +287,14 @@ func start_tool_use():
 			print("Completing instantaneous tool use")
 			current_tool.complete_use(target_pos)
 
+
 # Cleaner method to cancel tool use
 func cancel_tool_use():
 	if is_tool_use_in_progress and not tool_use_completed:
 		if interaction_feedback:
 			interaction_feedback.hide_progress()
+			
+		movement_disabled=false
 	
 	is_tool_use_in_progress = false
 	tool_use_completed = false
@@ -382,20 +415,27 @@ func _on_interaction_started(actor, interactable):
 	print("Player: Interaction started with ", interactable.name)
 	if interactable.has_method("get_interaction_duration"):
 		interaction_feedback.show_progress(0.0)
+		# Disable movement during progress-based interactions
+		if interactable.get_interaction_type() == Interactable.InteractionType.PROGRESS_BASED:
+			movement_disabled = true
 
 func _on_interaction_completed(actor, interactable):
 	print("Player: Interaction completed with ", interactable.name)
 	interaction_feedback.hide_progress()
+	# Re-enable movement
+	movement_disabled = false
 
 func _on_interaction_canceled(actor, interactable):
 	print("Player: Interaction canceled with ", interactable.name if interactable else "null")
 	interaction_feedback.hide_progress()
+	movement_disabled = false
 
 func _on_potential_interactable_changed(interactable):
 	if interactable and interactable.has_method("get_interaction_prompt"):
 		interaction_feedback.show_prompt(interactable.get_interaction_prompt())
 	else:
 		interaction_feedback.hide_prompt()
+	
 
 # Optional area detection functions (if you're using Area3D for interaction)
 func _on_interaction_area_body_entered(body):

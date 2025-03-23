@@ -182,21 +182,40 @@ func is_tile_type(grid_position: Vector3i, type: int) -> bool:
 
 # Function to check if a position is within the bounds of our level
 func is_within_bounds(grid_position: Vector3i) -> bool:
-	return grid_position.x >= 0 and grid_position.x < level_width and \
-		   grid_position.z >= 0 and grid_position.z < level_height
+	# Calculate absolute bounds - adjust these values as needed for your level
+	var min_x = -50  # Minimum X coordinate
+	var min_z = -50  # Minimum Z coordinate
+	var max_x = level_width + 50  # Maximum X coordinate
+	var max_z = level_height + 50  # Maximum Z coordinate
+	
+	# Check if position is within the expanded bounds
+	return grid_position.x >= min_x and grid_position.x < max_x and \
+		   grid_position.z >= min_z and grid_position.z < max_z
 
 # Function to get grid position from world position
+# Optional: Improve the world_to_grid function for better negative coordinate handling
 func world_to_grid(world_position: Vector3) -> Vector3i:
 	# Use consistent grid mapping based on actual tile size
+	# For negative coordinates, we need to handle the floor() behavior correctly
 	var grid_x = int(floor(world_position.x))
 	var grid_z = int(floor(world_position.z))
+	
+	# Debug output for troubleshooting
+	if grid_x < 0 or grid_z < 0:
+		print("Converting negative world pos: ", world_position, " to grid pos: ", Vector3i(grid_x, 0, grid_z))
 		
 	return Vector3i(grid_x, 0, grid_z)
 
 # Function to get world position from grid position
 func grid_to_world(grid_position: Vector3i) -> Vector3:
-	# First try the GridMap method
-	return grid_map.map_to_local(grid_position)
+	# Use GridMap's mapping but add more precise centering for visual elements
+	var world_pos = grid_map.map_to_local(grid_position)
+	
+	# Optional debugging for negative coordinates
+	if grid_position.x < 0 or grid_position.z < 0:
+		print("Converting grid pos: ", grid_position, " to world pos: ", world_pos)
+		
+	return world_pos
 
 # Set a tile to a specific type
 func set_tile_type(grid_position: Vector3i, type: int) -> bool:

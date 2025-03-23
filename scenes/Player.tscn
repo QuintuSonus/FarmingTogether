@@ -21,6 +21,7 @@ size = Vector3(1, 2.04773, 1)
 
 [node name="Player" type="CharacterBody3D"]
 script = ExtResource("1_8yfgv")
+move_acceleration = 20.0
 stop_acceleration = 30.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
@@ -56,7 +57,7 @@ transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806
 highlight_height = 0.6
 
 [node name="TileTargetingPoint" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
 
 [connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
 [connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]
