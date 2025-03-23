@@ -20,3 +20,10 @@ mesh = SubResource("BoxMesh_lnlv4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_w4wxe")
+
+[node name="SeedTypeLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+visible = false
+pixel_size = 0.01
+text = "Carrot Seeds"
+outline_size = 2

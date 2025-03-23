@@ -7,6 +7,9 @@ extends Tool
 var plant_scene: PackedScene
 var has_been_used: bool = false
 
+# Reference to mesh for changing appearance
+@onready var mesh_instance = $MeshInstance3D
+
 func _ready():
 	super._ready()  # Call parent's _ready function
 	
@@ -15,7 +18,54 @@ func _ready():
 	if not plant_scene:
 		push_error("SeedBag: Failed to load plant scene from path: " + plant_scene_path)
 	
+	# Update visual appearance based on seed type
+	update_appearance()
+	
 	print("SeedBag initialized for crop type: " + seed_type + " (single-use)")
+
+# Update the visual appearance based on seed type
+func update_appearance():
+	# Make sure we have a mesh to work with
+	if not mesh_instance:
+		print("SeedBag: No mesh instance found!")
+		return
+	
+	# Create a new material
+	var material = StandardMaterial3D.new()
+	
+	# Set color based on seed type
+	match seed_type.to_lower():
+		"carrot":
+			material.albedo_color = Color(1.0, 0.5, 0.0)  # Orange for carrots
+		"tomato":
+			material.albedo_color = Color(0.9, 0.1, 0.1)  # Red for tomatoes
+		_:
+			material.albedo_color = Color(0.8, 0.8, 0.1)  # Yellow default
+	
+	# Apply the material to the mesh
+	mesh_instance.material_override = material
+	
+	# Add/update text label if it exists
+	var label = get_node_or_null("SeedTypeLabel")
+	if label:
+		label.text = seed_type.capitalize() + " Seeds"
+
+# Set seed type and update appearance
+func set_seed_type(new_type: String):
+	seed_type = new_type
+	
+	# Update plant scene path based on seed type
+	match seed_type.to_lower():
+		"carrot":
+			plant_scene_path = "res://scenes/plants/CarrotPlant.tscn"
+		"tomato":
+			plant_scene_path = "res://scenes/plants/TomatoPlant.tscn"
+	
+	# Reload plant scene
+	plant_scene = load(plant_scene_path)
+	
+	# Update appearance
+	update_appearance()
 
 # Override to specify this tool's capabilities
 func get_capabilities() -> int:

@@ -6,7 +6,7 @@
 size = Vector3(0.05, 1.5, 0.05)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_p1khf"]
-size = Vector3(0.05, 1.5, 0.05)
+size = Vector3(0.1, 1.5, 0.1)
 
 [node name="Hoe" type="RigidBody3D"]
 collision_layer = 3

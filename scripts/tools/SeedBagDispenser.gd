@@ -9,6 +9,7 @@ var seed_bag_scene: PackedScene
 
 # Visual properties
 @onready var mesh_instance = $MeshInstance3D
+@onready var label = $Label3D if has_node("Label3D") else null
 
 func _ready():
 	# Add to interactables group for player interaction
@@ -41,6 +42,11 @@ func update_appearance():
 			material.albedo_color = Color(0.8, 0.8, 0.1)  # Yellow default
 			
 	mesh_instance.material_override = material
+	
+	# Update label if it exists
+	if label:
+		label.text = seed_type.capitalize() + " Seeds"
+		label.visible = false  # Make sure it's visible
 
 # Interactable implementation
 func can_interact(actor):
@@ -83,6 +89,9 @@ func interact(actor, _progress = 1.0):
 	
 	# Position it at the dispenser
 	new_seed_bag.global_position = global_position + Vector3(0, 1, 0)
+	
+	# Force visual update after adding to scene
+	new_seed_bag.call_deferred("update_appearance")
 	
 	# Give it to the player directly
 	if actor.has_method("pick_up_tool"):

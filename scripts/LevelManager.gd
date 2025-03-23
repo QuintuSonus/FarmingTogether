@@ -32,17 +32,77 @@ const DELIVERY_MESH_ID = 5
 # Signal for when a tile changes state
 signal tile_changed(position, old_type, new_type)
 
+# Flag to force runtime generation (optional)
+@export var force_runtime_generation: bool = false
+
 func _ready():
 	# Get reference to the GridMap
 	grid_map = $GridMap
 	
-	# Initialize our level
-	initialize_level()
+	# Check if there are already tiles placed in the editor
+	var existing_tiles = grid_map.get_used_cells()
+	
+	if force_runtime_generation or existing_tiles.size() == 0:
+		# No tiles placed in editor or forced generation - initialize with runtime generation
+		print("No editor-placed tiles found or generation forced. Creating default level layout...")
+		initialize_level()
+	else:
+		# Tiles already placed in editor - load them
+		print("Editor-placed tiles found. Loading level from editor...")
+		load_tile_states_from_editor()
 	
 	# Print debug info about tile states
 	print_all_tile_states()
+	print_level_state()
 
-# Set up initial level layout
+# Load tile states from tiles placed in the editor
+func load_tile_states_from_editor():
+	tile_states.clear()  # Clear any existing states
+	
+	# Get all cells that have been placed in the editor
+	var placed_cells = grid_map.get_used_cells()
+	print("Found " + str(placed_cells.size()) + " cells placed in the editor")
+	
+	# First, fill the level bounds with regular ground as a fallback
+	for x in range(level_width):
+		for z in range(level_height):
+			var pos = Vector3i(x, 0, z)
+			if not tile_states.has(pos):
+				tile_states[pos] = TileType.REGULAR_GROUND
+	
+	# Now process all placed cells
+	for cell_pos in placed_cells:
+		var item = grid_map.get_cell_item(cell_pos)
+		var tile_type = get_tile_type_from_mesh_id(item)
+		
+		# Store the tile type in our state dictionary
+		tile_states[cell_pos] = tile_type
+		
+		# Check if cell is within our defined level bounds
+		if cell_pos.x >= level_width or cell_pos.z >= level_height:
+			print("Warning: Tile at ", cell_pos, " is outside defined level bounds!")
+			
+			# Update level dimensions if needed
+			level_width = max(level_width, cell_pos.x + 1)
+			level_height = max(level_height, cell_pos.z + 1)
+			print("Level dimensions adjusted to ", level_width, "x", level_height)
+	
+	print("Level loaded from editor with " + str(tile_states.size()) + " tiles")
+
+# Helper function to convert mesh IDs to tile types
+func get_tile_type_from_mesh_id(mesh_id: int) -> int:
+	match mesh_id:
+		REGULAR_GROUND_MESH_ID: return TileType.REGULAR_GROUND
+		DIRT_GROUND_MESH_ID: return TileType.DIRT_GROUND
+		SOIL_MESH_ID: return TileType.SOIL
+		WATER_MESH_ID: return TileType.WATER
+		MUD_MESH_ID: return TileType.MUD
+		DELIVERY_MESH_ID: return TileType.DELIVERY
+		_: 
+			print("Warning: Unknown mesh ID: ", mesh_id)
+			return TileType.REGULAR_GROUND
+
+# Set up initial level layout (only used if no editor tiles exist or forced)
 func initialize_level():
 	# Clear any existing tiles
 	grid_map.clear()
@@ -82,9 +142,6 @@ func initialize_level():
 	tile_states[Vector3i(10, 0, 4)] = TileType.DELIVERY
 	
 	print("Level initialized with %d tiles" % tile_states.size())
-	
-	# Print a debug view of our level
-	print_level_state()
 
 # Function to change a dirt tile to soil (will be called when using hoe)
 func convert_to_soil(grid_position: Vector3i) -> bool:
