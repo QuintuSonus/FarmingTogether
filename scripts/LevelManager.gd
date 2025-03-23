@@ -386,3 +386,39 @@ func get_tile_type_direct(grid_position: Vector3i) -> int:
 		DELIVERY_MESH_ID: return TileType.DELIVERY
 		-1: return -1  # No tile at this position
 		_: return TileType.REGULAR_GROUND  # Default
+		
+# Add these methods to your existing LevelManager.gd script
+
+# Reset the level for a new run
+func reset_level():
+	# Clear any existing plants
+	remove_all_plants()
+	
+	# Reset all soil tiles back to dirt
+	reset_all_soil_tiles()
+	
+	# Apply saved farm layout (now handled by Main.apply_saved_farm_layout)
+	print("LevelManager: Level reset complete")
+
+# Remove all plants from the level
+func remove_all_plants():
+	# Find and remove all plants
+	var plants = get_tree().get_nodes_in_group("plants")
+	for plant in plants:
+		plant.queue_free()
+	
+	print("LevelManager: Removed " + str(plants.size()) + " plants")
+
+# Reset all soil tiles back to dirt
+func reset_all_soil_tiles():
+	# Find all soil tiles and convert them back to dirt
+	var soil_count = 0
+	
+	for x in range(level_width):
+		for z in range(level_height):
+			var pos = Vector3i(x, 0, z)
+			if is_tile_type(pos, TileType.SOIL):
+				set_tile_type(pos, TileType.DIRT_GROUND)
+				soil_count += 1
+	
+	print("LevelManager: Reset " + str(soil_count) + " soil tiles to dirt")

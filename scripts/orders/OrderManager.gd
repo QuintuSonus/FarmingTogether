@@ -250,3 +250,30 @@ func handle_failed_order(order):
 		emit_signal("order_failed", order)
 		
 		print("Order failed: ", order.display_name, " (", order.order_id, ")")
+		
+func reset_orders():
+	# Clear any existing orders
+	for order in active_orders:
+		if get_signal_connection_list("order_failed").size() > 0:
+			emit_signal("order_failed", order)
+	
+	# Reset order lists
+	active_orders.clear()
+	completed_orders.clear()
+	failed_orders.clear()
+	
+	# Reset score
+	current_score = 0
+	emit_signal("score_changed", current_score)
+	
+	# Reset level timer
+	level_timer = 0.0
+	emit_signal("level_time_updated", level_time_limit)
+	
+	# Reset order ID counter
+	next_order_id = 1
+	
+	# Set initial order timer
+	new_order_timer = initial_order_delay
+	
+	print("OrderManager: Orders reset")
