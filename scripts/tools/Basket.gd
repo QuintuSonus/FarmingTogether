@@ -67,6 +67,22 @@ func clear_crops():
 	contained_crops.clear()
 	update_appearance()
 	
+# Remove specific crop types (for order fulfillment)
+func remove_crops(crop_type: String, amount: int) -> int:
+	if not contained_crops.has(crop_type) or contained_crops[crop_type] < amount:
+		return 0
+		
+	contained_crops[crop_type] -= amount
+	
+	# Remove entry if zero
+	if contained_crops[crop_type] <= 0:
+		contained_crops.erase(crop_type)
+	
+	# Update visual appearance
+	update_appearance()
+	
+	return amount
+	
 func update_appearance():
 	# Update the visual slots
 	update_slots()
@@ -248,18 +264,26 @@ func complete_use(target_position):
 					harvested = true
 					return true
 	
-	# If we didn't harvest anything, try to deliver
+	# If we didn't harvest anything, try to deliver to an order
 	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY):
 		print("Basket: At delivery tile")
 		
-		# Here we would check if the crops match an order
-		# For now, just clear the basket if it has crops
-		if get_total_crops() > 0:
-			print("Basket: Delivering " + str(get_total_crops()) + " crops")
-			clear_crops()
-			return true
+		# Try to find an order manager
+		var order_manager = get_node_or_null("/root/Main/OrderManager")
+		
+		if order_manager and get_total_crops() > 0:
+			# Try to complete an order with our current crops
+			var order_completed = order_manager.try_complete_any_order(self)
+			
+			if order_completed:
+				print("Basket: Successfully delivered order!")
+				return true
+			else:
+				print("Basket: Crops don't match any orders")
+				# Optional: Add a visual feedback that order doesn't match
+				return false
 		else:
-			print("Basket: Nothing to deliver")
+			print("Basket: Nothing to deliver or OrderManager not found")
 	
 	return false
 
