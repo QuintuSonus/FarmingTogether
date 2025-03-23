@@ -107,7 +107,17 @@ func complete_use(target_position: Vector3i) -> bool:
 	plant.crop_type = seed_type
 	plant.global_position = world_pos
 	
+	# EXPLICIT INITIALIZATION - Ensure proper initial state
+	plant.current_stage = Plant.GrowthStage.SEED
+	plant.is_watered = false
+	plant.growth_progress = 0.0
+	plant.spoil_progress = 0.0
+	
 	print("SeedBag: Plant spawned at: ", plant.global_position)
 	
 	get_node("/root/Main").add_child(plant)
+	
+	# Force update appearance after adding to scene
+	plant.call_deferred("update_appearance")
+	
 	return true

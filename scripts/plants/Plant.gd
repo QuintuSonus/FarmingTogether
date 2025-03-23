@@ -27,6 +27,7 @@ var growth_bar_container: Node3D
 var spoil_bar_container: Node3D
 
 # Called when the node enters the scene tree for the first time
+# Plant.gd - Fix for _ready() function
 func _ready():
 	add_to_group("interactables")
 	add_to_group("plants")
@@ -36,8 +37,20 @@ func _ready():
 	# Set up progress bars
 	setup_progress_bars()
 	
+	# EXPLICIT INITIALIZATION - Set initial stage
+	current_stage = GrowthStage.SEED
+	is_watered = false
+	growth_progress = 0.0
+	spoil_progress = 0.0
+	
+	# Update appearance based on initial stage
+	call_deferred("update_appearance")
+	
+	# Update progress bar visibility
+	update_progress_bar_visibility()
+	
 	# Debug output
-	print("Plant initialized: " + crop_type)
+	print("Plant initialized: " + crop_type + ", Stage: " + str(current_stage))
 
 func setup_progress_bars():
 	# Create containers for our progress bars

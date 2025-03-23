@@ -24,6 +24,15 @@ func _ready():
 	if not leaves:
 		push_error("CarrotPlant: Leaves node not found!")
 
+
+func _enter_tree():
+	# Make sure only the appropriate meshes are visible on creation
+	# We'll double-check in case the scene file has incorrect defaults
+	if has_node("SeedMesh") and has_node("GrowingMesh") and has_node("Leaves"):
+		$SeedMesh.visible = true
+		$GrowingMesh.visible = false
+		$Leaves.visible = false
+		
 # Override the update_appearance method to update the visual appearance
 func update_appearance():
 	if not seed_mesh or not growing_mesh or not leaves:
