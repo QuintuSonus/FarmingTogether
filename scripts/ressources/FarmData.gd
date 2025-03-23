@@ -1,4 +1,4 @@
-# scripts/resources/FarmData.gd
+# scripts/ressources/FarmData.gd
 class_name FarmData
 extends Resource
 
@@ -10,6 +10,9 @@ extends Resource
 # Tile data - stores positions and types of special tiles
 # Format: { "x,z": tile_type }
 @export var tile_data: Dictionary = {}
+
+# Store for the initial farm layout (set at game start)
+var initial_farm_layout = {}
 
 # Costs of different tile types
 var tile_prices = {
@@ -199,3 +202,110 @@ func print_all_tiles():
 		print(key, ": Type ", type)
 	
 	print("=====================")
+
+# Save the initial farm layout from the scene
+func save_initial_farm_layout(level_manager):
+	if not level_manager:
+		push_error("FarmData: Cannot save initial farm layout - level manager is null")
+		return false
+		
+	print("FarmData: Saving initial farm layout from Main.tscn")
+	initial_farm_layout.clear()
+	
+	# Get level dimensions
+	var level_width = level_manager.level_width
+	var level_height = level_manager.level_height
+	
+	# Save all non-default tiles (anything that's not REGULAR_GROUND)
+	for x in range(-50, level_width + 50):
+		for z in range(-50, level_height + 50):
+			var pos = Vector3i(x, 0, z)
+			var tile_type = level_manager.get_tile_type(pos)
+			
+			# Only store non-default tiles
+			if tile_type != level_manager.TileType.REGULAR_GROUND:
+				var key = str(x) + "," + str(z)
+				initial_farm_layout[key] = tile_type
+				print("FarmData: Saved initial tile at " + key + " with type " + str(tile_type))
+	
+	print("FarmData: Saved " + str(initial_farm_layout.size()) + " tiles in initial farm layout")
+	
+	# Also save this to disk
+	save()
+	return true
+
+# Reset farm to initial layout
+func reset_to_initial_layout(level_manager):
+	if not level_manager:
+		push_error("FarmData: Cannot reset to initial farm layout - level manager is null")
+		return false
+		
+	if initial_farm_layout.size() == 0:
+		push_error("FarmData: No initial farm layout saved!")
+		return false
+		
+	print("FarmData: Resetting to initial farm layout")
+	
+	# Clear all tiles first (set everything to REGULAR_GROUND)
+	for x in range(-50, 50):
+		for z in range(-50, 50):
+			var pos = Vector3i(x, 0, z)
+			level_manager.set_tile_type(pos, level_manager.TileType.REGULAR_GROUND)
+			
+			# Also clear from our tile_data
+			var key = str(x) + "," + str(z)
+			if tile_data.has(key):
+				tile_data.erase(key)
+	
+	# Now restore initial layout
+	for key in initial_farm_layout:
+		var coords = key.split(",")
+		var x = int(coords[0])
+		var z = int(coords[1])
+		var type = initial_farm_layout[key]
+		
+		# Set the tile in the level
+		var pos = Vector3i(x, 0, z)
+		level_manager.set_tile_type(pos, type)
+		
+		# Also update our tile_data
+		tile_data[key] = type
+	
+	print("FarmData: Reset " + str(initial_farm_layout.size()) + " tiles to initial layout")
+	save()
+	return true
+
+# Reset progression but keep initial farm layout
+func reset_progression():
+	print("FarmData: Resetting all progression data")
+	
+	# Reset currency and stats
+	currency = 1000
+	run_count = 0
+	highest_score = 0
+	
+	# Clear all custom tile data but keep initial layout
+	tile_data.clear()
+	
+	# Reset unlocked items to initial state
+	unlocked_seeds = ["carrot"]
+	unlocked_tools = ["hoe", "watering_can", "basket"]
+	
+	# Reset all statistics
+	stats = {
+		"orders_completed": 0,
+		"crops_harvested": 0,
+		"tiles_tilled": 0,
+		"total_earnings": 0
+	}
+	
+	# Save the reset data
+	save()
+	
+	return true
+
+# Static method to perform a complete reset
+static func reset_all():
+	var farm_data = FarmData.new()
+	farm_data.save()
+	return farm_data

@@ -59,6 +59,8 @@ func _ready():
 	if OS.is_debug_build():
 		add_debug_ui()
 	
+	# NEW: Save the initial farm layout from Main.tscn
+	save_initial_farm_layout()
 	# Apply saved farm layout if it exists
 	apply_saved_farm_layout()
 	
@@ -370,3 +372,83 @@ func _input(event):
 				# Hide gameplay UI
 				hide_gameplay_ui()
 				level_editor.start_editing()
+				
+func reset_progression():
+	print("Main: Resetting all progression")
+	
+	# Load farm data
+	var farm_data = FarmData.load_data()
+	
+	# Reset progression data (currency, stats, etc)
+	farm_data.reset_progression()
+	
+	# Reset level state
+	if level_manager and level_manager.has_method("reset_level"):
+		level_manager.reset_level()
+	
+	# Reset order system
+	if order_manager and order_manager.has_method("reset_orders"):
+		order_manager.reset_orders()
+		
+	# Reset to initial farm layout from Main.tscn
+	farm_data.reset_to_initial_layout(level_manager)
+	
+	# Reset player position
+	var player_nodes = get_tree().get_nodes_in_group("players")
+	for player in player_nodes:
+		if player:
+			player.global_position = Vector3(4, 1, 2)  # Default spawn position
+	
+	# Show gameplay UI
+	show_gameplay_ui()
+	
+	# Start the game
+	start_game()
+	
+	print("Main: Progression reset complete")
+
+# Apply default farm layout (for fresh start)
+func apply_default_farm_layout():
+	if not level_manager:
+		return
+		
+	print("Main: Applying default farm layout")
+	
+	# Clear all tiles to regular ground
+	for x in range(-10, 20):
+		for z in range(-10, 20):
+			var pos = Vector3i(x, 0, z)
+			level_manager.set_tile_type(pos, level_manager.TileType.REGULAR_GROUND)
+	
+	# Add some basic dirt tiles for farming
+	for x in range(2, 6):
+		for z in range(2, 6):
+			var pos = Vector3i(x, 0, z)
+			level_manager.set_tile_type(pos, level_manager.TileType.DIRT_GROUND)
+	
+	# Add water tiles on the right side
+	for z in range(3, 5):
+		var pos = Vector3i(8, 0, z)
+		level_manager.set_tile_type(pos, level_manager.TileType.WATER)
+	
+	# Add a delivery tile
+	level_manager.set_tile_type(Vector3i(10, 0, 4), level_manager.TileType.DELIVERY)
+	
+	print("Main: Default farm layout applied")
+
+func save_initial_farm_layout():
+	if not level_manager:
+		push_error("Main: Cannot save initial farm layout - level manager not found")
+		return
+		
+	# Load farm data
+	var farm_data = FarmData.load_data()
+	
+	# Only save initial layout if it hasn't been saved before
+	# This ensures we don't overwrite with a modified layout during gameplay
+	if farm_data.initial_farm_layout.size() == 0:
+		print("Main: Saving initial farm layout from Main.tscn")
+		farm_data.save_initial_farm_layout(level_manager)
+	else:
+		print("Main: Initial farm layout already saved (" + 
+			  str(farm_data.initial_farm_layout.size()) + " tiles)")

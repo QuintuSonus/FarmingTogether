@@ -600,3 +600,48 @@ func _on_visibility_changed():
 	elif not visible and is_editing:
 		# If becoming hidden while in editing mode, stop editing properly
 		stop_editing()
+
+# Update the reset_farm_progression method in scripts/editor/LevelEditor.gd
+
+# Reset the entire farm progression
+func reset_farm_progression():
+	print("LevelEditor: Resetting all farm progression")
+	
+	# Reset FarmData progression
+	if farm_data:
+		farm_data.reset_progression()
+	else:
+		# Create new farm data if none exists
+		farm_data = FarmData.load_data()
+		farm_data.reset_progression()
+	
+	# Reset to initial farm layout
+	if level_manager:
+		var success = farm_data.reset_to_initial_layout(level_manager)
+		if not success:
+			push_error("LevelEditor: Failed to reset to initial farm layout!")
+	
+	# Update currency display
+	update_currency_display()
+	
+	# Show success message
+	var popup = AcceptDialog.new()
+	popup.title = "Farm Reset"
+	popup.dialog_text = "Farm has been reset to its original layout!"
+	popup.dialog_hide_on_ok = true
+	get_tree().root.add_child(popup)
+	popup.popup_centered()
+
+# Helper method to set tile type that works during reset
+func set_tile_type(grid_position: Vector3i, type: int) -> bool:
+	if not level_manager:
+		return false
+		
+	# Use the LevelManager's method to set the tile
+	var result = level_manager.set_tile_type(grid_position, type)
+	
+	# Also update the farm data directly
+	if farm_data and result:
+		farm_data.set_tile(grid_position.x, grid_position.z, type)
+		
+	return result

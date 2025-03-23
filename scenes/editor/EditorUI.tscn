@@ -105,6 +105,15 @@ layout_mode = 2
 text = "Selected: None"
 horizontal_alignment = 1
 
+[node name="HSeparator2" type="HSeparator" parent="LeftPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ResetProgressionButton" type="Button" parent="LeftPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "Reset All Progression"
+
 [node name="BottomPanel" type="Panel" parent="."]
 layout_mode = 1
 anchors_preset = 12
