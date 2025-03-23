@@ -4,8 +4,10 @@ extends CharacterBody3D
 # Player movement parameters
 @export var normal_speed: float = 4.0
 @export var mud_speed: float = 2.0
-@export var acceleration: float = 8.0
+@export var move_acceleration: float = 8.0
+@export var stop_acceleration: float = 8.0
 @export var rotation_speed: float = 10.0
+@export var controller_deadzone: float = 0.2  # Deadzone for controller input
 
 # Node references
 var level_manager: Node
@@ -54,8 +56,8 @@ func _ready():
 
 # Handle physics updates
 func _physics_process(delta):
-	# Get input direction
-	var input_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	# Get input direction - works with both keyboard and controller
+	var input_dir = get_movement_vector()
 	var direction = Vector3(input_dir.x, 0, input_dir.y).normalized()
 	
 	# Update current grid position
@@ -70,17 +72,25 @@ func _physics_process(delta):
 	
 	# Set velocity based on input
 	if direction:
+		# Apply the magnitude of the joystick to control variable speed
+		var input_strength = input_dir.length()
+		var target_speed = current_speed
+		
+		# If using controller (analog input), apply input strength for variable speed
+		if input_strength < 0.99 and input_strength > controller_deadzone:
+			target_speed = current_speed * input_strength
+		
 		# Gradually accelerate in the input direction
-		velocity.x = move_toward(velocity.x, direction.x * current_speed, acceleration * delta)
-		velocity.z = move_toward(velocity.z, direction.z * current_speed, acceleration * delta)
+		velocity.x = move_toward(velocity.x, direction.x * target_speed, move_acceleration * delta)
+		velocity.z = move_toward(velocity.z, direction.z * target_speed, move_acceleration * delta)
 		
 		# Rotate player to face movement direction
 		var target_rotation = atan2(direction.x, direction.z)
 		rotation.y = lerp_angle(rotation.y, target_rotation, rotation_speed * delta)
 	else:
 		# Gradually slow down to a stop
-		velocity.x = move_toward(velocity.x, 0, acceleration * delta)
-		velocity.z = move_toward(velocity.z, 0, acceleration * delta)
+		velocity.x = move_toward(velocity.x, 0, stop_acceleration * delta)
+		velocity.z = move_toward(velocity.z, 0, stop_acceleration * delta)
 	
 	# Apply movement
 	move_and_slide()
@@ -96,6 +106,16 @@ func _physics_process(delta):
 	# Update tile highlighting
 	if tile_highlighter:
 		update_tile_highlight()
+
+# Get movement vector from input (keyboard or controller)
+func get_movement_vector() -> Vector2:
+	var input_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	
+	# Apply deadzone for controller input to prevent drift
+	if input_dir.length() < controller_deadzone:
+		input_dir = Vector2.ZERO
+		
+	return input_dir
 
 # Update the tool use progress
 func update_tool_use_progress(delta):
@@ -155,14 +175,14 @@ func update_tile_highlight():
 
 # Handle input events
 func _input(event):
-	# Tool pickup/drop (E key)
+	# Tool pickup/drop (E key or X button)
 	if event.is_action_pressed("interact"):
 		if current_tool:
 			drop_tool()
 		else:
 			interaction_manager.start_interaction()
 	
-	# Tool usage (Space key)
+	# Tool usage (Space key or Square button)
 	if event.is_action_pressed("use_tool"):
 		if current_tool and current_tool.has_method("use"):
 			start_tool_use()
@@ -185,7 +205,7 @@ func _on_tool_use_completed(position):
 	else:
 		print("Player: No tool or no complete_use method")
 	
-	 # Reset the tool use state - THIS WAS MISSING
+	 # Reset the tool use state
 	is_tool_use_in_progress = false
 	# Keep tool_use_completed as true since it was actually completed
 	tool_use_position = null
@@ -193,7 +213,6 @@ func _on_tool_use_completed(position):
 
 # Get the current tool being held
 func get_current_tool():
-	
 	return current_tool
 	
 func start_tool_use():
@@ -238,7 +257,7 @@ func start_tool_use():
 			print("Completing instantaneous tool use")
 			current_tool.complete_use(target_pos)
 
-# NEW: Cleaner method to cancel tool use
+# Cleaner method to cancel tool use
 func cancel_tool_use():
 	if is_tool_use_in_progress and not tool_use_completed:
 		if interaction_feedback:
@@ -247,6 +266,7 @@ func cancel_tool_use():
 	is_tool_use_in_progress = false
 	tool_use_completed = false
 	tool_use_position = null
+
 # Update interaction progress callback
 func update_interaction_progress(progress):
 	if interaction_feedback:
@@ -292,9 +312,8 @@ func pick_up_tool(tool_obj):
 	print("Picked up: ", tool_obj.name)
 
 # Drop the current tool
-# Enhanced drop_tool function for Player.gd
 func drop_tool():
-	# VERY SIMPLIFIED DROP LOGIC WITH THOROUGH ERROR CHECKING
+	# Simplified drop logic with error checking
 	if not current_tool:
 		print("No tool to drop")
 		return false
@@ -335,7 +354,7 @@ func drop_tool():
 	
 	# Position in front of player
 	var drop_pos = global_position + global_transform.basis.z * 1.0
-	drop_pos.y = 1.3  # Slightly above ground
+	drop_pos.y = 1.0  # Slightly above ground
 	tool_obj.global_position = drop_pos
 	
 	# Re-enable physics
