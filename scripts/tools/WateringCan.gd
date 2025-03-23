@@ -11,6 +11,9 @@ var current_water: float = 5.0
 func _ready():
 	super._ready()  # Call parent's _ready function
 	
+	# Add to special group for identification
+	add_to_group("watering_can_tools")
+	
 	# Create a water level indicator
 	create_water_indicator()
 	
@@ -18,6 +21,10 @@ func _ready():
 	update_appearance()
 	
 	print("WateringCan initialized with ", current_water, "/", water_capacity, " water")
+
+# Custom method to identify this as a watering can
+func get_tool_type():
+	return "WateringCan"
 
 # Create a visual indicator for water level
 func create_water_indicator():
@@ -51,6 +58,7 @@ func create_water_indicator():
 	update_water_level()
 
 func use(target_position):
+	print("\n===== WATERING CAN USE ATTEMPT =====")
 	print("WateringCan: Use attempted at grid position ", target_position)
 	print("WateringCan: Current water level: ", current_water, "/", water_capacity)
 	
@@ -68,14 +76,14 @@ func use(target_position):
 		return false
 	
 	# DETAILED DEBUG: Print all plants in the scene
-	print("WateringCan: --- Checking all plants in scene ---")
+	print("\nWateringCan: --- Checking all plants in scene ---")
 	var plants_found = 0
 	for obj in get_tree().get_nodes_in_group("interactables"):
 		if obj is Plant:
 			plants_found += 1
 			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
 			var stage_name = ["SEED", "GROWING", "HARVESTABLE", "SPOILED"][obj.current_stage]
-			print("  Plant at ", obj_grid_pos, " - Type: ", obj.crop_type, 
+			print("  Plant at ", obj_grid_pos, " (world: ", obj.global_position, ") - Type: ", obj.crop_type, 
 				", Stage: ", stage_name, ", Watered: ", obj.is_watered)
 	print("WateringCan: Total plants found: ", plants_found)
 	
@@ -83,10 +91,10 @@ func use(target_position):
 	if plants_found == 0:
 		print("WateringCan: WARNING - No plants found in scene!")
 	
-	# Look for plants at the target position
-	var found_plant = false
+	# NEW: Count plants at target position needing water
+	var plants_to_water = []
 	
-	# Try BOTH groups - this is safer
+	# Look for plants at the target position
 	for group_name in ["plants", "interactables"]:
 		for obj in get_tree().get_nodes_in_group(group_name):
 			if obj is Plant:
@@ -95,33 +103,29 @@ func use(target_position):
 					# Check if it's at our target position
 					var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
 					
-					# Check grid position and print detailed info
-					print("WateringCan: Comparing positions - Plant at ", obj_grid_pos, 
-						" (world: ", obj.global_position, ") vs target ", target_position)
-					
 					# Calculate direct grid cell for this position to be sure
 					var obj_direct_grid = Vector3i(
 						int(floor(obj.global_position.x)),
 						0,
 						int(floor(obj.global_position.z))
 					)
-					print("WateringCan: Direct grid pos: ", obj_direct_grid)
 					
 					# Try both grid position checks
-					if obj_grid_pos == target_position or obj_direct_grid == target_position:
-						print("WateringCan: FOUND unwatered plant to water!")
-						found_plant = true
-						return true
+					if (obj_grid_pos == target_position or obj_direct_grid == target_position) and not plants_to_water.has(obj):
+						plants_to_water.append(obj)
 	
-	if !found_plant:
-		print("WateringCan: No valid plant found at position ", target_position)
-		
-	return false
+	if plants_to_water.size() > 0:
+		print("WateringCan: Found " + str(plants_to_water.size()) + " plants to water at position " + str(target_position))
+		return true
+	else:
+		print("WateringCan: No valid plants found at position ", target_position)
+		return false
 
 func complete_use(target_position):
-	var level_manager = get_node("/root/Main/LevelManager")
-	
+	print("\n===== WATERING CAN COMPLETE_USE =====")
 	print("WateringCan: Completing use at grid position ", target_position)
+	
+	var level_manager = get_node("/root/Main/LevelManager")
 	
 	# If on water tile, refill
 	if level_manager.is_tile_type(target_position, level_manager.TileType.WATER):
@@ -141,7 +145,6 @@ func complete_use(target_position):
 		return false
 	
 	# Try to water plants at this position - check BOTH groups
-	var watered_something = false
 	var all_interactables = []
 	
 	# Combine plants from both groups (in case something is only in one)
@@ -152,6 +155,11 @@ func complete_use(target_position):
 	for obj in get_tree().get_nodes_in_group("interactables"):
 		if obj is Plant and not all_interactables.has(obj):
 			all_interactables.append(obj)
+	
+	print("\nWateringCan: Found " + str(all_interactables.size()) + " plants to check for watering")
+	
+	# NEW: Find all plants at target position
+	var plants_to_water = []
 	
 	for obj in all_interactables:
 		if obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
@@ -164,26 +172,44 @@ func complete_use(target_position):
 				int(floor(obj.global_position.z))
 			)
 			
-			print("WateringCan: Checking plant at ", obj_grid_pos, " vs target: ", target_position)
-			print("WateringCan: Direct grid position: ", obj_direct_grid)
-			
 			# Try both position comparisons
-			if obj_grid_pos == target_position or obj_direct_grid == target_position:
-				print("WateringCan: Found plant to water at ", target_position)
-				if obj.water():
-					current_water -= 1
-					print("WateringCan: SUCCESS - Plant watered! Water remaining: ", current_water)
-					
-					# Update appearance
-					update_appearance()
-					
-					watered_something = true
-					return true
+			var position_matches = (obj_grid_pos == target_position or obj_direct_grid == target_position)
+			
+			if position_matches and not plants_to_water.has(obj):
+				plants_to_water.append(obj)
 	
-	if not watered_something:
-		print("WateringCan: Nothing to water at position ", target_position)
+	# NEW: Water all plants at target position
+	if plants_to_water.size() > 0:
+		print("WateringCan: Found " + str(plants_to_water.size()) + " plants to water")
 		
-	return watered_something
+		# NEW: Remove duplicates - keep just one plant
+		if plants_to_water.size() > 1:
+			print("WARNING: Multiple plants at same position - keeping only one")
+			var to_keep = plants_to_water[0]
+			
+			# Remove all others
+			for i in range(1, plants_to_water.size()):
+				print("  Removing duplicate plant " + str(i))
+				plants_to_water[i].queue_free()
+			
+			# Keep only the first plant in our array
+			plants_to_water = [to_keep]
+		
+		# Water the remaining plant
+		print("Watering plant: " + plants_to_water[0].name)
+		if plants_to_water[0].water():
+			current_water -= 1
+			print("SUCCESS - Plant watered! Water remaining: " + str(current_water))
+			
+			# Update appearance
+			update_appearance()
+			return true
+		else:
+			print("ERROR: Plant could not be watered")
+			return false
+	else:
+		print("WateringCan: No plants to water at position " + str(target_position))
+		return false
 
 func get_interaction_type():
 	return Interactable.InteractionType.INSTANTANEOUS
@@ -215,9 +241,6 @@ func update_appearance():
 	
 	# Update water level label
 	update_water_label()
-		
-	# Debug output
-	print("WateringCan: Appearance updated - Water level: ", current_water, "/", water_capacity)
 	
 # Update the water level indicator mesh
 func update_water_level():

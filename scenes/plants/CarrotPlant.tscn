@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://scripts/plants/CarrotPlant.gd" id="1_a4mq8"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_tgj65"]
-top_radius = 1.0
-bottom_radius = 1.0
-height = 1.0
+top_radius = 0.2
+bottom_radius = 0.2
+height = 0.2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfn3b"]
 albedo_color = Color(0.521569, 0.309804, 0.133333, 1)
@@ -13,7 +13,7 @@ albedo_color = Color(0.521569, 0.309804, 0.133333, 1)
 [sub_resource type="CylinderMesh" id="CylinderMesh_jfreh"]
 top_radius = 0.05
 bottom_radius = 0.1
-height = 0.3
+height = 1.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vg4j2"]
 albedo_color = Color(1, 0.541176, 0.121569, 1)
@@ -32,12 +32,10 @@ mesh = SubResource("CylinderMesh_tgj65")
 surface_material_override/0 = SubResource("StandardMaterial3D_wfn3b")
 
 [node name="GrowingMesh" type="MeshInstance3D" parent="."]
-visible = false
 mesh = SubResource("CylinderMesh_jfreh")
 surface_material_override/0 = SubResource("StandardMaterial3D_vg4j2")
 
 [node name="Leaves" type="Node3D" parent="."]
-visible = false
 
 [node name="Leaf1" type="CSGBox3D" parent="Leaves"]
 transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 0.0659428, 0.130478, 0.0380861)

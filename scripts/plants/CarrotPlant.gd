@@ -4,7 +4,8 @@ extends Plant
 @onready var seed_mesh = $SeedMesh
 @onready var growing_mesh = $GrowingMesh
 @onready var leaves = $Leaves
-@onready var water_particles = $WaterParticles
+# Fix: Check if WaterParticles node exists to avoid errors
+@onready var water_particles = $WaterParticles if has_node("WaterParticles") else null
 
 # Override the _ready function to set carrot-specific properties
 func _ready():
@@ -94,11 +95,20 @@ func update_appearance():
 
 # Override the water method to add visual effects
 func water():
+	print("CarrotPlant.water() called - Beginning watering process")
 	var result = super.water()  # Call the parent method
+	print("  Parent water() result: " + str(result))
 	
-	if result and water_particles:
-		water_particles.emitting = true
-		print("CarrotPlant: Watering particles emitted!")
+	if result:
+		print("  Plant was successfully watered!")
+		# Fixed: Check for water_particles before using
+		if water_particles:
+			water_particles.emitting = true
+			print("  Watering particles emitted!")
+		else:
+			print("  Note: WaterParticles node not found - skipping particle effect")
+	else:
+		print("  Plant could not be watered (already watered or wrong stage)")
 	
 	return result
 

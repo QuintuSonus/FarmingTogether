@@ -113,10 +113,7 @@ func get_tile_type(grid_position: Vector3i) -> int:
 	else:
 		print("WARNING: No tile state for position ", grid_position)
 	
-	# Debug output
-	if type != TileType.REGULAR_GROUND:
-		print("get_tile_type at ", grid_position, " = ", type, " (", TileType.keys()[type], ")")
-	
+		
 	return type
 
 # Function to check if a tile is of a specific type
@@ -144,11 +141,6 @@ func world_to_grid(world_position: Vector3) -> Vector3i:
 	
 	# Method 2: GridMap's built-in method
 	var gridmap_result = grid_map.local_to_map(world_position)
-	
-	# Debug output to compare methods
-	print("world_to_grid: ", world_position)
-	print("  Direct method: ", result)
-	print("  GridMap method: ", gridmap_result)
 	
 	# Use the method that actually has a tile state
 	if !tile_states.has(result) and tile_states.has(gridmap_result):

@@ -34,6 +34,8 @@ func _ready():
 	
 	# Get reference to parent (assumed to be the player)
 	actor = get_parent()
+	
+	print("InteractionManager initialized")
 
 func _on_detection_timer_timeout():
 	# Only update potential interactable if not in the middle of an interaction
@@ -59,19 +61,19 @@ func get_best_interactable():
 	
 	# Find all nodes in the "interactables" group
 	for obj in get_tree().get_nodes_in_group("interactables"):
-		# Skip if it's not in our interaction layer
-		if not obj is CollisionObject3D or not obj.get_collision_layer_value(interaction_layer):
+		# Skip if not a collision object (most interactables should be)
+		if not obj is CollisionObject3D:
 			continue
 			
 		var dir_to_obj = (obj.global_position - actor.global_position).normalized()
 		var dot_product = forward_dir.dot(dir_to_obj)
+		var distance = actor.global_position.distance_to(obj.global_position)
 		
 		# Skip if it's behind the player (dot product < 0)
 		if dot_product <= 0:
 			continue
 			
-		var angle = acos(dot_product)
-		var distance = actor.global_position.distance_to(obj.global_position)
+		var angle = acos(clamp(dot_product, -1.0, 1.0))
 		
 		# Check if within range and angle
 		if distance <= max_detection_distance and angle <= interaction_angle_rad:
@@ -109,11 +111,7 @@ func start_interaction(action_name: String = "interact"):
 		
 	var interactable = potential_interactable
 	
-	# Special case for "interact" action: if no interactable and player has tool, drop it
-	if action_name == "interact" and (not interactable) and actor and actor.has_method("drop_tool") and actor.current_tool:
-		print("InteractionManager: No interactable but player has tool, dropping tool")
-		actor.drop_tool()
-		return
+	# NOTE: The direct drop handling is now in Player.gd, so we don't handle it here
 	
 	# Exit if no interactable found
 	if not interactable:
@@ -138,7 +136,7 @@ func start_interaction(action_name: String = "interact"):
 			return
 			
 		# For non-tool interactions, respect their interaction type
-		var interaction_type = interactable.get_interaction_type()
+		var interaction_type = interactable.get_interaction_type() if interactable.has_method("get_interaction_type") else Interactable.InteractionType.INSTANTANEOUS
 		print("InteractionManager: Interaction type: ", interaction_type)
 		
 		if interaction_type == Interactable.InteractionType.INSTANTANEOUS:

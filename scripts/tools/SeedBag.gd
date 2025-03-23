@@ -19,6 +19,18 @@ func use(target_position):
 	
 	# Check if the target position is soil
 	if level_manager.is_tile_type(target_position, level_manager.TileType.SOIL):
+		# NEW: Check for existing plants at this position
+		var existing_plants = 0
+		for obj in get_tree().get_nodes_in_group("plants"):
+			if obj is Plant:
+				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+				if obj_grid_pos == target_position:
+					existing_plants += 1
+		
+		if existing_plants > 0:
+			print("SeedBag: Cannot plant - already " + str(existing_plants) + " plants at this position!")
+			return false
+			
 		return true
 	return false
 	
@@ -41,6 +53,26 @@ func complete_use(target_position):
 	if not plant_scene:
 		print("SeedBag: Cannot plant - plant scene not loaded")
 		return false
+	
+	# NEW: Check for existing plants at this position again (safety check)
+	var existing_plants = []
+	for obj in get_tree().get_nodes_in_group("plants"):
+		if obj is Plant:
+			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+			if obj_grid_pos == target_position:
+				existing_plants.append(obj)
+	
+	if existing_plants.size() > 0:
+		print("SeedBag: ERROR - Already " + str(existing_plants.size()) + " plants at this position!")
+		print("SeedBag: Removing duplicate plants before creating a new one")
+		
+		# Remove all existing plants at this position except the first one
+		for i in range(1, existing_plants.size()):
+			print("Removing duplicate plant: " + str(i))
+			existing_plants[i].queue_free()
+			
+		# Don't create a new plant, just return success
+		return true
 	
 	# DIRECT CALCULATION with CENTERING
 	# Add 0.5 to X and Z to center the plant on the tile

@@ -54,5 +54,7 @@ transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806
 [node name="TileHighlighter" parent="." instance=ExtResource("4_pfgso")]
 highlight_height = 1.0
 
+[node name="TileTargetingPoint" type="Node3D" parent="."]
+
 [connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
 [connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]
