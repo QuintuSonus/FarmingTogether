@@ -31,17 +31,30 @@ func _ready():
 	
 	# Get reference to parent (assumed to be the player)
 	actor = get_parent()
-
+func _process(_delta):
+	# Safety check: Ensure potential_interactable is still valid 
+	if potential_interactable != null and not is_instance_valid(potential_interactable):
+		# The object has been freed, so clear the reference
+		if potential_interactable:
+			potential_interactable = null
+			emit_signal("potential_interactable_changed", null)
+			
+			
 func _on_detection_timer_timeout():
 	# Only update potential interactable if not in interaction
 	if not is_interaction_in_progress:
 		var new_potential = get_best_interactable()
+		
+		# Make sure both the current and new potential interactables are valid
+		if potential_interactable != null and not is_instance_valid(potential_interactable):
+			potential_interactable = null
+		
 		if new_potential != potential_interactable:
-			# Update highlighting
-			if potential_interactable and potential_interactable.has_method("set_highlighted"):
+			# Update highlighting - with null checks
+			if potential_interactable and is_instance_valid(potential_interactable) and potential_interactable.has_method("set_highlighted"):
 				potential_interactable.set_highlighted(false)
 				
-			if new_potential and new_potential.has_method("set_highlighted"):
+			if new_potential and is_instance_valid(new_potential) and new_potential.has_method("set_highlighted"):
 				new_potential.set_highlighted(true)
 				
 			potential_interactable = new_potential

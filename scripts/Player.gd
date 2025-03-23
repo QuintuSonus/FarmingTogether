@@ -184,6 +184,12 @@ func _on_tool_use_completed(position):
 		print("Player: Tool use completion result: ", success)
 	else:
 		print("Player: No tool or no complete_use method")
+	
+	 # Reset the tool use state - THIS WAS MISSING
+	is_tool_use_in_progress = false
+	# Keep tool_use_completed as true since it was actually completed
+	tool_use_position = null
+
 
 # Get the current tool being held
 func get_current_tool():
@@ -286,6 +292,7 @@ func pick_up_tool(tool_obj):
 	print("Picked up: ", tool_obj.name)
 
 # Drop the current tool
+# Enhanced drop_tool function for Player.gd
 func drop_tool():
 	# VERY SIMPLIFIED DROP LOGIC WITH THOROUGH ERROR CHECKING
 	if not current_tool:
@@ -296,6 +303,10 @@ func drop_tool():
 	
 	# Store reference to the tool
 	var tool_obj = current_tool
+	
+	# First, unhighlight the tool if it's currently highlighted
+	if tool_obj.has_method("set_highlighted"):
+		tool_obj.set_highlighted(false)
 	
 	# Clear the tool reference FIRST
 	current_tool = null
@@ -338,6 +349,11 @@ func drop_tool():
 		
 		# Add impulse
 		tool_obj.apply_central_impulse(Vector3(0, 0.5, 0))
+	
+	# Force update of interaction manager to forget about this tool
+	if interaction_manager and interaction_manager.potential_interactable == tool_obj:
+		interaction_manager.potential_interactable = null
+		interaction_manager.emit_signal("potential_interactable_changed", null)
 	
 	print("Tool successfully dropped")
 	return true
