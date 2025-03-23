@@ -52,3 +52,8 @@ script = ExtResource("10_r0qmd")
 follow_viewport_enabled = true
 
 [node name="OrderUI" parent="UILayer" instance=ExtResource("11_e62db")]
+
+[node name="SeedingBag2" parent="." instance=ExtResource("7_rf83w")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.62548, 1.61006, 5.30466)
+seed_type = "tomato"
+plant_scene_path = "res://scenes/plants/TomatoPlant.tscn"

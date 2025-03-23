@@ -34,8 +34,20 @@ signal score_changed(new_score)
 signal level_time_updated(time_remaining)
 
 func _ready():
-	# Start the first order timer
-	new_order_timer = initial_order_delay
+	print("OrderManager initialized")
+	
+	# Start with a shorter initial order delay for testing
+	new_order_timer = 3.0
+	
+	# Force immediate order creation for testing
+	call_deferred("create_test_order")
+	
+	# Debug signal connections
+	await get_tree().process_frame
+	print("OrderManager signals:")
+	print("- order_created has ", get_signal_connection_list("order_created").size(), " connections")
+	print("- order_completed has ", get_signal_connection_list("order_completed").size(), " connections")
+	print("- order_failed has ", get_signal_connection_list("order_failed").size(), " connections")
 
 func _process(delta):
 	# Update level timer
@@ -63,6 +75,24 @@ func _process(delta):
 			create_new_order()
 			# Set new timer for next order
 			new_order_timer = randf_range(new_order_min_delay, new_order_max_delay)
+
+# Create a test order for debugging
+func create_test_order():
+	print("Creating test order after 1 second...")
+	await get_tree().create_timer(1.0).timeout
+	
+	# Create a simple test order
+	var test_crops = {"carrot": 2}
+	var order = Order.new(next_order_id, test_crops, 60.0)
+	next_order_id += 1
+	
+	# Add to active orders
+	active_orders.append(order)
+	
+	# Emit signal
+	emit_signal("order_created", order)
+	
+	print("Test order created: ", order.display_name, " (", order.order_id, ")")
 
 # Create a new order based on current difficulty
 func create_new_order():
@@ -130,16 +160,45 @@ func create_new_order():
 	print("Required crops: ", order.required_crops)
 	print("Time limit: ", order.time_limit, " seconds")
 
-# Check if a basket can fulfill any current order
-func check_basket_for_order_fulfillment(basket) -> Order:
+# Check if a basket EXACTLY matches any current order
+func check_basket_for_exact_order_match(basket) -> Order:
 	if not basket or not basket.has_method("get_crop_count"):
 		return null
 	
+	# Check each active order
 	for order in active_orders:
-		if order.can_fulfill_with_basket(basket):
+		var is_exact_match = true
+		
+		# First check if all required crops are in the basket in exact quantities
+		for crop_type in order.required_crops:
+			var required = order.required_crops[crop_type]
+			var available = basket.get_crop_count(crop_type)
+			
+			if available != required:  # Must be exactly the required amount
+				is_exact_match = false
+				break
+		
+		# Then check if the basket has ANY crops not in the order
+		if is_exact_match:
+			for crop_type in basket.contained_crops.keys():
+				if not order.required_crops.has(crop_type):
+					is_exact_match = false
+					break
+		
+		if is_exact_match:
 			return order
 	
 	return null
+
+# Try to complete any order with exact basket match
+func try_complete_any_order(basket) -> bool:
+	var matching_order = check_basket_for_exact_order_match(basket)
+	
+	if matching_order:
+		return complete_order(matching_order.order_id, basket)
+	
+	# If we get here, no exact match was found
+	return false
 
 # Complete an order
 func complete_order(order_id: int, basket) -> bool:
@@ -156,23 +215,9 @@ func complete_order(order_id: int, basket) -> bool:
 	if matched_order == null:
 		return false
 	
-	# Verify basket contents again
-	if not matched_order.can_fulfill_with_basket(basket):
-		return false
-	
 	# Calculate score
 	var score = matched_order.complete()
 	current_score += score
-	
-	# Remove crops from basket
-	for crop_type in matched_order.required_crops:
-		var amount = matched_order.required_crops[crop_type]
-		# We need to implement this method in the Basket class
-		if basket.has_method("remove_crops"):
-			basket.remove_crops(crop_type, amount)
-		else:
-			# Fallback if remove_crops isn't implemented yet
-			basket.clear_crops()
 	
 	# Move to completed orders
 	completed_orders.append(matched_order)
@@ -199,13 +244,3 @@ func handle_failed_order(order):
 		emit_signal("order_failed", order)
 		
 		print("Order failed: ", order.display_name, " (", order.order_id, ")")
-		
-# Try to complete any order with a basket
-func try_complete_any_order(basket):
-	# Find a matching order
-	var matching_order = check_basket_for_order_fulfillment(basket)
-	
-	if matching_order:
-		return complete_order(matching_order.order_id, basket)
-	
-	return false

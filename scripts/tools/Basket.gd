@@ -8,7 +8,13 @@ var contained_crops = {}  # Dictionary of crop_type: count
 var slots_container: Node3D
 var max_slots = 6  # Maximum number of slots to display
 
-# Color mapping for different crop types
+# References to crop icons (textures)
+var crop_icons = {
+	"carrot": preload("res://assets/textures/crops/carrot_icon.png"),
+	"tomato": preload("res://assets/textures/crops/tomato_icon.png")
+}
+
+# Fallback colors for crops without icons
 var crop_colors = {
 	"carrot": Color(1.0, 0.5, 0.0),  # Orange for carrots
 	"tomato": Color(0.9, 0.1, 0.1)   # Red for tomatoes
@@ -101,6 +107,43 @@ func update_appearance():
 		
 		mesh.material_override = material
 
+# Create a billboard sprite for a crop
+func create_crop_sprite(crop_type: String) -> MeshInstance3D:
+	# Create a quad mesh for the sprite
+	var quad = QuadMesh.new()
+	quad.size = Vector2(0.15, 0.15)  # Size of the icon
+	
+	# Create mesh instance
+	var sprite = MeshInstance3D.new()
+	sprite.mesh = quad
+	
+	# Create material with the crop icon
+	var material = StandardMaterial3D.new()
+	
+	# Check if we have an icon for this crop type
+	if crop_icons.has(crop_type) and crop_icons[crop_type] != null:
+		# Use the icon texture
+		material.albedo_texture = crop_icons[crop_type]
+		material.albedo_color = Color(1, 1, 1, 1)  # White to show texture as is
+	else:
+		# Fallback to color if no icon available
+		material.albedo_color = get_crop_color(crop_type)
+	
+	# Make it double-sided and unshaded for consistent visibility
+	material.cull_mode = StandardMaterial3D.CULL_DISABLED
+	material.shading_mode = StandardMaterial3D.SHADING_MODE_UNSHADED
+	
+	# Make it transparent (in case the texture has transparency)
+	material.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
+	
+	# Enable billboard mode on the MATERIAL (not the mesh)
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	
+	# Apply material
+	sprite.material_override = material
+	
+	return sprite
+
 # Update the slots to show current crop contents
 func update_slots():
 	# Clear existing slots
@@ -118,65 +161,69 @@ func update_slots():
 	var slot_count = displayed_crops.size()
 	
 	# Create slots
-	var slot_size = 0.12
-	var spacing = 0.02
+	var slot_size = 0.15  # Size of each crop icon
+	var spacing = 0.05    # Gap between icons
 	var total_width = slot_count * (slot_size + spacing) - spacing
 	var start_x = -total_width / 2 + slot_size / 2
 	
+	# Create a background panel for the slots
+	if slot_count > 0:
+		var panel = MeshInstance3D.new()
+		panel.name = "SlotsPanel"
+		
+		# Create a slightly larger box for the background
+		var panel_mesh = BoxMesh.new()
+		var panel_width = total_width + 0.1
+		panel_mesh.size = Vector3(panel_width, 0.2, 0.02)
+		panel.mesh = panel_mesh
+		
+		# Create dark semi-transparent material
+		var panel_material = StandardMaterial3D.new()
+		panel_material.albedo_color = Color(0.1, 0.1, 0.1, 0.7)
+		panel_material.transparency = StandardMaterial3D.TRANSPARENCY_ALPHA
+		panel.material_override = panel_material
+		
+		slots_container.add_child(panel)
+	
+	# Add each crop icon
 	for i in range(slot_count):
 		var crop_type = displayed_crops[i]
 		var x_pos = start_x + i * (slot_size + spacing)
 		
-		# Create slot visual
-		var slot = MeshInstance3D.new()
-		slot.name = "Slot" + str(i)
+		# Create crop sprite
+		var crop_sprite = create_crop_sprite(crop_type)
+		crop_sprite.name = "Crop" + str(i)
 		
-		# Use a cube mesh for the slot
-		var cube_mesh = BoxMesh.new()
-		cube_mesh.size = Vector3(slot_size, slot_size, slot_size / 4)
-		slot.mesh = cube_mesh
+		# Position slightly in front of the panel
+		crop_sprite.position = Vector3(x_pos, 0, 0.03)
 		
-		# Position the slot
-		slot.position = Vector3(x_pos, 0, 0)
-		
-		# Create material with crop color
-		var material = StandardMaterial3D.new()
-		material.albedo_color = get_crop_color(crop_type)
-		material.emission_enabled = true
-		material.emission = material.albedo_color * 0.5  # Subtle glow
-		material.metallic = 0.2
-		material.roughness = 0.6
-		slot.material_override = material
-		
-		slots_container.add_child(slot)
+		slots_container.add_child(crop_sprite)
 	
 	# If we have more crops than slots, add an indicator
 	if all_crops.size() > max_slots:
-		var more_indicator = MeshInstance3D.new()
+		var more_indicator = Node3D.new()
 		more_indicator.name = "MoreIndicator"
+		more_indicator.position = Vector3(total_width/2 + slot_size + spacing, 0, 0)
 		
-		# Use three small spheres as "..." indicator
-		var parent = Node3D.new()
-		parent.position = Vector3(total_width/2 + slot_size/2 + spacing, 0, 0)
-		
+		# Create three dots for "..." indicator
 		for j in range(3):
 			var dot = MeshInstance3D.new()
 			var sphere = SphereMesh.new()
-			sphere.radius = slot_size / 8
-			sphere.height = slot_size / 4
+			sphere.radius = 0.025
+			sphere.height = 0.05
 			dot.mesh = sphere
 			
 			# Position dots horizontally
-			dot.position = Vector3(j * (slot_size/6), 0, 0)
+			dot.position = Vector3(j * 0.05, 0, 0.03)
 			
 			# White material
 			var dot_material = StandardMaterial3D.new()
 			dot_material.albedo_color = Color(1, 1, 1)
 			dot.material_override = dot_material
 			
-			parent.add_child(dot)
+			more_indicator.add_child(dot)
 		
-		slots_container.add_child(parent)
+		slots_container.add_child(more_indicator)
 
 # Get a color for a crop type
 func get_crop_color(crop_type: String) -> Color:
@@ -191,6 +238,25 @@ func get_crop_color(crop_type: String) -> Color:
 	# Create a bright, saturated color
 	var hue = abs(hash_val) % 360 / 360.0
 	return Color.from_hsv(hue, 0.8, 0.9)
+
+# Helper function to get a text summary of current crops
+func get_crops_summary() -> String:
+	var summary = ""
+	var crop_types = contained_crops.keys()
+	
+	for i in range(crop_types.size()):
+		var crop_type = crop_types[i]
+		var count = contained_crops[crop_type]
+		
+		summary += str(count) + " " + crop_type
+		
+		# Add comma or "and" for readability
+		if i < crop_types.size() - 2:
+			summary += ", "
+		elif i == crop_types.size() - 2:
+			summary += " and "
+	
+	return summary
 
 func use(target_position):
 	print("Basket.use() called at position: " + str(target_position))
@@ -264,26 +330,41 @@ func complete_use(target_position):
 					harvested = true
 					return true
 	
-	# If we didn't harvest anything, try to deliver to an order
+	# If we didn't harvest anything, try to deliver
 	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY):
 		print("Basket: At delivery tile")
 		
-		# Try to find an order manager
-		var order_manager = get_node_or_null("/root/Main/OrderManager")
-		
-		if order_manager and get_total_crops() > 0:
-			# Try to complete an order with our current crops
-			var order_completed = order_manager.try_complete_any_order(self)
+		# Only proceed if we have crops to deliver
+		if get_total_crops() > 0:
+			# Try to find an order manager
+			var order_manager = get_node_or_null("/root/Main/OrderManager")
 			
-			if order_completed:
-				print("Basket: Successfully delivered order!")
-				return true
+			if order_manager:
+				# Try to complete any exact matching order
+				var order_completed = order_manager.try_complete_any_order(self)
+				
+				if order_completed:
+					print("Basket: Successfully delivered order!")
+					# Basket was emptied by order manager
+					return true
+				else:
+					# No exact matching order found, crops are lost
+					print("Basket: No matching order - crops lost!")
+					
+					# Provide feedback to the player that crops were lost
+					# You could add a visual effect or sound here
+					var crops_summary = get_crops_summary()
+					print("Basket: Lost " + crops_summary)
+					
+					# Clear all crops without scoring
+					clear_crops()
+					return true
 			else:
-				print("Basket: Crops don't match any orders")
-				# Optional: Add a visual feedback that order doesn't match
-				return false
+				print("Basket: OrderManager not found - crops lost anyway")
+				clear_crops()
+				return true
 		else:
-			print("Basket: Nothing to deliver or OrderManager not found")
+			print("Basket: Nothing to deliver")
 	
 	return false
 
