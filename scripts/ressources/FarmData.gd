@@ -11,6 +11,10 @@ extends Resource
 # Format: { "x,z": tile_type }
 @export var tile_data: Dictionary = {}
 
+# NEW: Tool placement data - stores positions and types of placed tools
+# Format: { "x,z": tool_type }
+@export var tool_placement: Dictionary = {}
+
 # Store for the initial farm layout (set at game start)
 var initial_farm_layout = {}
 
@@ -22,6 +26,15 @@ var tile_prices = {
 	"water": 250,
 	"mud": 150,
 	"delivery": 300
+}
+
+# NEW: Costs of different tool types
+var tool_prices = {
+	"hoe": 150,
+	"watering_can": 200,
+	"basket": 250,
+	"carrot_seeds": 100,
+	"tomato_seeds": 150
 }
 
 # Unlocked items
@@ -68,6 +81,58 @@ func get_tile(x: int, z: int, default_type: int = 0) -> int:
 	if tile_data.has(key):
 		return tile_data[key]
 	return default_type
+
+# NEW: Place a tool at a specific position
+func place_tool(x: int, z: int, tool_type: String) -> bool:
+	var key = str(x) + "," + str(z)
+	
+	# Check if there's already a tool at this position
+	if tool_placement.has(key):
+		return false
+	
+	# Place the tool
+	tool_placement[key] = tool_type
+	print("FarmData: Placed tool ", tool_type, " at ", x, ",", z)
+	return true
+
+# NEW: Remove a tool from a specific position
+func remove_tool(x: int, z: int) -> bool:
+	var key = str(x) + "," + str(z)
+	
+	if tool_placement.has(key):
+		var tool_type = tool_placement[key]
+		tool_placement.erase(key)
+		print("FarmData: Removed tool ", tool_type, " from ", x, ",", z)
+		return true
+	
+	return false
+
+# NEW: Get tool at a specific position
+func get_tool_at(x: int, z: int) -> String:
+	var key = str(x) + "," + str(z)
+	if tool_placement.has(key):
+		return tool_placement[key]
+	return ""
+
+# NEW: Get the cost of a specific tool
+func get_tool_cost(tool_type: String) -> int:
+	if tool_prices.has(tool_type):
+		return tool_prices[tool_type]
+	return 0
+
+# NEW: Try to purchase a tool
+func try_purchase_tool(tool_type: String) -> bool:
+	var cost = get_tool_cost(tool_type)
+	if cost <= currency:
+		currency -= cost
+		
+		# Update statistics
+		if not stats.has("money_spent_on_tools"):
+			stats["money_spent_on_tools"] = 0
+		stats["money_spent_on_tools"] += cost
+		
+		return true
+	return false
 
 # Get the cost of converting to a specific tile type
 func get_tile_cost(type_name: String) -> int:
@@ -153,6 +218,10 @@ func get_delivery_tiles() -> Array:
 	
 	return delivery_tiles
 
+# NEW: Get all placed tools
+func get_all_placed_tools() -> Dictionary:
+	return tool_placement.duplicate()
+
 # Update statistics
 func add_stat(stat_name: String, value: int = 1):
 	if stats.has(stat_name):
@@ -177,7 +246,16 @@ func save(path: String = "user://farm_data.tres"):
 		return false
 
 # Static method to load farm data
-static func load_data(path: String = "user://farm_data.tres") -> FarmData:
+static func load_data(force_new: bool = false) -> FarmData:
+	var path = "user://farm_data.tres"
+	
+	# Check if we should create new data regardless of whether a save exists
+	if force_new:
+		print("FarmData: Force new requested - Creating new farm data instead of loading")
+		var new_data = FarmData.new()
+		return new_data
+	
+	# Normal load path - check if save file exists
 	if ResourceLoader.exists(path):
 		var data = ResourceLoader.load(path)
 		if data is FarmData:
@@ -185,7 +263,7 @@ static func load_data(path: String = "user://farm_data.tres") -> FarmData:
 			return data
 			
 	# Create new data if none exists
-	print("FarmData: Creating new farm data")
+	print("FarmData: No save file found - Creating new farm data")
 	var new_data = FarmData.new()
 	return new_data
 
@@ -202,6 +280,20 @@ func print_all_tiles():
 		print(key, ": Type ", type)
 	
 	print("=====================")
+
+# Debug method to print all placed tools
+func print_all_tools():
+	print("=== FARM DATA TOOLS ===")
+	print("Total tools placed: ", tool_placement.size())
+	
+	var sorted_keys = tool_placement.keys()
+	sorted_keys.sort()
+	
+	for key in sorted_keys:
+		var tool_type = tool_placement[key]
+		print(key, ": Tool ", tool_type)
+	
+	print("======================")
 
 # Save the initial farm layout from the scene
 func save_initial_farm_layout(level_manager):
@@ -286,6 +378,9 @@ func reset_progression():
 	
 	# Clear all custom tile data but keep initial layout
 	tile_data.clear()
+	
+	# NEW: Clear all tool placements
+	tool_placement.clear()
 	
 	# Reset unlocked items to initial state
 	unlocked_seeds = ["carrot"]

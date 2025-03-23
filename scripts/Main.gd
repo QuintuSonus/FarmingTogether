@@ -11,6 +11,9 @@ extends Node3D
 @export var camera_min_distance: float = 8.0  # Minimum distance for zoom
 @export var camera_padding: float = 5.0  # Extra space around players
 
+@export var always_reset_on_startup: bool = true
+
+
 # Game state
 var game_running: bool = false
 var current_level: int = 1
@@ -28,7 +31,21 @@ var order_manager: Node = null
 var player_manager: Node = null
 var ui_layer: CanvasLayer = null
 
+var tool_scenes = {
+	"hoe": "res://scenes/tools/Hoe.tscn",
+	"watering_can": "res://scenes/tools/WateringCan.tscn",
+	"basket": "res://scenes/tools/Basket.tscn",
+	"carrot_seeds": "res://scenes/tools/CarrotSeedDispenser.tscn",
+	"tomato_seeds": "res://scenes/tools/TomatoSeedDispenser.tscn"
+}
+
+
 func _ready():
+	
+	 # Reset game data if development flag is set
+	if always_reset_on_startup and OS.is_debug_build():
+		print("DEVELOPMENT MODE: Resetting all game data on startup")
+		reset_all_game_data()
 	# Initialize references to main nodes
 	level_manager = $LevelManager
 	order_manager = $OrderManager if has_node("OrderManager") else null
@@ -211,16 +228,26 @@ func start_game():
 	if main_camera:
 		main_camera.current = true
 	
+	# In development mode, use the scene exactly as-is
+	if not (always_reset_on_startup and OS.is_debug_build()):
+		# Only apply saved farm layout in normal (non-development) mode
+		apply_saved_farm_layout()
+	
 	# Start order generation
 	if order_manager:
-		# This would normally be more complex, but for now,
-		# just make sure it's properly initialized
 		print("Main: Starting order manager")
 	
 	print("Main: Game started")
 
 # Apply saved farm layout from farm data
 func apply_saved_farm_layout():
+	# In development mode, just use the scene as-is
+	if always_reset_on_startup and OS.is_debug_build():
+		print("Main: Development mode - Using scene's layout directly (no changes)")
+		# No need to modify anything - the scene is already set up in the editor
+		return
+	
+	# Only apply saved farm layout in non-development mode
 	if not level_manager:
 		return
 		
@@ -236,7 +263,27 @@ func apply_saved_farm_layout():
 		var pos = Vector3i(x, 0, z)
 		level_manager.set_tile_type(pos, type)
 	
+	# Now spawn all the saved tools
+	spawn_saved_tools()
+	
 	print("Main: Applied saved farm layout with " + str(farm_data.tile_data.size()) + " custom tiles")
+
+# Add a default tool spawning method
+func spawn_default_tools():
+	# Clear any existing tools
+	remove_player_tools()
+	
+	# Spawn default tools at strategic positions
+	# Modify these positions based on your scene layout
+	spawn_tool(Vector3i(4, 0, 4), "hoe")
+	spawn_tool(Vector3i(5, 0, 4), "basket") 
+	spawn_tool(Vector3i(6, 0, 4), "watering_can")
+	
+	# You can add seed dispensers too
+	spawn_tool(Vector3i(-2, 0, 2), "carrot_seeds")
+	spawn_tool(Vector3i(-2, 0, 4), "tomato_seeds")
+	
+	print("Main: Spawned default tools")
 
 # Function to show the editor when level is completed
 func on_level_completed(score: int, currency_earned: int):
@@ -340,7 +387,7 @@ func _on_editor_closed():
 	# Reset camera to game view if needed
 	if main_camera:
 		main_camera.current = true
-	
+	spawn_saved_tools()
 	# Show gameplay UI
 	show_gameplay_ui()
 	
@@ -349,9 +396,10 @@ func _on_editor_closed():
 
 func _on_editor_saved():
 	print("Main: Editor changes saved")
-
+	spawn_saved_tools()
 func _on_editor_canceled():
 	print("Main: Editor changes canceled")
+	spawn_saved_tools()
 
 # Signal handlers for game events
 func _on_level_time_updated(time_remaining):
@@ -452,3 +500,124 @@ func save_initial_farm_layout():
 	else:
 		print("Main: Initial farm layout already saved (" + 
 			  str(farm_data.initial_farm_layout.size()) + " tiles)")
+
+func spawn_saved_tools():
+	# Clear any existing player-placed tools first
+	remove_player_tools()
+	
+	# Get all placed tools from farm data
+	var farm_data = FarmData.load_data()
+	var tool_placement = farm_data.get_all_placed_tools()
+	
+	# Spawn each tool
+	for key in tool_placement:
+		var coords = key.split(",")
+		var x = int(coords[0])
+		var z = int(coords[1])
+		var tool_type = tool_placement[key]
+		
+		# Spawn the tool
+		spawn_tool(Vector3i(x, 0, z), tool_type)
+	
+	print("Main: Spawned " + str(tool_placement.size()) + " saved tools")
+
+# Remove all player-placed tools
+func remove_player_tools():
+	var player_tools = get_tree().get_nodes_in_group("player_tools")
+	for tool_node in player_tools:
+		tool_node.queue_free()
+	
+	print("Main: Removed " + str(player_tools.size()) + " player tools")
+
+# Spawn a tool in the world
+func spawn_tool(grid_pos: Vector3i, tool_type: String):
+	# Get the scene path for this tool type
+	if not tool_scenes.has(tool_type):
+		push_error("Main: No scene path for tool type: " + tool_type)
+		return
+	
+	var scene_path = tool_scenes[tool_type]
+	var tool_scene = load(scene_path)
+	
+	if not tool_scene:
+		push_error("Main: Failed to load tool scene: " + scene_path)
+		return
+	
+	# Create the tool instance
+	var tool_instance = tool_scene.instantiate()
+	
+	# Give it a unique name based on position
+	var tool_key = "player_tool_" + str(grid_pos.x) + "_" + str(grid_pos.z)
+	tool_instance.name = tool_key
+	
+	# Add to the scene
+	add_child(tool_instance)
+	
+	# Position the tool at the grid position
+	var world_pos = Vector3(grid_pos.x + 0.5, 0.75, grid_pos.z + 0.5)  # Center on tile and elevate
+	tool_instance.global_position = world_pos
+	
+	# Add to group for easy cleanup
+	tool_instance.add_to_group("player_tools")
+	
+	print("Main: Spawned " + tool_type + " at " + str(world_pos))
+	
+	# Add this new method to completely reset the game
+func reset_all_game_data():
+	# Create a new farm data with default values and save it
+	var farm_data = FarmData.new()
+	farm_data.save()
+	
+	# Apply the default farm layout
+	apply_default_farm_layout()
+	
+	print("Main: Game data has been completely reset")
+
+# Add this simplified reset method
+func reset_progression_only():
+	# Create a new farm data with default values but don't save it yet
+	var farm_data = FarmData.new()
+	
+	# Save the current level layout if needed
+	if level_manager and OS.is_debug_build():
+		# Only save the layout the first time
+		var existing_data = FarmData.load_data(false)
+		if existing_data.initial_farm_layout.size() == 0:
+			print("Main: Saving initial farm layout from editor scene")
+			# Save current level layout from gridmap into farm_data
+			save_gridmap_to_farmdata(farm_data)
+			# Store this as the initial layout too
+			farm_data.initial_farm_layout = farm_data.tile_data.duplicate()
+		else:
+			# Use existing tile data to preserve layout
+			farm_data.tile_data = existing_data.tile_data.duplicate()
+			farm_data.initial_farm_layout = existing_data.initial_farm_layout.duplicate()
+			# Don't interfere with manually placed tools either
+			farm_data.tool_placement = existing_data.tool_placement.duplicate()
+	
+	# Save the farm data to disk
+	farm_data.save()
+	
+	print("Main: Game progression reset while preserving scene layout")
+	
+# Helper method to save current GridMap to FarmData
+func save_gridmap_to_farmdata(farm_data):
+	if not level_manager or not level_manager.has_node("GridMap"):
+		return
+		
+	var grid_map = level_manager.get_node("GridMap")
+	var cells = grid_map.get_used_cells()
+	
+	# Clear existing tile data
+	farm_data.tile_data.clear()
+	
+	# Convert each placed cell to tile data
+	for cell_pos in cells:
+		var item = grid_map.get_cell_item(cell_pos)
+		var tile_type = level_manager.get_tile_type_from_mesh_id(item)
+		
+		# Only save non-default tiles
+		if tile_type != 0:  # Not REGULAR_GROUND
+			farm_data.set_tile(cell_pos.x, cell_pos.z, tile_type)
+	
+	print("Main: Saved " + str(farm_data.tile_data.size()) + " tiles from GridMap to FarmData")

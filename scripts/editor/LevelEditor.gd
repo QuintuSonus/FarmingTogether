@@ -12,9 +12,20 @@ var editor_camera: Camera3D = null
 
 # Editor state
 var selected_tile_type: String = "none"
+var selected_tool_type: String = "none"
 var is_editing: bool = false
+var is_placing_tool: bool = false
 var original_tile_states: Dictionary = {}
 var farm_bounds: Rect2 = Rect2(-8, -8, 20, 20)  # Expanded bounds to include negative coordinates
+
+# Tool scene references
+var tool_scenes = {
+	"hoe": "res://scenes/tools/Hoe.tscn",
+	"watering_can": "res://scenes/tools/WateringCan.tscn",
+	"basket": "res://scenes/tools/Basket.tscn",
+	"carrot_seeds": "res://scenes/tools/CarrotSeedDispenser.tscn",
+	"tomato_seeds": "res://scenes/tools/TomatoSeedDispenser.tscn"
+}
 
 # Game state management
 var gameplay_nodes = []
@@ -199,6 +210,9 @@ func start_editing():
 	# Set editor as active
 	is_editing = true
 	
+	# Spawn existing tools from farm data
+	spawn_saved_tools()
+	
 	print("LevelEditor: Started editing mode with UI visible")
 
 # Called when editor is deactivated
@@ -219,6 +233,9 @@ func stop_editing():
 		editor_camera.current = false
 	if main_camera and main_camera.has_method("make_current"):
 		main_camera.make_current()
+	
+	# Remove all editor-placed tools
+	remove_editor_tools()
 	
 	# Set editor as inactive
 	is_editing = false
@@ -357,9 +374,9 @@ func save_original_state():
 # Update the currency display
 func update_currency_display():
 	if editor_ui:
-		var currency_label = editor_ui.find_child("CurrencyLabel")
-		if currency_label:
-			currency_label.text = "Currency: " + str(farm_data.currency)
+		# Update currency label
+		if editor_ui.has_method("update_currency"):
+			editor_ui.update_currency(farm_data.currency)
 		
 		# Also update button states based on affordability
 		if editor_ui.has_method("update_button_states"):
@@ -401,14 +418,38 @@ func setup_highlight_mesh():
 # Select a tile type
 func select_tile_type(type_name: String):
 	selected_tile_type = type_name
+	selected_tool_type = "none"
+	is_placing_tool = false
 	
 	# Update UI
 	if editor_ui:
-		var label = editor_ui.find_child("SelectedTileLabel")
-		if label:
-			label.text = "Selected: " + type_name.capitalize()
+		# Update the tile label
+		if editor_ui.has_method("update_selected_tile"):
+			editor_ui.update_selected_tile(type_name)
+		
+		# Also update the tool label if it exists
+		if editor_ui.has_method("update_selected_tool"):
+			editor_ui.update_selected_tool("None")
 	
 	print("LevelEditor: Selected tile type: " + type_name)
+
+# Select a tool type for placement
+func select_tool_type(tool_type: String):
+	selected_tool_type = tool_type
+	selected_tile_type = "none"
+	is_placing_tool = true
+	
+	# Update UI
+	if editor_ui:
+		# Update the tool label
+		if editor_ui.has_method("update_selected_tool"):
+			editor_ui.update_selected_tool(tool_type)
+		
+		# Also update the tile label if it exists
+		if editor_ui.has_method("update_selected_tile"):
+			editor_ui.update_selected_tile("None")
+	
+	print("LevelEditor: Selected tool type: " + tool_type)
 
 # Check if a tile can be placed
 func can_place_tile(grid_pos: Vector3i, type_name: String) -> bool:
@@ -464,12 +505,135 @@ func place_tile(grid_pos: Vector3i, type_name: String) -> bool:
 	
 	return false
 
-# Process input for tile placement
+# Check if a tool can be placed at a specific position
+func can_place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
+	# Don't place if removing tools
+	if tool_type == "remove_tool":
+		return farm_data.get_tool_at(grid_pos.x, grid_pos.z) != ""
+	
+	# Check if position already has a tool
+	if farm_data.get_tool_at(grid_pos.x, grid_pos.z) != "":
+		return false
+	
+	# Check if player can afford it
+	var cost = farm_data.get_tool_cost(tool_type)
+	return farm_data.currency >= cost
+
+# Place a tool at the given position
+func place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
+	if tool_type == "remove_tool":
+		return remove_tool_at(grid_pos)
+	
+	# Check if position already has a tool
+	if farm_data.get_tool_at(grid_pos.x, grid_pos.z) != "":
+		print("LevelEditor: Position already has a tool")
+		return false
+	
+	# Try to purchase the tool
+	if not farm_data.try_purchase_tool(tool_type):
+		print("LevelEditor: Can't afford tool of type " + tool_type)
+		return false
+	
+	# Place the tool in farm data
+	if farm_data.place_tool(grid_pos.x, grid_pos.z, tool_type):
+		# Spawn the actual tool object
+		spawn_tool(grid_pos, tool_type)
+		
+		# Update UI
+		update_currency_display()
+		
+		print("LevelEditor: Placed " + tool_type + " at " + str(grid_pos))
+		return true
+	
+	return false
+
+# Remove a tool at the given position
+func remove_tool_at(grid_pos: Vector3i) -> bool:
+	# Check if there's a tool at this position
+	var tool_type = farm_data.get_tool_at(grid_pos.x, grid_pos.z)
+	if tool_type == "":
+		return false
+	
+	# Remove from farm data
+	if farm_data.remove_tool(grid_pos.x, grid_pos.z):
+		# Find and remove the tool object
+		var tool_key = "editor_tool_" + str(grid_pos.x) + "_" + str(grid_pos.z)
+		var tool_node = get_node_or_null(tool_key)
+		if tool_node:
+			tool_node.queue_free()
+		
+		print("LevelEditor: Removed " + tool_type + " from " + str(grid_pos))
+		return true
+	
+	return false
+
+# Spawn a tool in the world
+func spawn_tool(grid_pos: Vector3i, tool_type: String):
+	# Get the scene path for this tool type
+	if not tool_scenes.has(tool_type):
+		push_error("LevelEditor: No scene path for tool type: " + tool_type)
+		return
+	
+	var scene_path = tool_scenes[tool_type]
+	var tool_scene = load(scene_path)
+	
+	if not tool_scene:
+		push_error("LevelEditor: Failed to load tool scene: " + scene_path)
+		return
+	
+	# Create the tool instance
+	var tool_instance = tool_scene.instantiate()
+	
+	# Give it a unique name based on position
+	var tool_key = "editor_tool_" + str(grid_pos.x) + "_" + str(grid_pos.z)
+	tool_instance.name = tool_key
+	
+	# Add to the scene
+	add_child(tool_instance)
+	
+	# Position the tool at the grid position
+	var world_pos = Vector3(grid_pos.x + 0.5, 0.75, grid_pos.z + 0.5)  # Center on tile and elevate
+	tool_instance.global_position = world_pos
+	
+	# Add to group for easy cleanup
+	tool_instance.add_to_group("editor_tools")
+	
+	print("LevelEditor: Spawned " + tool_type + " at " + str(world_pos))
+
+# Spawn all tools saved in farm data
+func spawn_saved_tools():
+	# Clear any existing editor tools first
+	remove_editor_tools()
+	
+	# Get all placed tools from farm data
+	var tool_placement = farm_data.get_all_placed_tools()
+	
+	# Spawn each tool
+	for key in tool_placement:
+		var coords = key.split(",")
+		var x = int(coords[0])
+		var z = int(coords[1])
+		var tool_type = tool_placement[key]
+		
+		# Spawn the tool
+		spawn_tool(Vector3i(x, 0, z), tool_type)
+	
+	print("LevelEditor: Spawned " + str(tool_placement.size()) + " saved tools")
+
+# Remove all editor-placed tools
+func remove_editor_tools():
+	var editor_tools = get_tree().get_nodes_in_group("editor_tools")
+	for tool_node in editor_tools:
+		tool_node.queue_free()
+	
+	print("LevelEditor: Removed " + str(editor_tools.size()) + " editor tools")
+
+# Process input for tile/tool placement
 func _input(event):
 	if not is_editing or not visible:
 		return
 	
-	# Handle mouse input for tile placement
+	# Handle mouse input for tile/tool placement
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var mouse_pos = get_viewport().get_mouse_position()
 		var from = editor_camera.project_ray_origin(mouse_pos)
@@ -488,20 +652,32 @@ func _input(event):
 			
 			# Check if in farm bounds - this now handles negative coordinates
 			if is_position_in_bounds(grid_pos):
-				# Place selected tile type
-				if selected_tile_type != "none":
-					place_tile(grid_pos, selected_tile_type)
+				if is_placing_tool:
+					# Place selected tool type
+					if selected_tool_type != "none":
+						place_tool(grid_pos, selected_tool_type)
+				else:
+					# Place selected tile type
+					if selected_tile_type != "none":
+						place_tile(grid_pos, selected_tile_type)
 			else:
 				print("LevelEditor: Position " + str(grid_pos) + " is outside farm bounds: " + str(farm_bounds))
 	
-	# Update tile highlighter on mouse movement
+	# Update highlights on mouse movement
 	if event is InputEventMouseMotion:
-		update_tile_highlight()
+		update_highlights()
 
 # Helper method to check if a position is within farm bounds
 func is_position_in_bounds(grid_pos: Vector3i) -> bool:
 	return grid_pos.x >= farm_bounds.position.x and grid_pos.x < farm_bounds.position.x + farm_bounds.size.x and \
 		   grid_pos.z >= farm_bounds.position.y and grid_pos.z < farm_bounds.position.y + farm_bounds.size.y
+
+# Update highlighters based on selected mode (tile or tool)
+func update_highlights():
+	if is_placing_tool:
+		update_tool_highlight()
+	else:
+		update_tile_highlight()
 
 # Update the tile highlighter
 func update_tile_highlight():
@@ -537,6 +713,56 @@ func update_tile_highlight():
 			var material = highlight_mesh.material_override
 			if material:
 				if selected_tile_type != "none" and can_place_tile(grid_pos, selected_tile_type):
+					material.albedo_color = Color(0, 1, 0, 0.5)  # Green = can place
+				else:
+					material.albedo_color = Color(1, 0, 0, 0.5)  # Red = can't place
+			
+			return
+	
+	# Hide highlighter if no valid tile
+	tile_highlighter.visible = false
+
+# Update the tool placement highlighter
+func update_tool_highlight():
+	if not tile_highlighter or not highlight_mesh or not editor_camera or not level_manager:
+		return
+	
+	var mouse_pos = get_viewport().get_mouse_position()
+	var from = editor_camera.project_ray_origin(mouse_pos)
+	var to = from + editor_camera.project_ray_normal(mouse_pos) * 100
+	
+	# Raycast to find intersected tile
+	var space_state = get_viewport().get_world_3d().direct_space_state
+	var query = PhysicsRayQueryParameters3D.create(from, to)
+	query.collide_with_areas = true
+	query.collide_with_bodies = true
+	var result = space_state.intersect_ray(query)
+	
+	if result and result.has("position"):
+		var pos = result.position
+		var grid_pos = level_manager.world_to_grid(pos)
+		
+		# Check if in farm bounds
+		if is_position_in_bounds(grid_pos):
+			# Position highlighter
+			var world_pos = level_manager.grid_to_world(grid_pos)
+			world_pos.y = 0.3  # Slightly above the ground
+			tile_highlighter.global_position = world_pos
+			
+			# Show highlighter
+			tile_highlighter.visible = true
+			
+			# Change color based on can place
+			var material = highlight_mesh.material_override
+			if material:
+				# Special case for remove tool
+				if selected_tool_type == "remove_tool":
+					var has_tool = farm_data.get_tool_at(grid_pos.x, grid_pos.z) != ""
+					if has_tool:
+						material.albedo_color = Color(1, 0.5, 0, 0.5)  # Orange = can remove
+					else:
+						material.albedo_color = Color(0.5, 0.5, 0.5, 0.3)  # Gray = nothing to remove
+				elif selected_tool_type != "none" and can_place_tool(grid_pos, selected_tool_type):
 					material.albedo_color = Color(0, 1, 0, 0.5)  # Green = can place
 				else:
 					material.albedo_color = Color(1, 0, 0, 0.5)  # Red = can't place
@@ -601,9 +827,7 @@ func _on_visibility_changed():
 		# If becoming hidden while in editing mode, stop editing properly
 		stop_editing()
 
-# Update the reset_farm_progression method in scripts/editor/LevelEditor.gd
-
-# Reset the entire farm progression
+# Reset the farm progression
 func reset_farm_progression():
 	print("LevelEditor: Resetting all farm progression")
 	
@@ -620,6 +844,9 @@ func reset_farm_progression():
 		var success = farm_data.reset_to_initial_layout(level_manager)
 		if not success:
 			push_error("LevelEditor: Failed to reset to initial farm layout!")
+	
+	# Remove all tools
+	remove_editor_tools()
 	
 	# Update currency display
 	update_currency_display()
