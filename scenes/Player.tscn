@@ -1,9 +1,13 @@
-[gd_scene load_steps=9 format=3 uid="uid://cykkbk3sjbrw3"]
+[gd_scene load_steps=13 format=3 uid="uid://cykkbk3sjbrw3"]
 
-[ext_resource type="Script" path="res://scripts/Player.gd" id="1_8yfgv"]
+[ext_resource type="Script" path="res://scripts/player/PlayerController.gd" id="1_16aah"]
 [ext_resource type="Script" path="res://scripts/interaction/InteractionManager.gd" id="2_ljt2q"]
 [ext_resource type="PackedScene" uid="uid://xbimmd14id3y" path="res://scenes/ui/InteractionFeedback.tscn" id="3_sxwei"]
 [ext_resource type="PackedScene" uid="uid://3ypmhllqy7ns" path="res://scenes/ui/TileHighlighter.tscn" id="4_pfgso"]
+[ext_resource type="Script" path="res://scripts/player/PlayerMovement.gd" id="5_ju8ue"]
+[ext_resource type="Script" path="res://scripts/player/PlayerToolHandler.gd" id="6_p53g4"]
+[ext_resource type="Script" path="res://scripts/player/PlayerInteraction.gd" id="7_a8unj"]
+[ext_resource type="Script" path="res://scripts/player/PlayerGridTracker.gd" id="8_774td"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_01bbd"]
 radius = 0.4
@@ -20,9 +24,7 @@ height = 1.8
 size = Vector3(1, 2.04773, 1)
 
 [node name="Player" type="CharacterBody3D"]
-script = ExtResource("1_8yfgv")
-move_acceleration = 20.0
-stop_acceleration = 30.0
+script = ExtResource("1_16aah")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("CapsuleMesh_01bbd")
@@ -58,6 +60,18 @@ highlight_height = 0.6
 
 [node name="TileTargetingPoint" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+
+[node name="PlayerMovement" type="Node" parent="."]
+script = ExtResource("5_ju8ue")
+
+[node name="PlayerToolHandler" type="Node" parent="."]
+script = ExtResource("6_p53g4")
+
+[node name="PlayerInteraction" type="Node" parent="."]
+script = ExtResource("7_a8unj")
+
+[node name="PlayerGridTracker" type="Node" parent="."]
+script = ExtResource("8_774td")
 
 [connection signal="body_entered" from="InteractionArea" to="." method="_on_interaction_area_body_entered"]
 [connection signal="body_exited" from="InteractionArea" to="." method="_on_interaction_area_body_exited"]

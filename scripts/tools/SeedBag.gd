@@ -215,7 +215,7 @@ func remove_seed_bag():
 				player.clear_tool_reference(self)
 			else:
 				# Fallback to direct assignment if method doesn't exist
-				player.current_tool = null
+				player.tool_handler.current_tool = null
 				
 	# Delete after two frames to ensure all references are cleared
 	await get_tree().process_frame
