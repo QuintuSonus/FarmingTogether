@@ -335,7 +335,7 @@ func drop_tool():
 	
 	# Position in front of player
 	var drop_pos = global_position + global_transform.basis.z * 1.0
-	drop_pos.y = 1.0  # Slightly above ground
+	drop_pos.y = 1.3  # Slightly above ground
 	tool_obj.global_position = drop_pos
 	
 	# Re-enable physics

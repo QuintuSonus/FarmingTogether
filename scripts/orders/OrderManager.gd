@@ -201,6 +201,7 @@ func try_complete_any_order(basket) -> bool:
 	return false
 
 # Complete an order
+# Complete an order
 func complete_order(order_id: int, basket) -> bool:
 	var order_index = -1
 	var matched_order = null
@@ -218,6 +219,11 @@ func complete_order(order_id: int, basket) -> bool:
 	# Calculate score
 	var score = matched_order.complete()
 	current_score += score
+	
+	# Clear the basket after successful order completion
+	if basket and basket.has_method("clear_crops"):
+		print("OrderManager: Clearing basket after successful order completion")
+		basket.clear_crops()
 	
 	# Move to completed orders
 	completed_orders.append(matched_order)
