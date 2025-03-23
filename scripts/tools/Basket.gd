@@ -13,6 +13,9 @@ func _ready():
 # Custom method to identify this as a basket - safer than overriding get_class()
 func get_tool_type():
 	return "Basket"
+	
+func get_capabilities() -> int:
+	return ToolCapabilities.Capability.HARVEST_CROPS | ToolCapabilities.Capability.DELIVER_ORDERS
 
 func add_crop(crop_type: String):
 	print("Basket: Adding crop: " + crop_type)

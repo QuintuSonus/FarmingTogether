@@ -99,9 +99,13 @@ func _physics_process(delta):
 
 # Update the tool use progress
 func update_tool_use_progress(delta):
+	print("Updating tool use progress. Duration:", tool_use_duration)
+	
 	if is_tool_use_in_progress and not tool_use_completed and tool_use_duration > 0:
 		var elapsed = (Time.get_ticks_msec() - tool_use_start_time) / 1000.0
 		var progress = clamp(elapsed / tool_use_duration, 0.0, 1.0)
+		
+		print("Progress calculation: elapsed=", elapsed, ", progress=", progress)
 		
 		# Update progress bar
 		if interaction_feedback:
@@ -109,6 +113,7 @@ func update_tool_use_progress(delta):
 		
 		# Check if complete
 		if progress >= 1.0 and not tool_use_completed:
+			print("Tool use complete!")
 			tool_use_completed = true
 			_on_tool_use_completed(tool_use_position)
 
@@ -125,13 +130,7 @@ func update_tile_highlight():
 	
 	# Also get player's current grid position
 	current_grid_position = level_manager.world_to_grid(global_position)
-	
-	# Optional: Don't highlight the tile we're standing on
-	#if front_grid_position == current_grid_position:
-		#if tile_highlighter:
-			#tile_highlighter.hide_highlight()
-		#return
-	
+		
 	# Check if this tile is within bounds
 	if level_manager.is_within_bounds(front_grid_position):
 		# Get world position of this grid cell for highlighting
@@ -156,73 +155,20 @@ func update_tile_highlight():
 
 # Handle input events
 func _input(event):
-	# Tool pickup/interaction (E key)
+	# Tool pickup/drop (E key)
 	if event.is_action_pressed("interact"):
-		print("Player: INTERACT button pressed (E)")
-		
-		# DIRECT HANDLING: If we have a tool, pressing E will always drop it
-		# This bypasses the interaction manager completely for tool dropping
 		if current_tool:
-			print("Player: Directly dropping tool")
 			drop_tool()
 		else:
-			# Only use interaction manager for picking up tools, not dropping
-			interaction_manager.start_interaction("interact")
+			interaction_manager.start_interaction()
 	
 	# Tool usage (Space key)
 	if event.is_action_pressed("use_tool"):
-		print("Player: USE TOOL button pressed (Space)")
-		# Only start a new tool use if we're not already using a tool
-		if not is_tool_use_in_progress and current_tool and current_tool.has_method("use"):
-			# Make sure position is Vector3i
-			var pos = Vector3i(front_grid_position.x, front_grid_position.y, front_grid_position.z)
-			var can_use = current_tool.use(pos)
-			
-			print("Player: Tool can be used: ", can_use, " at position ", pos)
-			
-			if can_use:
-				# For progress-based tools like Hoe
-				if current_tool.has_method("get_interaction_type") and current_tool.get_interaction_type() == Interactable.InteractionType.PROGRESS_BASED:
-					print("Player: Starting progress-based tool use")
-					
-					# Get tool use duration
-					var duration = current_tool.get_interaction_duration() if current_tool.has_method("get_interaction_duration") else 1.0
-					
-					# Store interaction state
-					is_tool_use_in_progress = true
-					tool_use_completed = false
-					tool_use_start_time = Time.get_ticks_msec()
-					tool_use_position = pos
-					tool_use_duration = duration
-					
-					# Show initial progress (0%)
-					if interaction_feedback:
-						interaction_feedback.show_progress(0.0)
-					
-				else:
-					# Instant tools like watering can
-					print("Player: Completing instantaneous tool use")
-					current_tool.complete_use(pos)
-					
-	# Cancel interaction if key released (for canceling ongoing tool use)
+		if current_tool and current_tool.has_method("use"):
+			start_tool_use()
 	elif event.is_action_released("use_tool"):
-		# Only process if we were in the middle of using a tool
 		if is_tool_use_in_progress:
-			print("Player: Tool use button released")
-			
-			if not tool_use_completed:
-				print("Player: Tool use canceled before completion")
-				
-				# Hide progress bar
-				if interaction_feedback:
-					interaction_feedback.hide_progress()
-			
-			# Reset tool use state
-			is_tool_use_in_progress = false
-			tool_use_completed = false
-			tool_use_start_time = 0
-			tool_use_position = null
-			tool_use_duration = 0.0
+			cancel_tool_use()
 
 # New function to handle tool use completion
 func _on_tool_use_completed(position):
@@ -239,6 +185,62 @@ func _on_tool_use_completed(position):
 	else:
 		print("Player: No tool or no complete_use method")
 
+# Get the current tool being held
+func get_current_tool():
+	
+	return current_tool
+	
+func start_tool_use():
+	if not current_tool or is_tool_use_in_progress:
+		return
+	
+	var target_pos = front_grid_position
+	print("Attempting to use tool at position:", target_pos)
+	
+	var can_use = current_tool.use(target_pos)
+	print("Tool.use() result:", can_use)
+	
+	if can_use:
+		print("Tool type:", current_tool.get_class())
+		print("Has get_usage_interaction_type:", current_tool.has_method("get_usage_interaction_type"))
+		
+		if current_tool.has_method("get_usage_interaction_type"):
+			print("Usage interaction type:", current_tool.get_usage_interaction_type())
+		
+		# Use the tool's usage-specific methods
+		if current_tool.has_method("get_usage_interaction_type") and current_tool.get_usage_interaction_type() == Interactable.InteractionType.PROGRESS_BASED:
+			# Get duration - use a default of 1.0 if method not found
+			var duration = 1.0
+			if current_tool.has_method("get_usage_duration"):
+				duration = current_tool.get_usage_duration()
+			
+			print("Starting progress-based tool use with duration:", duration)
+			
+			# Setup progress tracking
+			is_tool_use_in_progress = true
+			tool_use_completed = false
+			tool_use_start_time = Time.get_ticks_msec()
+			tool_use_position = target_pos
+			tool_use_duration = duration
+			
+			# Show initial progress
+			if interaction_feedback:
+				interaction_feedback.show_progress(0.0)
+				print("Progress bar shown at 0%")
+		else:
+			# Instant tool use
+			print("Completing instantaneous tool use")
+			current_tool.complete_use(target_pos)
+
+# NEW: Cleaner method to cancel tool use
+func cancel_tool_use():
+	if is_tool_use_in_progress and not tool_use_completed:
+		if interaction_feedback:
+			interaction_feedback.hide_progress()
+	
+	is_tool_use_in_progress = false
+	tool_use_completed = false
+	tool_use_position = null
 # Update interaction progress callback
 func update_interaction_progress(progress):
 	if interaction_feedback:

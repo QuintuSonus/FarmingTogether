@@ -133,11 +133,7 @@ func world_to_grid(world_position: Vector3) -> Vector3i:
 	# Use consistent grid mapping based on actual tile size
 	var grid_x = int(floor(world_position.x))
 	var grid_z = int(floor(world_position.z))
-	
-	# Debug output
-	print("Converting world pos ", world_position, " to grid pos ", Vector3i(grid_x, 0, grid_z))
-	print("Tile type at this position: ", get_tile_type_direct(Vector3i(grid_x, 0, grid_z)))
-	
+		
 	return Vector3i(grid_x, 0, grid_z)
 
 # Function to get world position from grid position

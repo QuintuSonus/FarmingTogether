@@ -26,6 +26,12 @@ func _ready():
 func get_tool_type():
 	return "WateringCan"
 
+func get_capabilities() -> int:
+	return ToolCapabilities.Capability.WATER_PLANTS
+	
+
+	
+	
 # Create a visual indicator for water level
 func create_water_indicator():
 	# Check if we already have a water indicator
