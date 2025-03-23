@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://sbseehkvk78e"]
+
+[ext_resource type="Script" path="res://scripts/tools/SeedBagDispenser.gd" id="1_tomato"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m743m"]
+albedo_color = Color(0.565703, 0.220726, 0.196285, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tomato"]
+material = SubResource("StandardMaterial3D_m743m")
+size = Vector3(0.8, 1, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tomato"]
+size = Vector3(0.8, 1, 0.8)
+
+[node name="TomatoSeedDispenser" type="StaticBody3D"]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_tomato")
+seed_type = "tomato"
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_tomato")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_tomato")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+visible = false
+pixel_size = 0.01
+text = "Tomato Seeds"
+font_size = 48
+outline_size = 8

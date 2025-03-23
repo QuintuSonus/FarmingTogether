@@ -5,6 +5,7 @@ extends Tool
 @export var seed_type: String = "carrot"
 @export_file("*.tscn") var plant_scene_path: String = "res://scenes/plants/CarrotPlant.tscn"
 var plant_scene: PackedScene
+var has_been_used: bool = false
 
 func _ready():
 	super._ready()  # Call parent's _ready function
@@ -14,14 +15,11 @@ func _ready():
 	if not plant_scene:
 		push_error("SeedBag: Failed to load plant scene from path: " + plant_scene_path)
 	
-	print("SeedBag initialized for crop type: " + seed_type)
+	print("SeedBag initialized for crop type: " + seed_type + " (single-use)")
 
 # Override to specify this tool's capabilities
 func get_capabilities() -> int:
 	return ToolCapabilities.Capability.PLANT_SEEDS
-
-# For tool pickup - keep instantaneous (inherited from Tool base class)
-# The base Tool class already returns INSTANTANEOUS, so no need to override
 
 # For tool usage - progress-based
 func get_usage_interaction_type() -> int:
@@ -33,6 +31,11 @@ func get_usage_duration() -> float:
 # Check if can use at position
 func use(target_position: Vector3i) -> bool:
 	print("SeedBag.use() called for position: ", target_position)
+	
+	# Don't allow using if already used
+	if has_been_used:
+		print("SeedBag: Already used - cannot plant again")
+		return false
 	
 	# Get the level manager
 	var level_manager = get_node("/root/Main/LevelManager")
@@ -60,6 +63,11 @@ func use(target_position: Vector3i) -> bool:
 # Complete the planting action
 func complete_use(target_position: Vector3i) -> bool:
 	print("SeedBag.complete_use() called for position: ", target_position)
+	
+	# Don't allow completing if already used
+	if has_been_used:
+		print("SeedBag: Already used - cannot complete planting")
+		return false
 	
 	var level_manager = get_node("/root/Main/LevelManager")
 	
@@ -89,7 +97,9 @@ func complete_use(target_position: Vector3i) -> bool:
 			print("Removing duplicate plant: " + str(i))
 			existing_plants[i].queue_free()
 			
-		# Don't create a new plant, just return success
+		# Don't create a new plant, but still mark as used and remove the bag
+		has_been_used = true
+		remove_seed_bag()
 		return true
 	
 	# DIRECT CALCULATION with CENTERING
@@ -120,4 +130,21 @@ func complete_use(target_position: Vector3i) -> bool:
 	# Force update appearance after adding to scene
 	plant.call_deferred("update_appearance")
 	
+	# Mark as used and remove
+	has_been_used = true
+	remove_seed_bag()
+	
 	return true
+
+# New method to remove the seed bag after use
+func remove_seed_bag():
+	print("SeedBag: Single-use complete - removing bag")
+	
+	# Check if held by player
+	var player = get_node_or_null("/root/Main/Player")
+	if player and player.has_method("get_current_tool") and player.get_current_tool() == self:
+		# Clear the player's current tool reference
+		player.current_tool = null
+		
+	# Queue for deletion
+	queue_free()

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bpr653sxwfe1t"]
+[gd_scene load_steps=14 format=3 uid="uid://bpr653sxwfe1t"]
 
 [ext_resource type="Script" path="res://scripts/LevelManager.gd" id="1_et6yy"]
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1_sl04e"]
@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" uid="uid://d3682o52t1ulf" path="res://scenes/debug/GridDebugger.tscn" id="9_t5fhk"]
 [ext_resource type="Script" path="res://scripts/orders/OrderManager.gd" id="10_r0qmd"]
 [ext_resource type="PackedScene" uid="uid://cr5dy8no3004" path="res://scenes/ui/OrderUI.tscn" id="11_e62db"]
+[ext_resource type="PackedScene" uid="uid://diushxjvndfo7" path="res://scenes/tools/CarrotSeedDispenser.tscn" id="12_0lop4"]
+[ext_resource type="PackedScene" uid="uid://sbseehkvk78e" path="res://scenes/tools/TomatoSeedDispenser.tscn" id="13_3txli"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_sl04e")
@@ -63,3 +65,9 @@ follow_viewport_enabled = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.62548, 1.61006, 5.30466)
 seed_type = "tomato"
 plant_scene_path = "res://scenes/plants/TomatoPlant.tscn"
+
+[node name="CarrotSeedDispenser" parent="." instance=ExtResource("12_0lop4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.35956, 0.960221, 1.71803)
+
+[node name="TomatoSeedDispenser" parent="." instance=ExtResource("13_3txli")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.37618, 0.960221, 4.4037)

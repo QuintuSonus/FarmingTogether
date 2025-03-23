@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://diushxjvndfo7"]
+
+[ext_resource type="Script" path="res://scripts/tools/SeedBagDispenser.gd" id="1_carrot"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8hhot"]
+albedo_color = Color(0.994835, 0.294822, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_carrot"]
+material = SubResource("StandardMaterial3D_8hhot")
+size = Vector3(0.8, 1, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_carrot"]
+size = Vector3(0.8, 1, 0.8)
+
+[node name="CarrotSeedDispenser" type="StaticBody3D"]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_carrot")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_carrot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_carrot")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+visible = false
+pixel_size = 0.01
+text = "Carrot Seeds"
+font_size = 48
+outline_size = 8
