@@ -149,7 +149,7 @@ func complete_use(target_position: Vector3i) -> bool:
 			
 		# Don't create a new plant, but still mark as used and remove the bag
 		has_been_used = true
-		remove_seed_bag()
+		call_deferred("remove_seed_bag")
 		return true
 	
 	# DIRECT CALCULATION with CENTERING
@@ -180,21 +180,44 @@ func complete_use(target_position: Vector3i) -> bool:
 	# Force update appearance after adding to scene
 	plant.call_deferred("update_appearance")
 	
-	# Mark as used and remove
+	# Mark as used and remove - use call_deferred to avoid immediate deletion
 	has_been_used = true
-	remove_seed_bag()
+	call_deferred("remove_seed_bag")
 	
 	return true
 
-# New method to remove the seed bag after use
+# Method to remove the seed bag after use
 func remove_seed_bag():
 	print("SeedBag: Single-use complete - removing bag")
 	
-	# Check if held by player
-	var player = get_node_or_null("/root/Main/Player")
-	if player and player.has_method("get_current_tool") and player.get_current_tool() == self:
-		# Clear the player's current tool reference
-		player.current_tool = null
-		
-	# Queue for deletion
+	# Find all players that might be holding this tool
+	var players = get_tree().get_nodes_in_group("players")
+	if players.size() == 0:
+		# Fallback to direct path if players group not used
+		var player = get_node_or_null("/root/Main/Player")
+		if player:
+			players = [player]
+			
+		# Try PlayerManager path - all players from PlayerManager
+		var player_manager = get_node_or_null("/root/Main/PlayerManager")
+		if player_manager and player_manager.has_method("get_players"):
+			players = player_manager.get_players()
+		elif player_manager and player_manager.has("players"):
+			players = player_manager.players
+	
+	# Check each player for holding this tool
+	for player in players:
+		if player and player.has_method("get_current_tool") and player.get_current_tool() == self:
+			print("SeedBag: Clearing reference from player " + str(player.name))
+			
+			# Safer way to clear the reference - use a method instead of direct property access
+			if player.has_method("clear_tool_reference"):
+				player.clear_tool_reference(self)
+			else:
+				# Fallback to direct assignment if method doesn't exist
+				player.current_tool = null
+				
+	# Delete after two frames to ensure all references are cleared
+	await get_tree().process_frame
+	await get_tree().process_frame
 	queue_free()

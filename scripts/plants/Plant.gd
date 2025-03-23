@@ -213,10 +213,13 @@ func get_required_tool_capability() -> int:
 
 # Check if actor has a tool that can interact with this plant
 func can_interact(actor):
-	# Debug info 
+	# Debug info with safer access to avoid crashes with freed tools 
 	var tool_info = "no tool"
-	if actor.current_tool:
+	if actor.current_tool and is_instance_valid(actor.current_tool):
 		tool_info = actor.current_tool.name
+	else:
+		# Tool is no longer valid
+		tool_info = "freed tool"
 	
 	print("Plant.can_interact() - Stage: " + str(current_stage) + ", Tool: " + tool_info)
 	
@@ -224,7 +227,7 @@ func can_interact(actor):
 	if required_capability < 0:
 		return false
 		
-	if actor.current_tool and actor.current_tool.has_method("get_capabilities"):
+	if actor.current_tool and is_instance_valid(actor.current_tool) and actor.current_tool.has_method("get_capabilities"):
 		var tool_capabilities = actor.current_tool.get_capabilities()
 		return ToolCapabilities.has_capability(tool_capabilities, required_capability)
 	
@@ -251,9 +254,17 @@ func get_priority() -> float:
 
 func interact(actor, _progress = 1.0) -> bool:
 	print("Plant.interact() called with actor: " + str(actor.name))
-	print("  Plant stage: " + str(current_stage) + ", Tool: " + str(actor.current_tool.name if actor.current_tool else "none"))
 	
-	if current_stage == GrowthStage.HARVESTABLE and actor.current_tool and ToolCapabilities.has_capability(actor.current_tool.get_capabilities(), ToolCapabilities.Capability.HARVEST_CROPS):
+	# Check for valid tool with safer access
+	var tool_name = "none"
+	if actor.current_tool and is_instance_valid(actor.current_tool):
+		tool_name = actor.current_tool.name
+	else:
+		tool_name = "freed tool"
+	
+	print("  Plant stage: " + str(current_stage) + ", Tool: " + str(tool_name))
+	
+	if current_stage == GrowthStage.HARVESTABLE and actor.current_tool and is_instance_valid(actor.current_tool) and actor.current_tool.has_method("get_capabilities") and ToolCapabilities.has_capability(actor.current_tool.get_capabilities(), ToolCapabilities.Capability.HARVEST_CROPS):
 		print("  Plant is harvestable and actor has harvest capability")
 		# Harvest the plant
 		actor.current_tool.add_crop(crop_type)
@@ -263,7 +274,7 @@ func interact(actor, _progress = 1.0) -> bool:
 		# Remove plant
 		queue_free()
 		return true
-	elif current_stage == GrowthStage.SEED and not is_watered and actor.current_tool and ToolCapabilities.has_capability(actor.current_tool.get_capabilities(), ToolCapabilities.Capability.WATER_PLANTS):
+	elif current_stage == GrowthStage.SEED and not is_watered and actor.current_tool and is_instance_valid(actor.current_tool) and actor.current_tool.has_method("get_capabilities") and ToolCapabilities.has_capability(actor.current_tool.get_capabilities(), ToolCapabilities.Capability.WATER_PLANTS):
 		# Water the plant
 		print("  Calling water() method from interact()")
 		return water()

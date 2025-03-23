@@ -14,6 +14,10 @@ var current_interaction_progress: float = 0.0
 var is_interaction_in_progress: bool = false
 var actor = null
 
+# Static dictionary to track grid positions that are being interacted with
+# This prevents multiple players from interacting with the same tile
+static var interacting_positions = {}
+
 # Signals
 signal interaction_started(actor, interactable)
 signal interaction_completed(actor, interactable)
@@ -31,6 +35,7 @@ func _ready():
 	
 	# Get reference to parent (assumed to be the player)
 	actor = get_parent()
+	
 func _process(_delta):
 	# Safety check: Ensure potential_interactable is still valid 
 	if potential_interactable != null and not is_instance_valid(potential_interactable):
@@ -110,10 +115,29 @@ func start_interaction():
 	# Get interaction type
 	var interaction_type = interactable.get_interaction_type() if interactable.has_method("get_interaction_type") else Interactable.InteractionType.INSTANTANEOUS
 	
+	# Check for interaction conflicts with other players (for tiles)
+	var player = get_parent()
+	
+	# For tile interactions, check if another player is already interacting
+	if player.has_method("get_front_grid_position"):
+		var grid_pos = player.front_grid_position
+		var pos_key = str(grid_pos.x) + "," + str(grid_pos.z)
+		
+		if interacting_positions.has(pos_key) and interacting_positions[pos_key] != player:
+			print("Interaction conflict: Another player is already interacting with this tile")
+			return
+		
+		# Register this interaction
+		interacting_positions[pos_key] = player
+		print("InteractionManager: Registered interaction at position " + pos_key)
+	
 	if interaction_type == Interactable.InteractionType.INSTANTANEOUS:
 		# Handle instantaneous interaction
 		if interactable.interact(actor):
 			emit_signal("interaction_completed", actor, interactable)
+			
+			# Clear interaction position for instantaneous interactions
+			_clear_interaction_position()
 	else:
 		# Start progress-based interaction
 		current_interactable = interactable
@@ -126,7 +150,7 @@ func update_interaction(delta: float):
 	if not is_interaction_in_progress or not current_interactable:
 		return
 		
-	if not current_interactable.can_interact(actor):
+	if not is_instance_valid(current_interactable) or not current_interactable.can_interact(actor):
 		cancel_interaction()
 		return
 	
@@ -151,6 +175,9 @@ func cancel_interaction():
 	is_interaction_in_progress = false
 	current_interactable = null
 	
+	# Clear interaction position
+	_clear_interaction_position()
+	
 # Complete the current interaction
 func complete_interaction():
 	if current_interactable:
@@ -159,3 +186,18 @@ func complete_interaction():
 	
 	is_interaction_in_progress = false
 	current_interactable = null
+	
+	# Clear interaction position
+	_clear_interaction_position()
+
+# Helper method to clear the interaction position
+func _clear_interaction_position():
+	var player = get_parent()
+	
+	if player.has_method("get_front_grid_position"):
+		var grid_pos = player.front_grid_position
+		var pos_key = str(grid_pos.x) + "," + str(grid_pos.z)
+		
+		if interacting_positions.has(pos_key) and interacting_positions[pos_key] == player:
+			interacting_positions.erase(pos_key)
+			print("InteractionManager: Cleared interaction at position " + pos_key)
