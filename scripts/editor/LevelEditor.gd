@@ -97,7 +97,7 @@ func _ready():
 			
 		var start_button = editor_ui.find_child("StartButton")
 		if start_button:
-			start_button.connect("pressed", Callable(self, "start_next_run"))
+			start_button.connect("pressed", Callable(self, "start_next_level"))
 	
 	# Set up highlight mesh
 	setup_highlight_mesh()
@@ -520,6 +520,9 @@ func can_place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 	return farm_data.currency >= cost
 
 # Place a tool at the given position
+# Update the place_tool function in LevelEditor.gd to handle seed unlocking:
+
+# Place a tool at the given position
 func place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 	if tool_type == "remove_tool":
 		return remove_tool_at(grid_pos)
@@ -538,6 +541,17 @@ func place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 	if farm_data.place_tool(grid_pos.x, grid_pos.z, tool_type):
 		# Spawn the actual tool object
 		spawn_tool(grid_pos, tool_type)
+		
+		# IMPORTANT: Also unlock the corresponding seed for seed dispensers
+		if tool_type == "carrot_seeds":
+			farm_data.unlock_seed("carrot")
+			print("LevelEditor: Unlocked carrot seeds")
+		elif tool_type == "tomato_seeds":
+			farm_data.unlock_seed("tomato")
+			print("LevelEditor: Unlocked tomato seeds")
+			
+		# Save the updated farm data
+		farm_data.save()
 		
 		# Update UI
 		update_currency_display()
@@ -804,14 +818,16 @@ func save_changes():
 	emit_signal("editor_saved")
 
 # Start the next run
-func start_next_run():
+func start_next_level():
 	# Save changes first
 	save_changes()
 	
 	# Tell Main to start a new run
 	var main = get_node_or_null("/root/Main")
-	if main and main.has_method("start_next_run"):
-		main.start_next_run()
+	if main and main.has_method("start_next_level"):
+		main.start_next_level()
+	else:
+		push_error("LevelEditor: Could not find Main.start_next_level()")
 
 # Handle visibility changes
 func _on_visibility_changed():

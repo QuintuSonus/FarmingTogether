@@ -8,9 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://37i3fwe8cg5w" path="res://scenes/tools/WateringCan.tscn" id="8_7ocey"]
 [ext_resource type="PackedScene" uid="uid://d3682o52t1ulf" path="res://scenes/editor/debug/GridDebugger.tscn" id="9_t5fhk"]
 [ext_resource type="Script" path="res://scripts/orders/OrderManager.gd" id="10_r0qmd"]
+[ext_resource type="PackedScene" uid="uid://dwtu6a0ypc6ic" path="res://scenes/ui/LevelDisplay.tscn" id="10_rurev"]
 [ext_resource type="PackedScene" uid="uid://cr5dy8no3004" path="res://scenes/ui/OrderUI.tscn" id="11_e62db"]
 [ext_resource type="PackedScene" uid="uid://diushxjvndfo7" path="res://scenes/tools/CarrotSeedDispenser.tscn" id="12_0lop4"]
-[ext_resource type="PackedScene" uid="uid://sbseehkvk78e" path="res://scenes/tools/TomatoSeedDispenser.tscn" id="13_3txli"]
 [ext_resource type="PackedScene" uid="uid://cm1c8l7g4cgyb" path="res://scenes/PlayerManager.tscn" id="13_y6ahl"]
 
 [node name="Main" type="Node3D"]
@@ -35,7 +35,7 @@ metadata/_editor_floor_ = Vector3(0, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 0.571716, 0.820451, 0, -0.820451, 0.571716, 0, 0, 17.6625)
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.58459, 0.811329, 0, -0.811329, 0.58459, 1.95628, 8.66006, 10.2721)
+transform = Transform3D(1, 0, 0, 0, 0.498821, 0.866705, 0, -0.866705, 0.498821, 1.95628, 6.48451, 7.07132)
 
 [node name="Hoe" parent="." instance=ExtResource("5_5tuyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.32618, 1.68012, 4.08998)
@@ -51,16 +51,16 @@ visible = false
 
 [node name="OrderManager" type="Node3D" parent="."]
 script = ExtResource("10_r0qmd")
+level_time_limit = 120.0
 
 [node name="UILayer" type="CanvasLayer" parent="."]
 follow_viewport_enabled = true
 
 [node name="OrderUI" parent="UILayer" instance=ExtResource("11_e62db")]
 
+[node name="LevelDisplay" parent="UILayer" instance=ExtResource("10_rurev")]
+
 [node name="CarrotSeedDispenser" parent="." instance=ExtResource("12_0lop4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.41009, 0.960221, 2.56012)
-
-[node name="TomatoSeedDispenser" parent="." instance=ExtResource("13_3txli")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.37364, 0.960221, 4.4037)
 
 [node name="PlayerManager" parent="." instance=ExtResource("13_y6ahl")]

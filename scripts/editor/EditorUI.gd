@@ -23,6 +23,10 @@ func _ready():
 	var remove_tool_button = find_node_in_tabs("RemoveToolButton")
 	if remove_tool_button:
 		remove_tool_button.connect("pressed", Callable(self, "_on_remove_tool_pressed"))
+		
+	var start_button = find_child("StartButton")
+	if start_button:
+		start_button.text = "Start Next Level"
 
 # Connect all tool buttons
 func connect_tool_buttons():

@@ -18,9 +18,11 @@ extends Node3D
 var game_running: bool = false
 var current_level: int = 1
 var current_score: int = 0
+var highest_level_reached = 1
 
 # Level editor reference
 var level_editor = null
+
 
 # Keep track of the main camera
 var main_camera = null
@@ -30,6 +32,8 @@ var level_manager: Node = null
 var order_manager: Node = null
 var player_manager: Node = null
 var ui_layer: CanvasLayer = null
+
+
 
 var tool_scenes = {
 	"hoe": "res://scenes/tools/Hoe.tscn",
@@ -87,6 +91,8 @@ func _ready():
 	# Connect order manager signals
 	if order_manager:
 		order_manager.connect("level_time_updated", Callable(self, "_on_level_time_updated"))
+		order_manager.connect("level_failed", Callable(self, "on_level_failed"))
+		order_manager.connect("order_completed", Callable(self, "on_order_completed"))
 	
 	# Show gameplay UI
 	show_gameplay_ui()
@@ -286,6 +292,7 @@ func spawn_default_tools():
 	print("Main: Spawned default tools")
 
 # Function to show the editor when level is completed
+# When level is completed, show editor
 func on_level_completed(score: int, currency_earned: int):
 	# Update farm data with earned currency
 	var farm_data = FarmData.load_data()
@@ -294,20 +301,17 @@ func on_level_completed(score: int, currency_earned: int):
 	
 	# Update game state
 	game_running = false
-	current_level += 1
-	current_score += score
 	
-	print("Main: Level completed with score " + str(score) + " and earned " + str(currency_earned) + " currency")
+	print("Main: Level " + str(current_level) + " completed with score " + str(score) + " and earned " + str(currency_earned) + " currency")
+	
+	# Show completion message
+	show_level_completion_message(score, currency_earned)
 	
 	# Wait a moment before showing editor
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(1.5).timeout
 	
 	# Hide gameplay UI
 	hide_gameplay_ui()
-	
-	# Ensure main camera reference is current
-	if main_camera == null:
-		main_camera = $Camera3D
 	
 	# Show editor
 	if level_editor:
@@ -315,9 +319,24 @@ func on_level_completed(score: int, currency_earned: int):
 	else:
 		push_error("Main: No level editor to show!")
 
+
 # Start a new run
-func start_next_run():
-	print("Main: Starting new run")
+# Advance to the next level after editing
+func start_next_level():
+	print("Main: Starting level " + str(current_level + 1))
+	
+	# Increment level
+	current_level += 1
+	
+	# Save current level to farm data
+	var farm_data = FarmData.load_data()
+	farm_data.current_level = current_level
+	
+	# Track highest level reached
+	if current_level > farm_data.highest_level_reached:
+		farm_data.highest_level_reached = current_level
+		
+	farm_data.save()
 	
 	# Update game state
 	game_running = true
@@ -326,11 +345,13 @@ func start_next_run():
 	if level_manager and level_manager.has_method("reset_level"):
 		level_manager.reset_level()
 	
-	# Reset or restart order system
-	if order_manager and order_manager.has_method("reset_orders"):
-		order_manager.reset_orders()
-		
-	# Update farm layout using saved farm data
+	# Reset or restart order system with correct level
+	if order_manager:
+		order_manager.current_level = current_level
+		if order_manager.has_method("reset_orders"):
+			order_manager.reset_orders()
+	
+	# Apply saved farm layout from editor
 	apply_saved_farm_layout()
 	
 	# Reset player position
@@ -343,8 +364,14 @@ func start_next_run():
 	if main_camera:
 		main_camera.current = true
 		
+	# Update UI to show current level
+	update_level_display()
+	
 	# Show gameplay UI
 	show_gameplay_ui()
+	
+	print("Now playing level " + str(current_level))
+
 
 # Add debug UI for editor testing
 func add_debug_ui():
@@ -621,3 +648,63 @@ func save_gridmap_to_farmdata(farm_data):
 			farm_data.set_tile(cell_pos.x, cell_pos.z, tile_type)
 	
 	print("Main: Saved " + str(farm_data.tile_data.size()) + " tiles from GridMap to FarmData")
+
+# Show a message when level is completed with upgrade suggestions
+# Show a message when level is completed with upgrade suggestions
+func show_level_completion_message(score: int, currency_earned: int):
+	# Create a popup dialog
+	var dialog = AcceptDialog.new()
+	dialog.title = "Level " + str(current_level) + " Completed!"
+	
+	# Format the message
+	var message = "Score: " + str(score) + "\nCurrency earned: " + str(currency_earned)
+	message += "\n\nYou've advanced to the level editor where you can upgrade your farm."
+	message += "\n\nAfter editing your farm, press \"Start Next Level\" to continue."
+	
+	# Set the text
+	dialog.dialog_text = message
+	
+	# Add dialog to scene and show it
+	add_child(dialog)
+	dialog.popup_centered()
+		
+# Start next level after completing current one
+
+# Update UI to show current level
+func update_level_display():
+	# Update level counter
+	var level_label = get_node_or_null("/root/Main/UILayer/LevelDisplay/LevelLabel")
+	if level_label:
+		level_label.text = "Level " + str(current_level)
+		
+	# Update required orders label if available
+	var orders_label = get_node_or_null("/root/Main/UILayer/LevelDisplay/RequiredOrdersLabel")
+	if orders_label and order_manager:
+		orders_label.text = "Complete " + str(order_manager.orders_completed_this_run) + "/" + str(order_manager.required_orders)
+		
+func on_level_failed():
+	# Create a popup dialog
+	var dialog = AcceptDialog.new()
+	dialog.title = "Level Failed"
+	dialog.dialog_text = "You didn't complete enough orders!\n\nTry improving your farm layout in the editor."
+	dialog.add_button("Try Again", true, "try_again")
+	dialog.get_ok_button().text = "Edit Farm"
+	
+	# Connect to buttons
+	dialog.confirmed.connect(func(): 
+		dialog.hide()
+		# Hide gameplay UI
+		hide_gameplay_ui()
+		# Show editor
+		if level_editor:
+			level_editor.start_editing()
+	)
+	dialog.custom_action.connect(func(action): 
+		if action == "try_again":
+			dialog.hide()
+			reset_progression()  # Reset Progression
+	)
+	
+	# Add dialog to scene and show it
+	add_child(dialog)
+	dialog.popup_centered()

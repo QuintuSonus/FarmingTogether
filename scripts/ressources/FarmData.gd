@@ -7,6 +7,10 @@ extends Resource
 @export var run_count: int = 0
 @export var highest_score: int = 0
 
+@export var current_level: int = 1
+@export var highest_level_reached: int = 1
+
+
 # Tile data - stores positions and types of special tiles
 # Format: { "x,z": tile_type }
 @export var tile_data: Dictionary = {}
@@ -404,3 +408,164 @@ static func reset_all():
 	var farm_data = FarmData.new()
 	farm_data.save()
 	return farm_data
+	
+# Unlocked crop types (start with carrots)
+@export var unlocked_crops: Dictionary = {
+	"carrot": {
+		"unlocked": true,
+		"growth_time": 20.0,
+		"value": 1.0,
+		"color": Color(1.0, 0.5, 0.0)  # Orange
+	},
+	"tomato": {
+		"unlocked": false,
+		"growth_time": 30.0,
+		"value": 1.5,
+		"color": Color(0.9, 0.1, 0.1)  # Red
+	}
+	# Future crops can be added here
+}
+
+# Cost scaling for upgrades based on how many you already have
+var upgrade_scaling = {
+	"dirt": 1.0,  # No scaling
+	"water": 1.2,  # 20% increase per water tile
+	"delivery": 1.5  # 50% increase per delivery tile
+}
+
+# Get all unlocked crop types
+func get_unlocked_crops() -> Array:
+	var crops = []
+	for crop_name in unlocked_crops:
+		if unlocked_crops[crop_name].unlocked:
+			crops.append(crop_name)
+	return crops
+
+# Check if a crop is unlocked
+func is_crop_unlocked(crop_type: String) -> bool:
+	if unlocked_crops.has(crop_type):
+		return unlocked_crops[crop_type].unlocked
+	return false
+
+# Unlock a new crop type
+func unlock_crop(crop_type: String, cost: int = 0) -> bool:
+	# Check if we can afford it and don't already have it
+	if not unlocked_crops.has(crop_type) or unlocked_crops[crop_type].unlocked:
+		return false
+		
+	if cost > 0:
+		if currency < cost:
+			return false
+		currency -= cost
+	
+	# Unlock the crop
+	unlocked_crops[crop_type].unlocked = true
+	
+	# Also automatically unlock the seed if crop names match seed names
+	if crop_type in ["carrot", "tomato"]:
+		unlocked_seeds.append(crop_type)
+	
+	return true
+
+# Calculate the cost of a tile based on how many of that type you already have
+func get_scaled_tile_cost(type_name: String) -> int:
+	var base_cost = get_tile_cost(type_name)
+	if base_cost == 0:
+		return 0
+	
+	# Count existing tiles of this type
+	var existing_count = 0
+	var tile_type_id = -1
+	
+	# Convert type name to tile type ID
+	match type_name:
+		"dirt": tile_type_id = 1  # DIRT_GROUND
+		"soil": tile_type_id = 2  # SOIL
+		"water": tile_type_id = 3  # WATER
+		"mud": tile_type_id = 4    # MUD
+		"delivery": tile_type_id = 5  # DELIVERY
+	
+	# Count tiles
+	if tile_type_id >= 0:
+		for key in tile_data:
+			if tile_data[key] == tile_type_id:
+				existing_count += 1
+	
+	# Apply scaling if defined
+	var scale_factor = 1.0
+	if upgrade_scaling.has(type_name):
+		scale_factor = pow(upgrade_scaling[type_name], existing_count)
+	
+	# Calculate final cost (rounded to nearest 10)
+	var scaled_cost = round(base_cost * scale_factor / 10) * 10
+	return int(scaled_cost)
+
+# Calculate recommended upgrades based on current farm state
+func get_recommended_upgrades() -> Dictionary:
+	var recommendations = {}
+	
+	# Count tile types
+	var dirt_count = 0
+	var water_count = 0
+	var delivery_count = 0
+	
+	for key in tile_data:
+		match tile_data[key]:
+			1: dirt_count += 1     # DIRT_GROUND
+			3: water_count += 1    # WATER
+			5: delivery_count += 1 # DELIVERY
+	
+	# Recommend based on current level and existing infrastructure
+	if current_level == 1:
+		if dirt_count < 4:
+			recommendations["dirt_tiles"] = {
+				"name": "Dirt Tiles",
+				"priority": 1,
+				"cost": get_scaled_tile_cost("dirt"),
+				"reason": "Expand your farming area"
+			}
+		
+		if not unlocked_crops["tomato"].unlocked:
+			recommendations["tomato_seeds"] = {
+				"name": "Tomato Seeds",
+				"priority": 2,
+				"cost": 150,
+				"reason": "Higher value crop"
+			}
+	
+	elif current_level >= 2:
+		if dirt_count < 6:
+			recommendations["dirt_tiles"] = {
+				"name": "More Dirt",
+				"priority": 1,
+				"cost": get_scaled_tile_cost("dirt"),
+				"reason": "Larger farm area"
+			}
+		
+		if water_count < 2:
+			recommendations["water_tile"] = {
+				"name": "Water Source",
+				"priority": 2,
+				"cost": get_scaled_tile_cost("water"),
+				"reason": "More efficient watering"
+			}
+	
+	return recommendations
+
+# Advanced stats for progression tracking
+func update_level_stats(level: int, score: int, orders_completed: int):
+	# Track level-specific stats
+	var level_key = "level_" + str(level) + "_completed"
+	add_stat(level_key, 1)
+	
+	# Track high score for this level
+	var high_score_key = "level_" + str(level) + "_high_score"
+	if not stats.has(high_score_key) or stats[high_score_key] < score:
+		stats[high_score_key] = score
+	
+	# Update general stats
+	add_stat("total_score", score)
+	add_stat("orders_completed", orders_completed)
+	
+	# Save changes
+	save()
