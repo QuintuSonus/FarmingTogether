@@ -116,6 +116,9 @@ func apply_tool_upgrade_effects(upgrade_data: UpgradeData, level: int):
 				1.0, # Flag to indicate active
 				GameParameter.ModifierType.SET
 			)
+			print("UpgradeEffects: Hose Attachment upgrade applied - watering can now waters adjacent tiles")
+			# Update existing watering cans in the scene
+			update_existing_watering_cans()
 
 # Apply player upgrade effects
 func apply_player_upgrade_effects(upgrade_data: UpgradeData, level: int):

@@ -85,66 +85,43 @@ func create_water_indicator():
 	# Update the water level visualization
 	update_water_level()
 
-func use(target_position):
-	
-	
-	# Get the level manager
+func use(target_position: Vector3i) -> bool:
 	var level_manager = get_node("/root/Main/LevelManager")
 	
 	# If we're on a water tile, always allow refill action
 	if level_manager.is_tile_type(target_position, level_manager.TileType.WATER):
-		
 		return true
 	
 	# Check if we have water
 	if current_water <= 0:
-		
 		return false
 	
-	# DETAILED DEBUG: Print all plants in the scene
+	# Get positions to check
+	var positions_to_check = [target_position]
 	
-	var plants_found = 0
-	for obj in get_tree().get_nodes_in_group("interactables"):
-		if obj is Plant:
-			plants_found += 1
-			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-			var stage_name = ["SEED", "GROWING", "HARVESTABLE", "SPOILED"][obj.current_stage]
-			
+	# If hose attachment is active, add adjacent tiles
+	if has_hose_attachment():
+		positions_to_check.append_array(get_adjacent_positions(target_position))
 	
-	# NEW: Count plants at target position needing water
+	# Check for plants needing water at all relevant positions
 	var plants_to_water = []
 	
-	# Look for plants at the target position
-	for group_name in ["plants", "interactables"]:
-		for obj in get_tree().get_nodes_in_group(group_name):
-			if obj is Plant:
-				# Check if it's a plant in the SEED stage that needs water
-				if obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
-					# Check if it's at our target position
-					var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-					
-					# Calculate direct grid cell for this position to be sure
-					var obj_direct_grid = Vector3i(
-						int(floor(obj.global_position.x)),
-						0,
-						int(floor(obj.global_position.z))
-					)
-					
-					# Try both grid position checks
-					if (obj_grid_pos == target_position or obj_direct_grid == target_position) and not plants_to_water.has(obj):
-						plants_to_water.append(obj)
+	for pos in positions_to_check:
+		for obj in get_tree().get_nodes_in_group("plants"):
+			if obj is Plant and obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
+				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+				var obj_direct_grid = Vector3i(
+					int(floor(obj.global_position.x)),
+					0,
+					int(floor(obj.global_position.z))
+				)
+				
+				if (obj_grid_pos == pos or obj_direct_grid == pos) and not plants_to_water.has(obj):
+					plants_to_water.append(obj)
 	
-	if plants_to_water.size() > 0:
-		print("WateringCan: Found " + str(plants_to_water.size()) + " plants to water at position " + str(target_position))
-		return true
-	else:
-		print("WateringCan: No valid plants found at position ", target_position)
-		return false
+	return plants_to_water.size() > 0
 
-func complete_use(target_position):
-	print("\n===== WATERING CAN COMPLETE_USE =====")
-	print("WateringCan: Completing use at grid position ", target_position)
-	
+func complete_use(target_position: Vector3i) -> bool:
 	var level_manager = get_node("/root/Main/LevelManager")
 	
 	# If on water tile, refill
@@ -152,84 +129,56 @@ func complete_use(target_position):
 		var old_water = current_water
 		current_water = water_capacity
 		print("WateringCan: REFILLED from ", old_water, " to ", current_water)
-		
-		# Update appearance
 		update_appearance()
-		
-		# Play refill sound (to be implemented)
 		return true
 	
 	# Check if we have water
 	if current_water <= 0:
-		print("WateringCan: ERROR - Tried to use empty watering can")
 		return false
 	
-	# Try to water plants at this position - check BOTH groups
-	var all_interactables = []
+	# Get positions to water
+	var positions_to_water = [target_position]
 	
-	# Combine plants from both groups (in case something is only in one)
-	for obj in get_tree().get_nodes_in_group("plants"):
-		if obj is Plant and not all_interactables.has(obj):
-			all_interactables.append(obj)
-			
-	for obj in get_tree().get_nodes_in_group("interactables"):
-		if obj is Plant and not all_interactables.has(obj):
-			all_interactables.append(obj)
+	# If hose attachment is active, add adjacent tiles
+	if has_hose_attachment():
+		positions_to_water.append_array(get_adjacent_positions(target_position))
+		print("WateringCan: Hose attachment active - watering " + str(positions_to_water.size()) + " tiles")
 	
-	print("\nWateringCan: Found " + str(all_interactables.size()) + " plants to check for watering")
+	# Find all plants at the positions
+	var plants_watered = 0
+	var all_interactables = get_tree().get_nodes_in_group("plants")
 	
-	# NEW: Find all plants at target position
-	var plants_to_water = []
-	
-	for obj in all_interactables:
-		if obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
-			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-			
-			# Calculate direct position too (alternative calculation)
-			var obj_direct_grid = Vector3i(
-				int(floor(obj.global_position.x)),
-				0,
-				int(floor(obj.global_position.z))
-			)
-			
-			# Try both position comparisons
-			var position_matches = (obj_grid_pos == target_position or obj_direct_grid == target_position)
-			
-			if position_matches and not plants_to_water.has(obj):
-				plants_to_water.append(obj)
-	
-	# NEW: Water all plants at target position
-	if plants_to_water.size() > 0:
-		print("WateringCan: Found " + str(plants_to_water.size()) + " plants to water")
+	# Try to water plants at all relevant positions
+	for pos in positions_to_water:
+		var plants_at_position = []
 		
-		# NEW: Remove duplicates - keep just one plant
-		if plants_to_water.size() > 1:
-			print("WARNING: Multiple plants at same position - keeping only one")
-			var to_keep = plants_to_water[0]
-			
-			# Remove all others
-			for i in range(1, plants_to_water.size()):
-				print("  Removing duplicate plant " + str(i))
-				plants_to_water[i].queue_free()
-			
-			# Keep only the first plant in our array
-			plants_to_water = [to_keep]
+		for obj in all_interactables:
+			if obj is Plant and obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
+				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+				var obj_direct_grid = Vector3i(
+					int(floor(obj.global_position.x)),
+					0,
+					int(floor(obj.global_position.z))
+				)
+				
+				if (obj_grid_pos == pos or obj_direct_grid == pos) and not plants_at_position.has(obj):
+					plants_at_position.append(obj)
 		
-		# Water the remaining plant
-		print("Watering plant: " + plants_to_water[0].name)
-		if plants_to_water[0].water():
-			current_water -= 1
-			print("SUCCESS - Plant watered! Water remaining: " + str(current_water))
-			
-			# Update appearance
-			update_appearance()
-			return true
-		else:
-			print("ERROR: Plant could not be watered")
-			return false
-	else:
-		print("WateringCan: No plants to water at position " + str(target_position))
-		return false
+		# Water the first plant at this position (avoid duplicates)
+		if plants_at_position.size() > 0:
+			print("Watering plant at position " + str(pos))
+			if plants_at_position[0].water():
+				plants_watered += 1
+
+				# Only use water if we successfully watered something
+	# Only use 1 water total if any plants were watered
+	if plants_watered > 0 and current_water > 0:
+		current_water -= 1
+		update_appearance()
+		print("WateringCan: Used 1 water to water " + str(plants_watered) + " plants")
+		return true
+	
+	return plants_watered > 0
 
 func get_interaction_type():
 	return Interactable.InteractionType.INSTANTANEOUS
@@ -310,3 +259,26 @@ func get_parameter_manager():
 		return service_locator.get_service("parameter_manager")
 		print("parameters found")
 	return null
+	
+func has_hose_attachment() -> bool:
+	var parameter_manager = get_parameter_manager()
+	if parameter_manager:
+		return parameter_manager.get_value("tool.watering_can.area_effect", 0.0) > 0.0
+	return false
+
+# Get adjacent tile positions
+func get_adjacent_positions(center_position: Vector3i) -> Array:
+	var adjacent_positions = []
+	
+	# Define the four adjacent directions (up, right, down, left)
+	var directions = [
+		Vector3i(0, 0, -1),  # North
+		Vector3i(1, 0, 0),   # East
+		Vector3i(0, 0, 1),   # South
+		Vector3i(-1, 0, 0)   # West
+	]
+	
+	for dir in directions:
+		adjacent_positions.append(center_position + dir)
+	
+	return adjacent_positions
