@@ -66,7 +66,10 @@ func _ready():
 	# Connect order manager signals
 	if order_manager:
 		order_manager.connect("level_time_updated", Callable(self, "_on_level_time_updated"))
-	
+		order_manager.connect("level_completed", Callable(self, "on_level_completed"))
+		order_manager.connect("level_failed", Callable(self, "on_level_failed"))
+		
+		order_manager.connect("order_completed", Callable(self, "_on_order_completed"))
 	# Add debug button for editor testing (only in debug mode)
 	if OS.is_debug_build():
 		add_debug_ui()
@@ -296,3 +299,59 @@ func _input(event):
 				# Hide gameplay UI
 				ui_manager.hide_gameplay_ui()
 				level_editor.start_editing()
+
+func on_level_failed():
+	print("GameManager: Level failed")
+	
+	# Update game state
+	game_running = false
+	
+	# Wait a moment before showing message
+	await get_tree().create_timer(1.0).timeout
+	
+	# Show a failure message
+	var failure_dialog = AcceptDialog.new()
+	failure_dialog.title = "Level Failed"
+	failure_dialog.dialog_text = "You didn't complete enough orders in time!\nTry again next time."
+	failure_dialog.get_ok_button().text = "Continue"
+	
+	# Connect to the button press event
+	failure_dialog.connect("confirmed", Callable(self, "_on_level_failed_confirmed"))
+	
+	# Add to UI layer
+	if ui_manager:
+		var ui_layer = ui_manager.get_ui_layer()
+		if ui_layer:
+			ui_layer.add_child(failure_dialog)
+			failure_dialog.popup_centered()
+	else:
+		add_child(failure_dialog)
+		failure_dialog.popup_centered()
+		
+func _on_level_failed_confirmed():
+	# Reset level to 1 for a new run
+	current_level = 1
+	current_score = 0
+	
+	# Start a new run
+	if order_manager:
+		order_manager.current_level = current_level
+		order_manager.reset_orders()
+	
+	# Update UI
+	if ui_manager:
+		ui_manager.update_level_display(current_level, 0, order_manager.required_orders if order_manager else 3)
+		ui_manager.show_gameplay_ui()
+	
+	# Reset player position and restart
+	start_game()
+	
+func _on_order_completed(order, score):
+	# Update the level display UI with the new completed order count
+	if ui_manager and order_manager:
+		var completed_orders = order_manager.orders_completed_this_run
+		var required_orders = order_manager.required_orders
+		ui_manager.update_level_display(current_level, completed_orders, required_orders)
+		
+	print("GameManager: Order completed - " + str(order_manager.orders_completed_this_run) + 
+		  "/" + str(order_manager.required_orders) + " orders completed")
