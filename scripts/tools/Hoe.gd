@@ -40,12 +40,10 @@ func use(target_position: Vector3i) -> bool:
 			)
 			
 			if plant_grid_pos == target_position or obj_direct_grid == target_position:
-				print("Hoe can be used on spoiled plant")
 				return true
 	
 	# If no spoiled plant, check if it's dirt ground as before
 	var result = level_manager.is_tile_type(target_position, level_manager.TileType.DIRT_GROUND)
-	print("Hoe can be used (is dirt):", result)
 	return result
 
 # Implement completion logic

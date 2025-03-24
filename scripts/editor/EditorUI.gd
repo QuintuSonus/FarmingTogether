@@ -27,6 +27,7 @@ func _ready():
 	var start_button = find_child("StartButton")
 	if start_button:
 		start_button.text = "Start Next Level"
+		start_button.connect("pressed", Callable(level_editor, "start_next_level"))
 
 # Connect all tool buttons
 func connect_tool_buttons():

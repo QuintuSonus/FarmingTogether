@@ -1,7 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://bpr653sxwfe1t"]
+[gd_scene load_steps=17 format=3 uid="uid://bpr653sxwfe1t"]
 
 [ext_resource type="Script" path="res://scripts/LevelManager.gd" id="1_et6yy"]
-[ext_resource type="Script" path="res://scripts/Main.gd" id="1_sl04e"]
+[ext_resource type="Script" path="res://scripts/managers/GameManager.gd" id="1_ho4xx"]
 [ext_resource type="PackedScene" uid="uid://cd84u8mftwl3" path="res://scenes/GridMap.tscn" id="2_ugdbk"]
 [ext_resource type="PackedScene" uid="uid://7pq2ir7ov7l3" path="res://scenes/tools/Hoe.tscn" id="5_5tuyd"]
 [ext_resource type="PackedScene" uid="uid://dte7i6vc4ohbf" path="res://scenes/tools/Basket.tscn" id="6_wve4o"]
@@ -11,16 +11,14 @@
 [ext_resource type="PackedScene" uid="uid://dwtu6a0ypc6ic" path="res://scenes/ui/LevelDisplay.tscn" id="10_rurev"]
 [ext_resource type="PackedScene" uid="uid://cr5dy8no3004" path="res://scenes/ui/OrderUI.tscn" id="11_e62db"]
 [ext_resource type="PackedScene" uid="uid://diushxjvndfo7" path="res://scenes/tools/CarrotSeedDispenser.tscn" id="12_0lop4"]
+[ext_resource type="Script" path="res://scripts/managers/CameraController.gd" id="13_6p5wk"]
 [ext_resource type="PackedScene" uid="uid://cm1c8l7g4cgyb" path="res://scenes/PlayerManager.tscn" id="13_y6ahl"]
+[ext_resource type="Script" path="res://scripts/managers/FarmLayoutManager.gd" id="14_0xo86"]
+[ext_resource type="Script" path="res://scripts/managers/ToolManager.gd" id="15_7kdnr"]
+[ext_resource type="Script" path="res://scripts/managers/UIManager.gd" id="16_63cbe"]
 
 [node name="Main" type="Node3D"]
-script = ExtResource("1_sl04e")
-camera_follow_player = false
-camera_height = 12.0
-camera_distance = 3.0
-camera_angle = 0.0
-camera_min_distance = 5.0
-camera_padding = 0.0
+script = ExtResource("1_ho4xx")
 
 [node name="LevelManager" type="Node3D" parent="."]
 script = ExtResource("1_et6yy")
@@ -64,3 +62,15 @@ follow_viewport_enabled = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.41009, 0.960221, 2.56012)
 
 [node name="PlayerManager" parent="." instance=ExtResource("13_y6ahl")]
+
+[node name="CameraController" type="Node" parent="."]
+script = ExtResource("13_6p5wk")
+
+[node name="FarmLayoutManager" type="Node" parent="."]
+script = ExtResource("14_0xo86")
+
+[node name="ToolManager" type="Node" parent="."]
+script = ExtResource("15_7kdnr")
+
+[node name="UIManager" type="Node" parent="."]
+script = ExtResource("16_63cbe")

@@ -826,6 +826,7 @@ func start_next_level():
 	var main = get_node_or_null("/root/Main")
 	if main and main.has_method("start_next_level"):
 		main.start_next_level()
+		print("properly started next level")
 	else:
 		push_error("LevelEditor: Could not find Main.start_next_level()")
 
