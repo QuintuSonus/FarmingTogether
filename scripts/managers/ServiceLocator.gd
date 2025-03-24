@@ -1,5 +1,5 @@
 # scripts/managers/ServiceLocator.gd
-class_name ServiceLocator
+class_name SLSingleton
 extends Node
 
 # Dictionary of registered services

@@ -212,3 +212,5 @@ func _confirm_reset_progression():
 # Add this method to handle cancellation
 func _cancel_reset_progression():
 	print("Farm reset canceled by user")
+	
+# Add this function to your LevelEditor.gd:

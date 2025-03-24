@@ -93,7 +93,7 @@ func _ready():
 	setup_highlight_mesh()
 	
 	# Get game data
-	var service_locator = get_node_or_null("/root/ServiceLocator")
+	var service_locator = get_node_or_null("/root/Service_Locator")
 	if service_locator:
 		game_data = service_locator.get_service("game_data")
 		game_data_manager = service_locator.get_service("game_data_manager")
@@ -102,6 +102,9 @@ func _ready():
 	hide()
 	
 	print("LevelEditor: Initialized with UI hidden")
+	
+	 # Initialize the upgrades list 
+	initialize_upgrades()
 
 # Connect to all required nodes after they are available in the scene
 func connect_nodes():
@@ -179,42 +182,98 @@ func calculate_farm_bounds():
 
 # Called when editor is activated
 func start_editing():
+	print("LevelEditor: start_editing called")
+	
+	# DIAGNOSTIC #1: Check references
+	print("LevelEditor: DIAGNOSTIC - level_manager exists: " + str(level_manager != null))
+	print("LevelEditor: DIAGNOSTIC - grid_map exists: " + str(grid_map != null))
+	
 	if not level_manager or not grid_map:
 		push_error("LevelEditor: Cannot start editing - missing references!")
 		return
+		
+	print("LevelEditor: References check passed")
+	
+	# DIAGNOSTIC #2: Check game data
+	print("LevelEditor: DIAGNOSTIC - game_data exists: " + str(game_data != null))
 	
 	# Make sure we have game data
 	if not game_data:
+		print("LevelEditor: game_data is null, trying to get from ServiceLocator")
 		var service_locator = get_node_or_null("/root/ServiceLocator")
 		if service_locator:
+			print("LevelEditor: ServiceLocator found")
 			game_data = service_locator.get_service("game_data")
 			game_data_manager = service_locator.get_service("game_data_manager")
+			print("LevelEditor: After ServiceLocator - game_data exists: " + str(game_data != null))
+		else:
+			print("LevelEditor: ServiceLocator NOT found")
 		
 		if not game_data:
 			push_error("LevelEditor: Cannot start editing - game data not found!")
 			return
 	
+	print("LevelEditor: Game data check passed")
+	
+	# DIAGNOSTIC #3: Check for farm bounds calculation
+	print("LevelEditor: About to calculate farm bounds")
+	
+	# Protect against errors in calculate_farm_bounds
+	if not level_manager:
+		print("LevelEditor: level_manager became null before calculate_farm_bounds")
+		return
+		
 	# Calculate farm bounds to include all existing tiles
 	calculate_farm_bounds()
+	
+	print("LevelEditor: Farm bounds calculated")
+	
+	# DIAGNOSTIC #4: Check UI components
+	print("LevelEditor: DIAGNOSTIC - editor_ui exists: " + str(editor_ui != null))
 	
 	# Show editor and UI
 	show()
 	if editor_ui:
 		editor_ui.visible = true
-		editor_ui.update_currency_display()
+		print("LevelEditor: Made editor UI visible")
+		if editor_ui.has_method("update_currency_display"):
+			editor_ui.update_currency_display()
+			print("LevelEditor: Updated currency display")
+		else:
+			print("LevelEditor: editor_ui does not have update_currency_display method")
+	else:
+		print("LevelEditor: editor_ui is null, cannot show UI")
+	
+	# DIAGNOSTIC #5: Check game UI hiding
+	print("LevelEditor: About to hide game UI")
 	
 	# Hide game UI
 	hide_game_ui()
 	
+	print("LevelEditor: Game UI hidden")
+	
+	# DIAGNOSTIC #6: Check gameplay pausing
+	print("LevelEditor: About to pause gameplay")
+	
 	# Pause gameplay
 	pause_gameplay()
+	
+	print("LevelEditor: Gameplay paused")
+	
+	# DIAGNOSTIC #7: Check camera
+	print("LevelEditor: DIAGNOSTIC - editor_camera exists: " + str(editor_camera != null))
 	
 	# Switch to editor camera
 	if editor_camera:
 		editor_camera.current = true
+		print("LevelEditor: Switched to editor camera")
+	else:
+		print("LevelEditor: editor_camera is null, cannot switch camera")
 	
 	# Store original tile states
 	save_original_state()
+	
+	print("LevelEditor: Original state saved")
 	
 	# Set editor as active
 	is_editing = true
@@ -924,3 +983,307 @@ func reset_farm_progression():
 	popup.dialog_hide_on_ok = true
 	get_tree().root.add_child(popup)
 	popup.popup_centered()
+	
+# Add this function to your LevelEditor.gd:
+
+func initialize_upgrades():
+	print("LevelEditor: Initializing upgrades panel")
+	
+	# Check if we have editor_ui and it has the upgrades panel
+	if not editor_ui:
+		print("LevelEditor: Cannot initialize upgrades - editor_ui is null")
+		return
+	
+	# Get the upgrade system reference
+	var upgrade_system = null
+	
+	# Try through service locator first
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator:
+		upgrade_system = service_locator.get_service("upgrade_system")
+		print("LevelEditor: Got upgrade_system from ServiceLocator: " + str(upgrade_system != null))
+	
+	# If not found, try direct node lookup
+	if not upgrade_system:
+		upgrade_system = get_node_or_null("/root/Main/UpgradeSystem")
+		if not upgrade_system:
+			upgrade_system = get_node_or_null("/root/Main/MinimalUpgradeSystem")
+		
+		if upgrade_system:
+			print("LevelEditor: Found upgrade_system in scene tree: " + str(upgrade_system.name))
+	
+	# If still not found, check if it's a property on the game manager
+	if not upgrade_system:
+		var game_manager = get_node_or_null("/root/Main")
+		if game_manager and "upgrade_system" in game_manager:
+			upgrade_system = game_manager.upgrade_system
+			print("LevelEditor: Found upgrade_system as property on GameManager")
+	
+	# If we have an upgrade system, populate the UI
+	if upgrade_system:
+		populate_upgrade_panels(upgrade_system)
+	else:
+		print("LevelEditor: No upgrade system found")
+
+# Function to populate the upgrade panels
+func populate_upgrade_panels(upgrade_system):
+	print("LevelEditor: Populating upgrade panels")
+	
+	# Look for the upgrade tabs in the editor UI
+	var upgrade_tabs = find_upgrade_tabs()
+	if not upgrade_tabs or upgrade_tabs.is_empty():
+		print("LevelEditor: No upgrade tabs found in editor UI")
+		return
+	
+	# Get all available upgrades from the registry
+	var registry = null
+	if upgrade_system.has_method("get_upgrade_registry"):
+		registry = upgrade_system.get_upgrade_registry()
+	elif "upgrade_registry" in upgrade_system:
+		registry = upgrade_system.upgrade_registry
+	
+	if not registry:
+		print("LevelEditor: No upgrade registry found")
+		return
+	
+	# Get available upgrades
+	var all_upgrades = {}
+	if registry.has_method("get_all_upgrades"):
+		all_upgrades = registry.get_all_upgrades()
+	else:
+		print("LevelEditor: Registry doesn't have get_all_upgrades method")
+		return
+	
+	print("LevelEditor: Found " + str(all_upgrades.size()) + " upgrades in registry")
+	
+	# Get current upgrade levels
+	var current_levels = {}
+	if upgrade_system.has_method("get_all_upgrade_levels"):
+		current_levels = upgrade_system.get_all_upgrade_levels()
+	else:
+		# Build manually by checking each upgrade
+		for upgrade_id in all_upgrades.keys():
+			var level = 0
+			if upgrade_system.has_method("get_upgrade_level"):
+				level = upgrade_system.get_upgrade_level(upgrade_id)
+			current_levels[upgrade_id] = level
+	
+	# Get player currency
+	var currency = 1000  # Default
+	if game_data and game_data.progression_data:
+		currency = game_data.progression_data.currency
+	
+	# Now populate each tab based on upgrade type
+	populate_tab_with_upgrades(upgrade_tabs["tile_upgrades"], all_upgrades, current_levels, currency, UpgradeData.UpgradeType.TILE)
+	populate_tab_with_upgrades(upgrade_tabs["tool_upgrades"], all_upgrades, current_levels, currency, UpgradeData.UpgradeType.TOOL)
+	populate_tab_with_upgrades(upgrade_tabs["player_upgrades"], all_upgrades, current_levels, currency, UpgradeData.UpgradeType.PLAYER)
+	
+	print("LevelEditor: Upgrade panels populated")
+
+# Helper function to find upgrade tabs in the UI
+func find_upgrade_tabs():
+	var result = {}
+	
+	# Check if EditorUI exists and has the structure we need
+	if not editor_ui:
+		return result
+	
+	# Look for the tabs container
+	var left_panel = editor_ui.find_child("LeftPanel")
+	if not left_panel:
+		return result
+	
+	var tab_container = left_panel.find_child("TabContainer")
+	if not tab_container:
+		return result
+	
+	# Find the Upgrades tab
+	var upgrades_tab = null
+	for child in tab_container.get_children():
+		if "Upgrades" in child.name:
+			upgrades_tab = child
+			break
+	
+	if not upgrades_tab:
+		return result
+	
+	# Now find the category tabs
+	var category_tabs = upgrades_tab.find_child("CategoryTabs")
+	if not category_tabs:
+		return result
+	
+	# Search for the upgrade list for each category
+	for child in category_tabs.get_children():
+		var list = child.find_child("UpgradesList")
+		if not list:
+			continue
+			
+		if "Tile" in child.name:
+			result["tile_upgrades"] = list
+		elif "Tool" in child.name:
+			result["tool_upgrades"] = list
+		elif "Player" in child.name:
+			result["player_upgrades"] = list
+	
+	return result
+
+# Helper function to populate an upgrade tab
+func populate_tab_with_upgrades(tab, all_upgrades, current_levels, currency, type):
+	if not tab:
+		return
+		
+	# Clear any existing items
+	for child in tab.get_children():
+		child.queue_free()
+	
+	# Get upgrade item scene
+	var upgrade_item_scene = load("res://scenes/editor/UpgradeItem.tscn")
+	if not upgrade_item_scene:
+		print("LevelEditor: Failed to load UpgradeItem scene")
+		return
+	
+	# Add items for each upgrade of this type
+	var items_added = 0
+	for upgrade_id in all_upgrades.keys():
+		var upgrade = all_upgrades[upgrade_id]
+		if upgrade.type != type:
+			continue
+			
+		# Create the item
+		var item = upgrade_item_scene.instantiate()
+		tab.add_child(item)
+		
+		# Set up the item
+		var level = current_levels.get(upgrade_id, 0)
+		item.initialize(upgrade, level, currency)
+		
+		# Connect signal for selection
+		if item.has_signal("upgrade_selected"):
+			item.connect("upgrade_selected", Callable(self, "_on_upgrade_selected"))
+		
+		items_added += 1
+	
+	print("LevelEditor: Added " + str(items_added) + " items to " + str(type) + " upgrade tab")
+
+# Called when an upgrade is selected
+func _on_upgrade_selected(upgrade_id, upgrade_data):
+	# Update the info panel and handle purchase logic
+	var info_panel = find_upgrade_info_panel()
+	if not info_panel:
+		return
+		
+	# Set panel info
+	set_upgrade_info(info_panel, upgrade_data)
+	
+	# Store the currently selected upgrade ID for purchase
+	set_meta("selected_upgrade_id", upgrade_id)
+	
+	# Enable purchase button if affordable and not maxed
+	var purchase_button = info_panel.find_child("PurchaseButton")
+	if purchase_button:
+		var currency = game_data.progression_data.currency if game_data and game_data.progression_data else 0
+		var current_level = 0
+		var upgrade_system = get_upgrade_system()
+		if upgrade_system and upgrade_system.has_method("get_upgrade_level"):
+			current_level = upgrade_system.get_upgrade_level(upgrade_id)
+		
+		var affordable = currency >= upgrade_data.cost
+		var not_maxed = current_level < upgrade_data.max_level
+		
+		purchase_button.disabled = not (affordable and not_maxed)
+		
+		# Connect purchase button
+		if not purchase_button.is_connected("pressed", Callable(self, "_on_purchase_button_pressed")):
+			purchase_button.connect("pressed", Callable(self, "_on_purchase_button_pressed"))
+
+# Helper function to find the upgrade info panel
+func find_upgrade_info_panel():
+	if not editor_ui:
+		return null
+	
+	var left_panel = editor_ui.find_child("LeftPanel")
+	if not left_panel:
+		return null
+	
+	var tab_container = left_panel.find_child("TabContainer")
+	if not tab_container:
+		return null
+	
+	var upgrades_tab = null
+	for child in tab_container.get_children():
+		if "Upgrades" in child.name:
+			upgrades_tab = child
+			break
+	
+	if not upgrades_tab:
+		return null
+	
+	return upgrades_tab.find_child("UpgradeInfoPanel")
+
+# Helper function to set upgrade info in the panel
+func set_upgrade_info(panel, upgrade_data):
+	var title_label = panel.find_child("TitleLabel")
+	var description_label = panel.find_child("DescriptionLabel")
+	var price_label = panel.find_child("PriceLabel")
+	
+	if title_label:
+		title_label.text = upgrade_data.name
+	
+	if description_label:
+		description_label.text = upgrade_data.description
+	
+	if price_label:
+		price_label.text = "Cost: " + str(upgrade_data.cost)
+
+# Called when purchase button is pressed
+func _on_purchase_button_pressed():
+	if not has_meta("selected_upgrade_id"):
+		return
+		
+	var upgrade_id = get_meta("selected_upgrade_id")
+	var upgrade_system = get_upgrade_system()
+	
+	if not upgrade_system:
+		print("LevelEditor: No upgrade system found for purchase")
+		return
+	
+	# Try to purchase the upgrade
+	if upgrade_system.has_method("purchase_upgrade"):
+		var success = upgrade_system.purchase_upgrade(upgrade_id)
+		if success:
+			print("LevelEditor: Successfully purchased upgrade: " + upgrade_id)
+			
+			# Refresh the UI
+			call_deferred("initialize_upgrades")
+			
+			# Update currency display
+			if editor_ui and editor_ui.has_method("update_currency_display"):
+				editor_ui.update_currency_display()
+		else:
+			print("LevelEditor: Failed to purchase upgrade: " + upgrade_id)
+	else:
+		print("LevelEditor: Upgrade system doesn't have purchase_upgrade method")
+
+# Helper function to get the upgrade system
+func get_upgrade_system():
+	# Try through service locator first
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator:
+		var system = service_locator.get_service("upgrade_system")
+		if system:
+			return system
+	
+	# Try direct node lookup
+	var system = get_node_or_null("/root/Main/UpgradeSystem")
+	if not system:
+		system = get_node_or_null("/root/Main/MinimalUpgradeSystem")
+	
+	if system:
+		return system
+	
+	# Check if it's a property on the game manager
+	var game_manager = get_node_or_null("/root/Main")
+	if game_manager and "upgrade_system" in game_manager:
+		return game_manager.upgrade_system
+	
+	return null

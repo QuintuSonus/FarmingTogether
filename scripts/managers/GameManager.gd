@@ -117,7 +117,15 @@ func _ready():
 		
 		# Show gameplay UI
 		ui_manager.show_gameplay_ui()
-	
+	#if level_editor:
+	## Pass game_data directly to the editor
+		#if game_data:
+			#print("GameManager: Passing game_data directly to level_editor")
+			#level_editor.game_data = game_data
+	#
+	#if game_data_manager:
+		#print("GameManager: Passing game_data_manager directly to level_editor")
+		#level_editor.game_data_manager = game_data_manager
 	# Start the game
 	start_game()
 	
@@ -181,6 +189,7 @@ func on_level_completed(score: int, currency_earned: int):
 	if ui_manager:
 		ui_manager.hide_gameplay_ui()
 	
+	print("GameManager: Level completed, editor reference exists: " + str(level_editor != null))
 	# Show editor
 	if level_editor:
 		level_editor.start_editing()
