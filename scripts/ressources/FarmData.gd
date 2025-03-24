@@ -19,6 +19,9 @@ extends Resource
 # Format: { "x,z": tool_type }
 @export var tool_placement: Dictionary = {}
 
+@export var purchased_upgrades: Dictionary = {}
+@export var tile_upgrades: Dictionary = {}
+
 # Store for the initial farm layout (set at game start)
 var initial_farm_layout = {}
 
@@ -65,6 +68,13 @@ func _init():
 	
 	if unlocked_tools.size() == 0:
 		unlocked_tools = ["hoe", "watering_can", "basket"]
+	
+	# Initialize upgrade data dictionaries
+	if purchased_upgrades.size() == 0:
+		purchased_upgrades = {}
+		
+	if tile_upgrades.size() == 0:
+		tile_upgrades = {}
 
 # Set a tile in the data - properly handles negative coordinates
 func set_tile(x: int, z: int, type: int):

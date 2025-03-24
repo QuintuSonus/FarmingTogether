@@ -13,10 +13,10 @@
 [ext_resource type="PackedScene" uid="uid://diushxjvndfo7" path="res://scenes/tools/CarrotSeedDispenser.tscn" id="12_0lop4"]
 [ext_resource type="Script" path="res://scripts/managers/CameraController.gd" id="13_6p5wk"]
 [ext_resource type="PackedScene" uid="uid://cm1c8l7g4cgyb" path="res://scenes/PlayerManager.tscn" id="13_y6ahl"]
+[ext_resource type="Script" path="res://scripts/managers/FarmLayoutManager.gd" id="14_0xo86"]
 [ext_resource type="Script" path="res://scripts/managers/ToolManager.gd" id="15_7kdnr"]
 [ext_resource type="Script" path="res://scripts/managers/UIManager.gd" id="16_63cbe"]
-[ext_resource type="Script" path="res://scripts/upgrades/MinimalUpgradeSystem.gd" id="17_8rjml"]
-[ext_resource type="Script" path="res://scripts/managers/GameDataManager.gd" id="17_pc3wf"]
+[ext_resource type="Script" path="res://scripts/upgrades/UpgradeSystem.gd" id="17_rllxr"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_ho4xx")
@@ -67,6 +67,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.41009, 0.960221, 2.56012)
 [node name="CameraController" type="Node" parent="."]
 script = ExtResource("13_6p5wk")
 
+[node name="FarmLayoutManager" type="Node" parent="."]
+script = ExtResource("14_0xo86")
+
 [node name="ToolManager" type="Node" parent="."]
 script = ExtResource("15_7kdnr")
 
@@ -74,7 +77,4 @@ script = ExtResource("15_7kdnr")
 script = ExtResource("16_63cbe")
 
 [node name="UpgradeSystem" type="Node" parent="."]
-script = ExtResource("17_8rjml")
-
-[node name="GameDataManager" type="Node" parent="."]
-script = ExtResource("17_pc3wf")
+script = ExtResource("17_rllxr")

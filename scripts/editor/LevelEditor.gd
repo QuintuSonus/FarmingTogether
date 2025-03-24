@@ -4,7 +4,8 @@ extends Node3D
 # References
 var level_manager: Node = null
 var grid_map: GridMap = null
-var farm_data: FarmData = null
+var game_data: GameData = null
+var game_data_manager = null
 var editor_ui: Control = null
 var tile_highlighter: Node3D = null
 var highlight_mesh: MeshInstance3D = null
@@ -52,6 +53,25 @@ var tile_type_mapping = {
 	"delivery": 5  # DELIVERY
 }
 
+# Costs of different tile types
+var tile_prices = {
+	"regular": 0,
+	"dirt": 100,
+	"soil": 150,
+	"water": 250,
+	"mud": 150,
+	"delivery": 300
+}
+
+# Costs of different tool types
+var tool_prices = {
+	"hoe": 150,
+	"watering_can": 200,
+	"basket": 250,
+	"carrot_seeds": 100,
+	"tomato_seeds": 150
+}
+
 func _ready():
 	# Get references to nodes
 	editor_ui = $EditorUI
@@ -69,41 +89,14 @@ func _ready():
 	# Level manager might not be available immediately (if created by Main)
 	call_deferred("connect_nodes")
 	
-	# Connect UI signals
-	if editor_ui:
-		# Connect tile selection buttons
-		var buttons = {
-			"RegularButton": "regular",
-			"DirtButton": "dirt",
-			"SoilButton": "soil",
-			"WaterButton": "water",
-			"MudButton": "mud",
-			"DeliveryButton": "delivery"
-		}
-		
-		for button_name in buttons:
-			var button = editor_ui.find_child(button_name)
-			if button:
-				button.connect("pressed", Callable(self, "select_tile_type").bind(buttons[button_name]))
-		
-		# Connect action buttons
-		var cancel_button = editor_ui.find_child("CancelButton")
-		if cancel_button:
-			cancel_button.connect("pressed", Callable(self, "cancel_editing"))
-			
-		var save_button = editor_ui.find_child("SaveButton")
-		if save_button:
-			save_button.connect("pressed", Callable(self, "save_changes"))
-			
-		var start_button = editor_ui.find_child("StartButton")
-		if start_button:
-			start_button.connect("pressed", Callable(self, "start_next_level"))
-	
 	# Set up highlight mesh
 	setup_highlight_mesh()
 	
-	# Load or create farm data
-	farm_data = FarmData.load_data()
+	# Get game data
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator:
+		game_data = service_locator.get_service("game_data")
+		game_data_manager = service_locator.get_service("game_data_manager")
 	
 	# Initially hide editor (will be shown by Main when appropriate)
 	hide()
@@ -126,6 +119,13 @@ func connect_nodes():
 			print("LevelEditor: Found GridMap")
 	else:
 		push_error("LevelEditor: Could not find LevelManager!")
+	
+	# Get game data references if not already set
+	if not game_data:
+		var service_locator = get_node_or_null("/root/ServiceLocator")
+		if service_locator:
+			game_data = service_locator.get_service("game_data")
+			game_data_manager = service_locator.get_service("game_data_manager")
 	
 	# Find main camera
 	main_camera = get_node_or_null("/root/Main/Camera3D")
@@ -183,6 +183,17 @@ func start_editing():
 		push_error("LevelEditor: Cannot start editing - missing references!")
 		return
 	
+	# Make sure we have game data
+	if not game_data:
+		var service_locator = get_node_or_null("/root/ServiceLocator")
+		if service_locator:
+			game_data = service_locator.get_service("game_data")
+			game_data_manager = service_locator.get_service("game_data_manager")
+		
+		if not game_data:
+			push_error("LevelEditor: Cannot start editing - game data not found!")
+			return
+	
 	# Calculate farm bounds to include all existing tiles
 	calculate_farm_bounds()
 	
@@ -190,6 +201,7 @@ func start_editing():
 	show()
 	if editor_ui:
 		editor_ui.visible = true
+		editor_ui.update_currency_display()
 	
 	# Hide game UI
 	hide_game_ui()
@@ -204,13 +216,10 @@ func start_editing():
 	# Store original tile states
 	save_original_state()
 	
-	# Update currency display
-	update_currency_display()
-	
 	# Set editor as active
 	is_editing = true
 	
-	# Spawn existing tools from farm data
+	# Spawn existing tools from game data
 	spawn_saved_tools()
 	
 	print("LevelEditor: Started editing mode with UI visible")
@@ -366,21 +375,11 @@ func save_original_state():
 			if tile_type != 0:  # Not REGULAR_GROUND
 				original_tile_states[pos] = tile_type
 				
-				# Also update farm_data
-				farm_data.set_tile(x, z, tile_type)
+				# Also update game_data
+				if game_data_manager:
+					game_data_manager.set_tile(x, z, tile_type)
 	
 	print("LevelEditor: Saved original state of " + str(original_tile_states.size()) + " tiles")
-
-# Update the currency display
-func update_currency_display():
-	if editor_ui:
-		# Update currency label
-		if editor_ui.has_method("update_currency"):
-			editor_ui.update_currency(farm_data.currency)
-		
-		# Also update button states based on affordability
-		if editor_ui.has_method("update_button_states"):
-			editor_ui.update_button_states(farm_data.currency)
 
 # Set up the highlight mesh
 func setup_highlight_mesh():
@@ -461,8 +460,11 @@ func can_place_tile(grid_pos: Vector3i, type_name: String) -> bool:
 		return false
 	
 	# Check if player can afford it
-	var cost = farm_data.get_tile_cost(type_name)
-	return farm_data.currency >= cost
+	var cost = get_tile_cost(type_name)
+	if not game_data or not game_data.progression_data:
+		return false
+		
+	return game_data.progression_data.currency >= cost
 
 # Place a tile at the given position
 func place_tile(grid_pos: Vector3i, type_name: String) -> bool:
@@ -477,15 +479,23 @@ func place_tile(grid_pos: Vector3i, type_name: String) -> bool:
 	if current_type == new_type:
 		return false
 	
-	# Try to purchase the tile
-	if not farm_data.try_purchase_tile(type_name):
+	# Check if we can afford it
+	if not game_data or not game_data.progression_data:
+		return false
+		
+	var cost = get_tile_cost(type_name)
+	if game_data.progression_data.currency < cost:
 		print("LevelEditor: Can't afford tile of type " + type_name)
 		return false
 	
+	# Deduct currency
+	game_data.progression_data.currency -= cost
+	
 	# Update the tile
 	if level_manager.set_tile_type(grid_pos, new_type):
-		# Update our farm data - handle negative coordinates correctly
-		farm_data.set_tile(grid_pos.x, grid_pos.z, new_type)
+		# Update game data
+		if game_data_manager:
+			game_data_manager.set_tile(grid_pos.x, grid_pos.z, new_type)
 		
 		# Expand farm bounds if needed
 		if grid_pos.x < farm_bounds.position.x or grid_pos.x >= farm_bounds.position.x + farm_bounds.size.x or \
@@ -498,63 +508,88 @@ func place_tile(grid_pos: Vector3i, type_name: String) -> bool:
 			print("LevelEditor: Expanded farm bounds to: ", farm_bounds)
 		
 		# Update UI
-		update_currency_display()
+		if editor_ui:
+			editor_ui.update_currency_display()
 		
 		print("LevelEditor: Placed " + type_name + " tile at " + str(grid_pos))
 		return true
 	
 	return false
 
+# Get the cost of a tile type
+func get_tile_cost(type_name: String) -> int:
+	if tile_prices.has(type_name):
+		return tile_prices[type_name]
+	return 0
+
 # Check if a tool can be placed at a specific position
 func can_place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 	# Don't place if removing tools
 	if tool_type == "remove_tool":
-		return farm_data.get_tool_at(grid_pos.x, grid_pos.z) != ""
+		var tool_at_pos = ""
+		if game_data_manager:
+			tool_at_pos = game_data_manager.get_tool_at(grid_pos.x, grid_pos.z)
+		return tool_at_pos != ""
 	
 	# Check if position already has a tool
-	if farm_data.get_tool_at(grid_pos.x, grid_pos.z) != "":
+	var has_tool = false
+	if game_data_manager:
+		has_tool = game_data_manager.get_tool_at(grid_pos.x, grid_pos.z) != ""
+	
+	if has_tool:
 		return false
 	
 	# Check if player can afford it
-	var cost = farm_data.get_tool_cost(tool_type)
-	return farm_data.currency >= cost
+	var cost = get_tool_cost(tool_type)
+	if not game_data or not game_data.progression_data:
+		return false
+		
+	return game_data.progression_data.currency >= cost
 
-# Place a tool at the given position
-# Update the place_tool function in LevelEditor.gd to handle seed unlocking:
+# Get the cost of a tool type
+func get_tool_cost(tool_type: String) -> int:
+	if tool_prices.has(tool_type):
+		return tool_prices[tool_type]
+	return 0
 
 # Place a tool at the given position
 func place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 	if tool_type == "remove_tool":
 		return remove_tool_at(grid_pos)
 	
+	if not game_data or not game_data.progression_data:
+		return false
+	
 	# Check if position already has a tool
-	if farm_data.get_tool_at(grid_pos.x, grid_pos.z) != "":
+	var has_tool = false
+	if game_data_manager:
+		has_tool = game_data_manager.get_tool_at(grid_pos.x, grid_pos.z) != ""
+	
+	if has_tool:
 		print("LevelEditor: Position already has a tool")
 		return false
 	
-	# Try to purchase the tool
-	if not farm_data.try_purchase_tool(tool_type):
+	# Check if we can afford it
+	var cost = get_tool_cost(tool_type)
+	if game_data.progression_data.currency < cost:
 		print("LevelEditor: Can't afford tool of type " + tool_type)
 		return false
 	
-	# Place the tool in farm data
-	if farm_data.place_tool(grid_pos.x, grid_pos.z, tool_type):
+	# Deduct currency
+	game_data.progression_data.currency -= cost
+	
+	# Place the tool in game data
+	var success = false
+	if game_data_manager:
+		success = game_data_manager.place_tool(grid_pos.x, grid_pos.z, tool_type)
+	
+	if success:
 		# Spawn the actual tool object
 		spawn_tool(grid_pos, tool_type)
 		
-		# IMPORTANT: Also unlock the corresponding seed for seed dispensers
-		if tool_type == "carrot_seeds":
-			farm_data.unlock_seed("carrot")
-			print("LevelEditor: Unlocked carrot seeds")
-		elif tool_type == "tomato_seeds":
-			farm_data.unlock_seed("tomato")
-			print("LevelEditor: Unlocked tomato seeds")
-			
-		# Save the updated farm data
-		farm_data.save()
-		
 		# Update UI
-		update_currency_display()
+		if editor_ui:
+			editor_ui.update_currency_display()
 		
 		print("LevelEditor: Placed " + tool_type + " at " + str(grid_pos))
 		return true
@@ -564,12 +599,19 @@ func place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 # Remove a tool at the given position
 func remove_tool_at(grid_pos: Vector3i) -> bool:
 	# Check if there's a tool at this position
-	var tool_type = farm_data.get_tool_at(grid_pos.x, grid_pos.z)
+	var tool_type = ""
+	if game_data_manager:
+		tool_type = game_data_manager.get_tool_at(grid_pos.x, grid_pos.z)
+	
 	if tool_type == "":
 		return false
 	
-	# Remove from farm data
-	if farm_data.remove_tool(grid_pos.x, grid_pos.z):
+	# Remove from game data
+	var success = false
+	if game_data_manager:
+		success = game_data_manager.remove_tool(grid_pos.x, grid_pos.z)
+	
+	if success:
 		# Find and remove the tool object
 		var tool_key = "editor_tool_" + str(grid_pos.x) + "_" + str(grid_pos.z)
 		var tool_node = get_node_or_null(tool_key)
@@ -614,13 +656,16 @@ func spawn_tool(grid_pos: Vector3i, tool_type: String):
 	
 	print("LevelEditor: Spawned " + tool_type + " at " + str(world_pos))
 
-# Spawn all tools saved in farm data
+# Spawn all tools saved in game data
 func spawn_saved_tools():
 	# Clear any existing editor tools first
 	remove_editor_tools()
 	
-	# Get all placed tools from farm data
-	var tool_placement = farm_data.get_all_placed_tools()
+	if not game_data_manager:
+		return
+	
+	# Get all placed tools from game data
+	var tool_placement = game_data_manager.get_all_placed_tools()
 	
 	# Spawn each tool
 	for key in tool_placement:
@@ -771,7 +816,10 @@ func update_tool_highlight():
 			if material:
 				# Special case for remove tool
 				if selected_tool_type == "remove_tool":
-					var has_tool = farm_data.get_tool_at(grid_pos.x, grid_pos.z) != ""
+					var has_tool = false
+					if game_data_manager:
+						has_tool = game_data_manager.get_tool_at(grid_pos.x, grid_pos.z) != ""
+					
 					if has_tool:
 						material.albedo_color = Color(1, 0.5, 0, 0.5)  # Orange = can remove
 					else:
@@ -793,8 +841,10 @@ func cancel_editing():
 		var type = original_tile_states[pos]
 		level_manager.set_tile_type(pos, type)
 	
-	# Reload original farm data
-	farm_data = FarmData.load_data()
+	# Reload game data
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator:
+		game_data = service_locator.get_service("game_data")
 	
 	print("LevelEditor: Canceled changes")
 	
@@ -806,8 +856,9 @@ func cancel_editing():
 
 # Save changes
 func save_changes():
-	# Save farm data
-	farm_data.save()
+	# Save game data
+	if game_data:
+		game_data.save()
 	
 	print("LevelEditor: Saved changes")
 	
@@ -848,25 +899,23 @@ func _on_visibility_changed():
 func reset_farm_progression():
 	print("LevelEditor: Resetting all farm progression")
 	
-	# Reset FarmData progression
-	if farm_data:
-		farm_data.reset_progression()
-	else:
-		# Create new farm data if none exists
-		farm_data = FarmData.load_data()
-		farm_data.reset_progression()
+	# Reset GameData progression
+	if game_data_manager and game_data_manager.has_method("reset_progression"):
+		game_data_manager.reset_progression()
 	
 	# Reset to initial farm layout
 	if level_manager:
-		var success = farm_data.reset_to_initial_layout(level_manager)
-		if not success:
-			push_error("LevelEditor: Failed to reset to initial farm layout!")
+		# Reset to default layout if no initial layout exists
+		if not game_data or not game_data.farm_layout_data or game_data.farm_layout_data.initial_farm_layout.size() == 0:
+			if game_data_manager and game_data_manager.has_method("apply_default_farm_layout"):
+				game_data_manager.apply_default_farm_layout()
 	
 	# Remove all tools
 	remove_editor_tools()
 	
 	# Update currency display
-	update_currency_display()
+	if editor_ui:
+		editor_ui.update_currency_display()
 	
 	# Show success message
 	var popup = AcceptDialog.new()
@@ -875,17 +924,3 @@ func reset_farm_progression():
 	popup.dialog_hide_on_ok = true
 	get_tree().root.add_child(popup)
 	popup.popup_centered()
-
-# Helper method to set tile type that works during reset
-func set_tile_type(grid_position: Vector3i, type: int) -> bool:
-	if not level_manager:
-		return false
-		
-	# Use the LevelManager's method to set the tile
-	var result = level_manager.set_tile_type(grid_position, type)
-	
-	# Also update the farm data directly
-	if farm_data and result:
-		farm_data.set_tile(grid_position.x, grid_position.z, type)
-		
-	return result

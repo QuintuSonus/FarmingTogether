@@ -3,7 +3,7 @@ class_name ToolManager
 extends Node
 
 var level_manager = null
-var farm_data = null
+var game_data_manager = null
 
 # Reference to tool scenes
 var tool_scenes = {
@@ -16,12 +16,9 @@ var tool_scenes = {
 
 func _ready():
 	# Get farm data
-	var farm_layout_manager = get_parent().get_node_or_null("FarmLayoutManager")
-	if farm_layout_manager:
-		farm_data = farm_layout_manager.get_farm_data()
-	else:
-		# Fallback to loading directly
-		farm_data = FarmData.load_data()
+	game_data_manager = get_parent().get_node_or_null("GameDataManager")
+	if not game_data_manager:
+		push_error("ToolManager: GameDataManager not found")
 
 func set_level_manager(manager):
 	level_manager = manager
@@ -48,16 +45,16 @@ func spawn_saved_tools():
 	remove_player_tools()
 	
 	# Get all placed tools from farm data
-	if farm_data == null:
-		# Try to get farm data from FarmLayoutManager
-		var farm_layout_manager = get_parent().get_node_or_null("FarmLayoutManager")
-		if farm_layout_manager:
-			farm_data = farm_layout_manager.get_farm_data()
+	if game_data_manager == null:
+		# Try to get game data manager from service locator
+		var service_locator = get_node_or_null("/root/ServiceLocator")
+		if service_locator and service_locator.has_service("game_data_manager"):
+			game_data_manager = service_locator.get_service("game_data_manager")
 		else:
-			# Last chance - load directly
-			farm_data = FarmData.load_data()
+			push_error("ToolManager: GameDataManager not found")
+			return
 	
-	var tool_placement = farm_data.get_all_placed_tools()
+	var tool_placement = game_data_manager.get_all_placed_tools()
 	
 	# Spawn each tool
 	for key in tool_placement:
