@@ -200,10 +200,7 @@ func world_to_grid(world_position: Vector3) -> Vector3i:
 	var grid_x = int(floor(world_position.x))
 	var grid_z = int(floor(world_position.z))
 	
-	# Debug output for troubleshooting
-	if grid_x < 0 or grid_z < 0:
-		print("Converting negative world pos: ", world_position, " to grid pos: ", Vector3i(grid_x, 0, grid_z))
-		
+	
 	return Vector3i(grid_x, 0, grid_z)
 
 # Function to get world position from grid position
@@ -211,10 +208,7 @@ func grid_to_world(grid_position: Vector3i) -> Vector3:
 	# Use GridMap's mapping but add more precise centering for visual elements
 	var world_pos = grid_map.map_to_local(grid_position)
 	
-	# Optional debugging for negative coordinates
-	if grid_position.x < 0 or grid_position.z < 0:
-		print("Converting grid pos: ", grid_position, " to world pos: ", world_pos)
-		
+	
 	return world_pos
 
 # Set a tile to a specific type

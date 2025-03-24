@@ -56,12 +56,14 @@ func apply_tool_upgrade_effects(upgrade_data: UpgradeData, level: int):
 	match upgrade_data.id:
 		"well_worn_hoe":
 			# Reduce hoe usage time
+			var reduction_factor = pow(0.75, level)
 			parameter_manager.add_modifier(
 				"tool.hoe.usage_time",
 				"upgrade.well_worn_hoe",
-				0.75, # 25% reduction
+				reduction_factor,
 				GameParameter.ModifierType.MULTIPLY
 			)
+			print("Well-Worn Hoe upgrade applied at level " + str(level) + " - New tilling time: " + str(parameter_manager.get_value("tool.hoe.usage_time")) + "s")
 			
 		"large_watering_can":
 			# Increase watering can capacity

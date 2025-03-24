@@ -132,7 +132,7 @@ static func create_well_worn_hoe() -> UpgradeData:
 	upgrade.description = "Reduces soil tilling time by 25%."
 	upgrade.cost = 200
 	upgrade.type = UpgradeData.UpgradeType.TOOL
-	upgrade.max_level = 1
+	upgrade.max_level = 4
 	upgrade.effects = {"tilling_time_multiplier": 0.75}
 	upgrade.icon_path = "res://assets/textures/upgrades/well_worn_hoe_icon.png"
 	return upgrade

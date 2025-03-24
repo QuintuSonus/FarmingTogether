@@ -93,7 +93,7 @@ func _ready():
 	setup_highlight_mesh()
 	
 	# Get game data
-	var service_locator = get_node_or_null("/root/Service_Locator")
+	var service_locator = get_node_or_null("/root/ServiceLocator")
 	if service_locator:
 		game_data = service_locator.get_service("game_data")
 		game_data_manager = service_locator.get_service("game_data_manager")

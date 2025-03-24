@@ -157,6 +157,7 @@ func update_interaction(delta: float):
 	var duration = 1.0
 	if current_interactable.has_method("get_interaction_duration"):
 		duration = current_interactable.get_interaction_duration()
+		print("calling duration from interaction manager")
 	
 	current_interaction_progress += delta / duration
 	

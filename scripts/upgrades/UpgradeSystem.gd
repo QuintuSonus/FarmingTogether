@@ -28,12 +28,16 @@ func _ready():
 	add_child(upgrade_effects)
 	
 	# Get service dependencies
-	var service_locator = ServiceLocator.get_instance()
+	var service_locator = get_node_or_null("/root/ServiceLocator")
 	if service_locator:
 		game_data = service_locator.get_service("game_data")
 		parameter_manager = service_locator.get_service("parameter_manager")
 		event_bus = service_locator.get_service("event_bus")
-	
+		print(service_locator.get_service("parameter_manager"))
+	if parameter_manager:
+		print("UpgradeSystem: ParameterManager reference is valid")
+	else:
+		print("UpgradeSystem: ParameterManager reference is NULL!")
 	# Register ourselves with the service locator
 	if service_locator:
 		service_locator.register_service("upgrade_system", self)

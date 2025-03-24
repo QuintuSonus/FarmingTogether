@@ -15,9 +15,18 @@ func get_usage_interaction_type() -> int:
 	print("Hoe.get_usage_interaction_type called, returning PROGRESS_BASED")
 	return Interactable.InteractionType.PROGRESS_BASED
 	
+# In your Hoe.gd - add this to get_usage_duration():
 func get_usage_duration() -> float:
-	print("Hoe.get_usage_duration called, returning 3.0")
-	return 3.0
+	var parameter_manager = get_parameter_manager()
+	var duration = 3.0  # Default
+	
+	if parameter_manager:
+		duration = parameter_manager.get_value("tool.hoe.usage_time", 3.0)
+		print("Hoe: Retrieved usage time: " + str(duration) + "s")
+	else:
+		print("Hoe: Parameter manager not found!")
+		
+	return duration
 
 # Implement use logic
 func use(target_position: Vector3i) -> bool:
@@ -84,3 +93,10 @@ func complete_use(target_position: Vector3i) -> bool:
 	var result = level_manager.convert_to_soil(target_position)
 	print("Hoe completed use (convert dirt to soil), result:", result)
 	return result
+
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+		print("parameters found")
+	return null
