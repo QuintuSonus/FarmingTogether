@@ -71,8 +71,15 @@ func _ready():
 	if OS.is_debug_build():
 		add_debug_ui()
 	
-	# Show gameplay UI
-	ui_manager.show_gameplay_ui()
+	if ui_manager:
+		var completed_orders = 0
+		var required = 3  # Default
+		if order_manager:
+			completed_orders = order_manager.orders_completed_this_run
+			required = order_manager.required_orders
+		ui_manager.update_level_display(current_level, completed_orders, required)
+		# Show gameplay UI
+		ui_manager.show_gameplay_ui()
 	
 	# Start the game
 	start_game()
@@ -156,7 +163,14 @@ func start_next_level():
 	# MAKE SURE EDITOR IS HIDDEN
 	if level_editor and level_editor.visible:
 		level_editor.visible = false
-		
+	
+	if ui_manager:
+		var completed_orders = 0
+		var required = 3  # Default
+		if order_manager:
+			completed_orders = order_manager.orders_completed_this_run
+			required = order_manager.required_orders
+		ui_manager.update_level_display(current_level, completed_orders, required)
 	# Show gameplay UI - call after a small delay to ensure everything is ready
 	ui_manager.show_gameplay_ui()
 

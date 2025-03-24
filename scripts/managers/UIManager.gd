@@ -93,3 +93,22 @@ func restore_game_ui():
 	game_ui_visibility_states.clear()
 	
 	print("UIManager: Restored game UI elements")
+	
+func update_level_display(current_level: int, orders_completed: int = 0, required_orders: int = 0):
+	print("UIManager: Updating level display with level: " + str(current_level))
+	
+	# Find the level display elements
+	var level_label = ui_layer.get_node_or_null("/root/Main/UILayer/LevelDisplay/LevelLabel")
+	if level_label:
+		level_label.text = "Level " + str(current_level)
+		print("Successfully updated level label to: Level " + str(current_level))
+	else:
+		print("ERROR: Could not find LevelLabel node")
+	
+	# Update required orders label if available
+	var orders_label = ui_layer.get_node_or_null("/root/Main/UILayer/LevelDisplay/RequiredOrdersLabel")
+	if orders_label:
+		orders_label.text = "Complete " + str(orders_completed) + "/" + str(required_orders)
+		print("Successfully updated orders label to: " + str(orders_completed) + "/" + str(required_orders))
+	else:
+		print("ERROR: Could not find RequiredOrdersLabel node")
