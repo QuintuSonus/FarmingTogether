@@ -26,9 +26,6 @@ var orders_completed_this_run: int = 0
 # Order ID counter
 var next_order_id: int = 1
 
-var game_data: GameData = null
-var game_data_manager = null
-
 # Signals
 signal order_created(order)
 signal order_completed(order, score)
@@ -83,10 +80,7 @@ func _process(delta):
 
 # Update available crops based on farm data
 func update_available_crops():
-	var service_locator = get_node_or_null("/root/ServiceLocator")
-	if service_locator:
-		game_data = service_locator.get_service("game_data")
-		game_data_manager = service_locator.get_service("game_data_manager")
+	var farm_data = FarmData.load_data()
 	
 	# Reset and populate list based on unlocked seed dispensers
 	available_crop_types = []
@@ -95,7 +89,7 @@ func update_available_crops():
 	available_crop_types.append("carrot")
 	
 	# Add tomatoes if unlocked
-	if game_data_manager.is_seed_unlocked("tomato"):
+	if farm_data.is_seed_unlocked("tomato"):
 		available_crop_types.append("tomato")
 	
 	# Future crops can be added here
@@ -320,15 +314,11 @@ func check_level_completion():
 		emit_signal("level_completed", current_score, total_reward)
 		
 		# Update farm data stats
-		var service_locator = get_node_or_null("/root/ServiceLocator")
-		if service_locator:
-			game_data = service_locator.get_service("game_data")
-			game_data_manager = service_locator.get_service("game_data_manager")
-
-		game_data.add_stat("orders_completed", orders_completed_this_run)
-		game_data.add_stat("levels_completed", 1)
-		game_data.add_run_score(current_score)
-		game_data.save()
+		var farm_data = FarmData.load_data()
+		farm_data.add_stat("orders_completed", orders_completed_this_run)
+		farm_data.add_stat("levels_completed", 1)
+		farm_data.add_run_score(current_score)
+		farm_data.save()
 		
 		# Pause processing
 		set_process(false)
