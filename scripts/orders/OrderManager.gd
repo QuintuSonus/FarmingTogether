@@ -26,6 +26,10 @@ var orders_completed_this_run: int = 0
 # Order ID counter
 var next_order_id: int = 1
 
+# References to new architecture
+var game_data: GameData = null
+var game_data_manager: GameDataManager = null
+
 # Signals
 signal order_created(order)
 signal order_completed(order, score)
@@ -38,16 +42,42 @@ signal level_failed()
 func _ready():
 	print("OrderManager initialized")
 	
-	# Get available crops from farm data
+	# Get references to GameData and GameDataManager
+	get_game_data_references()
+	
+	# Get available crops from game data
 	update_available_crops()
 	
 	# Set required orders based on level
 	set_level_parameters()
 	
-	
 	print("OrderManager level " + str(current_level) + " started")
 	print("Required orders: " + str(required_orders))
 	print("Available crops: " + str(available_crop_types))
+
+# Get references to GameData and GameDataManager
+func get_game_data_references():
+	# Try to get from ServiceLocator first
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator:
+		game_data = service_locator.get_service("game_data")
+		game_data_manager = service_locator.get_service("game_data_manager")
+	
+	# If not found through ServiceLocator, try direct node reference
+	if not game_data_manager:
+		game_data_manager = get_node_or_null("/root/Main/GameDataManager")
+		if game_data_manager:
+			game_data = game_data_manager.game_data
+	
+	# Final fallback - try to find it in the scene tree
+	if not game_data_manager:
+		var possible_manager = get_tree().get_root().find_child("GameDataManager", true, false)
+		if possible_manager:
+			game_data_manager = possible_manager
+			game_data = game_data_manager.game_data
+			
+	if not game_data and not game_data_manager:
+		print("OrderManager: WARNING - Could not find GameData or GameDataManager references!")
 
 func _process(delta):
 	# Update level timer
@@ -78,18 +108,19 @@ func _process(delta):
 			var max_delay = max(new_order_max_delay - (current_level * 1.0), 10.0)
 			new_order_timer = randf_range(min_delay, max_delay)
 
-# Update available crops based on farm data
+# Update available crops based on game data
 func update_available_crops():
-	var farm_data = FarmData.load_data()
-	
 	# Reset and populate list based on unlocked seed dispensers
 	available_crop_types = []
 	
 	# Always have carrots available (starter crop)
 	available_crop_types.append("carrot")
 	
-	# Add tomatoes if unlocked
-	if farm_data.is_seed_unlocked("tomato"):
+	# Add tomatoes if unlocked using the new architecture
+	if game_data and game_data.progression_data and game_data.progression_data.unlocked_seeds.has("tomato"):
+		available_crop_types.append("tomato")
+	# Fallback to game_data_manager if game_data is not available
+	elif game_data_manager and game_data_manager.is_seed_unlocked("tomato"):
 		available_crop_types.append("tomato")
 	
 	# Future crops can be added here
@@ -313,12 +344,16 @@ func check_level_completion():
 		# Emit level completed signal with score and reward
 		emit_signal("level_completed", current_score, total_reward)
 		
-		# Update farm data stats
-		var farm_data = FarmData.load_data()
-		farm_data.add_stat("orders_completed", orders_completed_this_run)
-		farm_data.add_stat("levels_completed", 1)
-		farm_data.add_run_score(current_score)
-		farm_data.save()
+		# Update game data stats using new architecture
+		if game_data_manager:
+			game_data_manager.add_stat("orders_completed", orders_completed_this_run)
+			game_data_manager.add_stat("levels_completed", 1)
+			game_data_manager.add_stat("total_score", current_score)
+		elif game_data and game_data.stats_data:
+			game_data.stats_data.add_stat("orders_completed", orders_completed_this_run)
+			game_data.stats_data.add_stat("levels_completed", 1)
+			game_data.stats_data.add_stat("total_score", current_score)
+			game_data.save()
 		
 		# Pause processing
 		set_process(false)
