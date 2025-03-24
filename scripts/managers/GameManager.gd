@@ -251,6 +251,10 @@ func start_next_level():
 	if order_manager and order_manager.has_method("reset_orders"):
 		order_manager.current_level = current_level
 		order_manager.reset_orders()
+	
+	if order_manager and order_manager.has_method("update_available_crops"):
+		order_manager.update_available_crops()
+		print("GameManager: Updated order manager's available crops after editor save")
 		
 	# Update farm layout using saved farm data
 	if game_data_manager:

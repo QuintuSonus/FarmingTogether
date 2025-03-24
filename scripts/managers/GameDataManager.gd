@@ -108,8 +108,9 @@ func apply_saved_farm_layout():
 		var type = game_data.farm_layout_data.tile_data[key]
 		
 		var pos = Vector3i(x, 0, z)
-		level_manager.set_tile_type(pos, type)
-		print('from applying save')
+		if type>-1:
+			level_manager.set_tile_type(pos, type)
+			print('from applying save')
 	
 	print("GameDataManager: Applied saved farm layout with " + 
 		  str(game_data.farm_layout_data.tile_data.size()) + " custom tiles")

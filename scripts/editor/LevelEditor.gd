@@ -645,7 +645,10 @@ func place_tool(grid_pos: Vector3i, tool_type: String) -> bool:
 	if success:
 		# Spawn the actual tool object
 		spawn_tool(grid_pos, tool_type)
-		
+		# NEW CODE: Unlock the corresponding seed type for seed dispensers
+		if tool_type == "tomato_seeds" and not game_data.progression_data.unlocked_seeds.has("tomato"):
+			game_data.progression_data.unlocked_seeds.append("tomato")
+			print("LevelEditor: Unlocked tomato seeds")
 		# Update UI
 		if editor_ui:
 			editor_ui.update_currency_display()
@@ -811,6 +814,8 @@ func update_tile_highlight():
 	var query = PhysicsRayQueryParameters3D.create(from, to)
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
+	# Add this line right after the above code:
+	query.collision_mask = 0xFFFF & ~(1 << 9)  # Ignore layer 10 (index 9)
 	var result = space_state.intersect_ray(query)
 	
 	if result and result.has("position"):
@@ -821,7 +826,7 @@ func update_tile_highlight():
 		if is_position_in_bounds(grid_pos):
 			# Position highlighter
 			var world_pos = level_manager.grid_to_world(grid_pos)
-			world_pos.y = 0.3  # Slightly above the ground
+			world_pos.y = 0.6  # Slightly above the ground
 			tile_highlighter.global_position = world_pos
 			
 			# Show highlighter
