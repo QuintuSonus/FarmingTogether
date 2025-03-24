@@ -30,7 +30,7 @@ func get_usage_duration() -> float:
 
 # Implement use logic
 func use(target_position: Vector3i) -> bool:
-	print("Hoe.use called for position:", target_position)
+	
 	
 	var level_manager = get_node("/root/Main/LevelManager")
 	if not level_manager:
@@ -57,7 +57,7 @@ func use(target_position: Vector3i) -> bool:
 
 # Implement completion logic
 func complete_use(target_position: Vector3i) -> bool:
-	print("Hoe.complete_use called for position:", target_position)
+	
 	
 	var level_manager = get_node("/root/Main/LevelManager")
 	if not level_manager:

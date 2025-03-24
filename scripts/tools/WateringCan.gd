@@ -14,6 +14,9 @@ func _ready():
 	# Add to special group for identification
 	add_to_group("watering_can_tools")
 	
+	 # Update water capacity based on parameter system
+	update_water_capacity_from_parameters()
+	
 	# Create a water level indicator
 	create_water_indicator()
 	
@@ -29,7 +32,26 @@ func get_tool_type():
 func get_capabilities() -> int:
 	return ToolCapabilities.Capability.WATER_PLANTS
 	
-
+# Add this new function
+func update_water_capacity_from_parameters():
+	# Try to get parameter manager
+	var parameter_manager = get_parameter_manager()
+	
+	if parameter_manager:
+		# Get the base capacity from parameters
+		var new_capacity = parameter_manager.get_value("tool.watering_can.capacity", water_capacity)
+		
+		# Update the capacity
+		var old_capacity = water_capacity
+		water_capacity = new_capacity
+		
+		# If current water is also at the old max, increase it too
+		current_water = water_capacity
+			
+		print("WateringCan: Updated capacity from ", old_capacity, " to ", water_capacity)
+	else:
+		print("WateringCan: No parameter manager found, using default capacity: ", water_capacity)
+		update_appearance()
 	
 	
 # Create a visual indicator for water level
@@ -64,38 +86,30 @@ func create_water_indicator():
 	update_water_level()
 
 func use(target_position):
-	print("\n===== WATERING CAN USE ATTEMPT =====")
-	print("WateringCan: Use attempted at grid position ", target_position)
-	print("WateringCan: Current water level: ", current_water, "/", water_capacity)
+	
 	
 	# Get the level manager
 	var level_manager = get_node("/root/Main/LevelManager")
 	
 	# If we're on a water tile, always allow refill action
 	if level_manager.is_tile_type(target_position, level_manager.TileType.WATER):
-		print("WateringCan: Water tile detected - can refill")
+		
 		return true
 	
 	# Check if we have water
 	if current_water <= 0:
-		print("WateringCan: Cannot use - empty!")
+		
 		return false
 	
 	# DETAILED DEBUG: Print all plants in the scene
-	print("\nWateringCan: --- Checking all plants in scene ---")
+	
 	var plants_found = 0
 	for obj in get_tree().get_nodes_in_group("interactables"):
 		if obj is Plant:
 			plants_found += 1
 			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
 			var stage_name = ["SEED", "GROWING", "HARVESTABLE", "SPOILED"][obj.current_stage]
-			print("  Plant at ", obj_grid_pos, " (world: ", obj.global_position, ") - Type: ", obj.crop_type, 
-				", Stage: ", stage_name, ", Watered: ", obj.is_watered)
-	print("WateringCan: Total plants found: ", plants_found)
-	
-	# If no plants at all, the issue is likely with plant creation
-	if plants_found == 0:
-		print("WateringCan: WARNING - No plants found in scene!")
+			
 	
 	# NEW: Count plants at target position needing water
 	var plants_to_water = []
@@ -289,3 +303,10 @@ func update_water_label():
 			label.modulate = Color(0.9, 0.6, 0.1)  # Orange for low
 		else:
 			label.modulate = Color(0.1, 0.8, 1.0)  # Blue for normal
+
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+		print("parameters found")
+	return null

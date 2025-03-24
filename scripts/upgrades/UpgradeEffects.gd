@@ -7,17 +7,21 @@ var parameter_manager: ParameterManager
 
 func _ready():
 	# Get parameter manager from service locator
-	var service_locator = ServiceLocator.get_instance()
+	var service_locator = get_node_or_null("/root/ServiceLocator")
 	if service_locator:
+		print("UpdateEffects : service_locator found")
 		parameter_manager = service_locator.get_service("parameter_manager")
+		print(parameter_manager)
 
 # Apply all effects for an upgrade at a specific level
 func apply_upgrade_effects(upgrade_data: UpgradeData, level: int):
+	print("UpgradeEffects: Starting to apply effects for " + upgrade_data.name + " (Level " + str(level) + ")")
+	
 	if not parameter_manager:
-		push_error("UpgradeEffects: Cannot apply effects - parameter_manager not available")
+		print("UpgradeEffects: Cannot apply effects - parameter_manager is NULL!")
 		return
 	
-	print("UpgradeEffects: Applying effects for " + upgrade_data.name + " (Level " + str(level) + ")")
+	print("UpgradeEffects: parameter_manager is valid, proceeding with effect application")
 	
 	# Apply effects based on upgrade type
 	match upgrade_data.type:
@@ -27,6 +31,8 @@ func apply_upgrade_effects(upgrade_data: UpgradeData, level: int):
 			apply_tool_upgrade_effects(upgrade_data, level)
 		UpgradeData.UpgradeType.PLAYER:
 			apply_player_upgrade_effects(upgrade_data, level)
+	
+	print("UpgradeEffects: Finished applying effects for " + upgrade_data.name)
 
 # Apply tile upgrade effects
 func apply_tile_upgrade_effects(upgrade_data: UpgradeData, level: int):
@@ -55,7 +61,11 @@ func apply_tile_upgrade_effects(upgrade_data: UpgradeData, level: int):
 func apply_tool_upgrade_effects(upgrade_data: UpgradeData, level: int):
 	match upgrade_data.id:
 		"well_worn_hoe":
-			# Reduce hoe usage time
+			# Log BEFORE value
+			var before_value = parameter_manager.get_value("tool.hoe.usage_time")
+			print("UpgradeEffects: Hoe usage time BEFORE: " + str(before_value) + "s")
+			
+			# Apply the modifier
 			var reduction_factor = pow(0.75, level)
 			parameter_manager.add_modifier(
 				"tool.hoe.usage_time",
@@ -63,7 +73,10 @@ func apply_tool_upgrade_effects(upgrade_data: UpgradeData, level: int):
 				reduction_factor,
 				GameParameter.ModifierType.MULTIPLY
 			)
-			print("Well-Worn Hoe upgrade applied at level " + str(level) + " - New tilling time: " + str(parameter_manager.get_value("tool.hoe.usage_time")) + "s")
+			
+			# Log AFTER value
+			var after_value = parameter_manager.get_value("tool.hoe.usage_time")
+			print("UpgradeEffects: Hoe usage time AFTER: " + str(after_value) + "s")
 			
 		"large_watering_can":
 			# Increase watering can capacity
@@ -73,6 +86,8 @@ func apply_tool_upgrade_effects(upgrade_data: UpgradeData, level: int):
 				2.0 * level, # +2 per level
 				GameParameter.ModifierType.ADDITIVE
 			)
+			 # Update existing watering cans in the scene
+			update_existing_watering_cans()
 			
 		"extended_basket":
 			# Increase basket capacity
@@ -158,3 +173,12 @@ func apply_player_upgrade_effects(upgrade_data: UpgradeData, level: int):
 				1.1, # 10% more currency
 				GameParameter.ModifierType.MULTIPLY
 			)
+
+func update_existing_watering_cans():
+	# Find all watering cans in the scene
+	var watering_cans = get_tree().get_nodes_in_group("watering_can_tools")
+	
+	for can in watering_cans:
+		if can.has_method("update_water_capacity_from_parameters"):
+			can.update_water_capacity_from_parameters()
+			print("UpgradeEffects: Updated existing watering can")

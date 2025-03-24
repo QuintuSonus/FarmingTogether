@@ -21,7 +21,7 @@ func _ready():
 	# Update visual appearance based on seed type
 	update_appearance()
 	
-	print("SeedBag initialized for crop type: " + seed_type + " (single-use)")
+	
 
 # Update the visual appearance based on seed type
 func update_appearance():
@@ -76,11 +76,20 @@ func get_usage_interaction_type() -> int:
 	return Interactable.InteractionType.PROGRESS_BASED
 	
 func get_usage_duration() -> float:
-	return 2.0  # 2 seconds to plant seeds
+	var parameter_manager = get_parameter_manager()
+	var duration = 3.0  # Default
+		
+	if parameter_manager:
+		duration = parameter_manager.get_value("tool.hoe.usage_time", 2.0)
+	
+	else:
+		print("Hoe: Parameter manager not found!")
+			
+	return duration
 
 # Check if can use at position
 func use(target_position: Vector3i) -> bool:
-	print("SeedBag.use() called for position: ", target_position)
+
 	
 	# Don't allow using if already used
 	if has_been_used:
@@ -104,15 +113,15 @@ func use(target_position: Vector3i) -> bool:
 			print("SeedBag: Cannot plant - already " + str(existing_plants) + " plants at this position!")
 			return false
 			
-		print("SeedBag: Can plant at this position")
+		
 		return true
 	
-	print("SeedBag: Cannot plant - not soil at position ", target_position)
+	
 	return false
 
 # Complete the planting action
 func complete_use(target_position: Vector3i) -> bool:
-	print("SeedBag.complete_use() called for position: ", target_position)
+	
 	
 	# Don't allow completing if already used
 	if has_been_used:
@@ -221,3 +230,10 @@ func remove_seed_bag():
 	await get_tree().process_frame
 	await get_tree().process_frame
 	queue_free()
+	
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+		print("parameters found")
+	return null

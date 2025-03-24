@@ -6,7 +6,15 @@ extends Node
 var parameters = {}
 
 func _ready():
+	# Register with ServiceLocator if it exists
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("register_service"):
+		service_locator.register_service("parameter_manager", self)
+		print("ParameterManager: Registered with ServiceLocator")
+	
+	# Initialize default parameters
 	register_default_parameters()
+	print("ParameterManager: Initialized with default parameters")
 
 # Register a new parameter
 func register_parameter(id: String, base_value: float, description: String = "") -> GameParameter:
@@ -49,7 +57,7 @@ func register_default_parameters() -> void:
 	# Tool parameters
 	register_parameter("tool.hoe.usage_time", 3.0, "Time to use the hoe")
 	register_parameter("tool.seeding.usage_time", 2.0, "Time to plant seeds")
-	register_parameter("tool.watering_can.capacity", 5.0, "Watering can water capacity")
+	register_parameter("tool.watering_can.capacity", 2.0, "Watering can water capacity")
 	register_parameter("tool.basket.capacity", 6.0, "Basket crop capacity")
 	
 	# Plant parameters

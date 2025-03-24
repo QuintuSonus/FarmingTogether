@@ -30,14 +30,10 @@ var ui_layer: CanvasLayer = null
 
 func _ready():
 	# Register with ServiceLocator
-	var parameter_manager = ParameterManager.new()
-	parameter_manager.name = "ParameterManager"
-	add_child(parameter_manager)
-	
+		
 	var service_locator = get_node_or_null("/root/ServiceLocator")
 	if service_locator:
 		service_locator.register_service("game_manager", self)
-		service_locator.register_service("parameter_manager", parameter_manager)
 	
 	# Initialize references to main nodes
 	
@@ -88,8 +84,8 @@ func _ready():
 	if game_data_manager:
 		game_data_manager.save_initial_farm_layout()
 	
-		# Apply saved farm layout if it exists
-		game_data_manager.apply_saved_farm_layout()
+		## Apply saved farm layout if it exists
+		#game_data_manager.apply_saved_farm_layout()
 	
 	# Register services
 	if service_locator:

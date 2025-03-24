@@ -144,7 +144,7 @@ static func create_large_watering_can() -> UpgradeData:
 	upgrade.description = "Increases water capacity by 2 uses before refilling."
 	upgrade.cost = 250
 	upgrade.type = UpgradeData.UpgradeType.TOOL
-	upgrade.max_level = 2
+	upgrade.max_level = 5
 	upgrade.effects = {"additional_capacity": 2.0}
 	upgrade.icon_path = "res://assets/textures/upgrades/large_watering_can_icon.png"
 	return upgrade
@@ -168,7 +168,7 @@ static func create_rapid_seeder() -> UpgradeData:
 	upgrade.description = "Reduces seed planting time by 30%."
 	upgrade.cost = 200
 	upgrade.type = UpgradeData.UpgradeType.TOOL
-	upgrade.max_level = 1
+	upgrade.max_level = 2
 	upgrade.effects = {"planting_time_multiplier": 0.7}
 	upgrade.icon_path = "res://assets/textures/upgrades/rapid_seeder_icon.png"
 	return upgrade

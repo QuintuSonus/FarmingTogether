@@ -70,7 +70,7 @@ func save_initial_farm_layout():
 			var tile_type = level_manager.get_tile_type(pos)
 			
 			# Only store non-default tiles
-			if tile_type != level_manager.TileType.REGULAR_GROUND:
+			if tile_type > -1 and tile_type != level_manager.TileType.REGULAR_GROUND:
 				var key = str(x) + "," + str(z)
 				game_data.farm_layout_data.initial_farm_layout[key] = tile_type
 				game_data.farm_layout_data.tile_data[key] = tile_type
@@ -109,6 +109,7 @@ func apply_saved_farm_layout():
 		
 		var pos = Vector3i(x, 0, z)
 		level_manager.set_tile_type(pos, type)
+		print('from applying save')
 	
 	print("GameDataManager: Applied saved farm layout with " + 
 		  str(game_data.farm_layout_data.tile_data.size()) + " custom tiles")
@@ -128,7 +129,7 @@ func apply_default_farm_layout():
 	for x in range(-10, 20):
 		for z in range(-10, 20):
 			var pos = Vector3i(x, 0, z)
-			level_manager.set_tile_type(pos, level_manager.TileType.REGULAR_GROUND)
+			level_manager.set_tile_type(pos, level_manager.TileType.DIRT_REGULAR)
 	
 	# Add some basic dirt tiles for farming
 	for x in range(2, 6):

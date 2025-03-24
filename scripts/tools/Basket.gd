@@ -259,7 +259,7 @@ func get_crops_summary() -> String:
 	return summary
 
 func use(target_position):
-	print("Basket.use() called at position: " + str(target_position))
+	
 	var level_manager = get_node("/root/Main/LevelManager")
 	
 	# First check for harvestable plants at this position
@@ -270,7 +270,7 @@ func use(target_position):
 		for obj in get_tree().get_nodes_in_group(group):
 			if obj is Plant and obj.current_stage == Plant.GrowthStage.HARVESTABLE:
 				var plant_grid_pos = level_manager.world_to_grid(obj.global_position)
-				print("Basket: Found harvestable plant at " + str(plant_grid_pos) + ", target is " + str(target_position))
+				
 				
 				# Calculate direct grid position too
 				var obj_direct_grid = Vector3i(
@@ -280,7 +280,7 @@ func use(target_position):
 				)
 				
 				if plant_grid_pos == target_position or obj_direct_grid == target_position:
-					print("Basket: Position match - can harvest plant!")
+					
 					found_harvestable_plant = true
 					return true
 	
@@ -290,14 +290,14 @@ func use(target_position):
 	# Check if we're at a delivery tile with crops (original logic)
 	if get_total_crops() > 0:
 		if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY):
-			print("Basket: At delivery tile with crops - can deliver")
+			
 			return true
 	
-	print("Basket: Cannot use at this position")
+	
 	return false
 
 func complete_use(target_position):
-	print("Basket.complete_use() called at position: " + str(target_position))
+	
 	var level_manager = get_node("/root/Main/LevelManager")
 	
 	# First try to harvest any plants at this position
@@ -332,7 +332,7 @@ func complete_use(target_position):
 	
 	# If we didn't harvest anything, try to deliver
 	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY):
-		print("Basket: At delivery tile")
+	
 		
 		# Only proceed if we have crops to deliver
 		if get_total_crops() > 0:
@@ -349,7 +349,7 @@ func complete_use(target_position):
 					return true
 				else:
 					# No exact matching order found, crops are lost
-					print("Basket: No matching order - crops lost!")
+					
 					
 					# Provide feedback to the player that crops were lost
 					# You could add a visual effect or sound here
@@ -360,7 +360,7 @@ func complete_use(target_position):
 					clear_crops()
 					return true
 			else:
-				print("Basket: OrderManager not found - crops lost anyway")
+				
 				clear_crops()
 				return true
 		else:

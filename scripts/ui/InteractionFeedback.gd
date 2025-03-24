@@ -71,4 +71,3 @@ func hide_progress():
 func update_progress(value: float):
 	if progress_bar.visible:
 		progress_bar.value = value * 100
-		print("Progress updated to: ", value * 100)

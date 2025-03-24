@@ -36,10 +36,6 @@ func highlight_tile(position: Vector3, can_interact: bool = false):
 	else:
 		current_material.albedo_color = cannot_interact_color
 	
-	# Debugging for negative coordinates
-	if position.x < 0 or position.z < 0:
-		print("Highlighting negative position: ", position)
-	
 	# Make visible
 	visible = true
 
@@ -50,11 +46,7 @@ func highlight_neutral(position: Vector3):
 	global_rotation = Vector3.ZERO
 	
 	current_material.albedo_color = neutral_color
-	
-	# Debugging for negative coordinates
-	if position.x < 0 or position.z < 0:
-		print("Neutral highlighting negative position: ", position)
-	
+		
 	visible = true
 
 func hide_highlight():

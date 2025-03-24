@@ -111,12 +111,12 @@ func initialize_level():
 	print("Initializing level with dimensions: ", level_width, "x", level_height)
 	
 	# Create a simple level layout
-	# First, fill the entire level with regular ground
-	for x in range(level_width):
-		for z in range(level_height):
-			var pos = Vector3i(x, 0, z)
-			grid_map.set_cell_item(pos, REGULAR_GROUND_MESH_ID)
-			tile_states[pos] = TileType.REGULAR_GROUND
+	## First, fill the entire level with regular ground
+	#for x in range(level_width):
+		#for z in range(level_height):
+			#var pos = Vector3i(x, 0, z)
+			#grid_map.set_cell_item(pos, REGULAR_GROUND_MESH_ID)
+			#tile_states[pos] = TileType.REGULAR_GROUND
 	
 	# Add some dirt tiles for farming
 	for x in range(2, 6):
