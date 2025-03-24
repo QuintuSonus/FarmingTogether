@@ -48,10 +48,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.94618, 0.787168, 6.31417)
 [node name="GridDebugger" parent="." instance=ExtResource("9_t5fhk")]
 visible = false
 
-[node name="OrderManager" type="Node3D" parent="."]
-script = ExtResource("10_r0qmd")
-level_time_limit = 120.0
-
 [node name="UILayer" type="CanvasLayer" parent="."]
 follow_viewport_enabled = true
 
@@ -61,6 +57,9 @@ follow_viewport_enabled = true
 
 [node name="CarrotSeedDispenser" parent="." instance=ExtResource("12_0lop4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.41009, 0.960221, 2.56012)
+
+[node name="GameDataManager" type="Node" parent="."]
+script = ExtResource("17_pc3wf")
 
 [node name="PlayerManager" parent="." instance=ExtResource("13_y6ahl")]
 
@@ -76,5 +75,6 @@ script = ExtResource("16_63cbe")
 [node name="UpgradeSystem" type="Node" parent="."]
 script = ExtResource("17_rllxr")
 
-[node name="GameDataManager" type="Node" parent="."]
-script = ExtResource("17_pc3wf")
+[node name="OrderManager" type="Node3D" parent="."]
+script = ExtResource("10_r0qmd")
+level_time_limit = 120.0
