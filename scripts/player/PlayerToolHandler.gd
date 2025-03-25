@@ -5,9 +5,11 @@ extends Node
 # References
 var player: CharacterBody3D = null
 @onready var tool_holder = $"../ToolHolder"
+@onready var back_tool_holder = $"../BackToolHolder" if $"..".has_node("BackToolHolder") else null
 
 # Tool state
 var current_tool = null
+var stored_tool = null  # Second tool slot for tool belt upgrade
 var is_tool_use_in_progress: bool = false
 var tool_use_completed: bool = false
 var tool_use_start_time: int = 0
@@ -17,17 +19,45 @@ var tool_use_duration: float = 0.0
 # Static dictionary to track which tiles are being used by tools
 static var tiles_being_used = {}
 
+func _ready():
+	# Create back tool holder if it doesn't exist but tool belt is active
+	if tool_belt_enabled() and not back_tool_holder:
+		create_back_tool_holder()
+
 func _process(delta):
 	# Update tool use progress if in progress
 	if is_tool_use_in_progress and not tool_use_completed:
 		update_tool_use_progress(delta)
+
+# Check if tool belt upgrade is enabled
+func tool_belt_enabled() -> bool:
+	var parameter_manager = get_parameter_manager()
+	if parameter_manager:
+		return parameter_manager.get_value("player.tool_belt_capacity", 1.0) > 1.0
+	return false
+
+# Create back tool holder if it doesn't exist
+func create_back_tool_holder():
+	if player.has_node("BackToolHolder"):
+		back_tool_holder = player.get_node("BackToolHolder")
+		return
+		
+	var holder = Node3D.new()
+	holder.name = "BackToolHolder"
+	holder.position = Vector3(0, 0.2, -0.3)  # Position on the player's back
+	player.add_child(holder)
+	back_tool_holder = holder
+	print("PlayerToolHandler: Created BackToolHolder")
 
 # Pick up a tool
 func pick_up_tool(tool_obj):
 	if not is_instance_valid(tool_obj):
 		return
 		
-	if current_tool:
+	# If we have a tool belt and already have a tool, store the current tool
+	if current_tool and tool_belt_enabled() and not stored_tool:
+		store_current_tool()
+	elif current_tool:
 		# First drop the current tool
 		drop_tool()
 	
@@ -63,6 +93,76 @@ func pick_up_tool(tool_obj):
 		current_tool = tool_obj
 	else:
 		push_error("Player: ToolHolder node not found!")
+
+# Store the current tool on the player's back
+func store_current_tool():
+	if not current_tool or not tool_belt_enabled():
+		return false
+	
+	# Ensure we have a back tool holder
+	if not back_tool_holder:
+		create_back_tool_holder()
+	
+	# Get reference to the tool
+	var tool_obj = current_tool
+	
+	# Clear the current tool reference
+	current_tool = null
+	
+	# Remove from current holder
+	if tool_obj.get_parent():
+		tool_obj.get_parent().remove_child(tool_obj)
+	
+	# Add to back holder
+	back_tool_holder.add_child(tool_obj)
+	
+	# Position and rotate appropriately for back storage
+	tool_obj.position = Vector3.ZERO
+	tool_obj.rotation = Vector3(PI/2, 0, 0)  # Rotate to lay flat on back
+	
+	# Update reference
+	stored_tool = tool_obj
+	
+	print("PlayerToolHandler: Stored tool on back")
+	return true
+
+# Swap between current and stored tools
+func swap_tools():
+	if not tool_belt_enabled() or not stored_tool:
+		return false
+	
+	print("PlayerToolHandler: Swapping tools")
+	
+	# Save references to both tools
+	var hand_tool = current_tool
+	var back_tool = stored_tool
+	
+	# Clear references first
+	current_tool = null
+	stored_tool = null
+	
+	# Remove tools from their holders
+	if hand_tool and hand_tool.get_parent():
+		hand_tool.get_parent().remove_child(hand_tool)
+	
+	if back_tool and back_tool.get_parent():
+		back_tool.get_parent().remove_child(back_tool)
+	
+	# Move back tool to hand
+	if tool_holder and back_tool:
+		tool_holder.add_child(back_tool)
+		back_tool.position = Vector3.ZERO
+		back_tool.rotation = Vector3.ZERO
+		current_tool = back_tool
+	
+	# Move hand tool to back
+	if back_tool_holder and hand_tool:
+		back_tool_holder.add_child(hand_tool)
+		hand_tool.position = Vector3.ZERO
+		hand_tool.rotation = Vector3(PI/2, 0, 0)  # Rotate to lay flat on back
+		stored_tool = hand_tool
+	
+	return true
 
 # Drop the currently held tool
 func drop_tool():
@@ -126,6 +226,44 @@ func drop_tool():
 			interaction.interaction_manager.emit_signal("potential_interactable_changed", null)
 	
 	return true
+
+# Drop all tools (used when exiting game or changing levels)
+func drop_all_tools():
+	# First drop the current tool
+	drop_tool()
+	
+	# Then drop the stored tool if we have one
+	if stored_tool:
+		var tool_obj = stored_tool
+		stored_tool = null
+		
+		# Make sure the tool still exists
+		if not is_instance_valid(tool_obj):
+			return
+		
+		# Remove from back tool holder
+		if back_tool_holder and tool_obj.get_parent() == back_tool_holder:
+			back_tool_holder.remove_child(tool_obj)
+		
+		# Get a parent to add it to
+		var target_parent = player.get_parent()
+		
+		# Add to parent if not already in scene
+		if not tool_obj.is_inside_tree():
+			target_parent.add_child(tool_obj)
+		
+		# Position behind player
+		var drop_pos = player.global_position - player.global_transform.basis.z * 1.0
+		drop_pos.y = 1.0  # Slightly above ground
+		tool_obj.global_position = drop_pos
+		
+		# Re-enable physics
+		if tool_obj is RigidBody3D:
+			# Reset collision
+			tool_obj.collision_layer = 1 << 1  # Layer 2
+			tool_obj.collision_mask = 1  # Layer 1
+			tool_obj.freeze = false
+			tool_obj.apply_central_impulse(Vector3(0, 0.5, 0))
 
 # Start using the current tool
 func start_tool_use():
@@ -246,8 +384,23 @@ func cancel_tool_use():
 
 # Clear references to a tool (called when a tool is destroyed)
 func clear_tool_reference(tool_obj):
+	var cleared = false
+	
 	if current_tool == tool_obj:
 		print("Clearing reference to tool: " + str(tool_obj.name if is_instance_valid(tool_obj) else "unknown"))
 		current_tool = null
-		return true
-	return false
+		cleared = true
+	
+	if stored_tool == tool_obj:
+		print("Clearing reference to stored tool: " + str(tool_obj.name if is_instance_valid(tool_obj) else "unknown"))
+		stored_tool = null
+		cleared = true
+		
+	return cleared
+
+# Get parameter manager reference
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+	return null

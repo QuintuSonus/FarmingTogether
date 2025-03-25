@@ -55,6 +55,9 @@ script = ExtResource("2_ljt2q")
 [node name="ToolHolder" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, -0.18679, 0.2192, 0.671672)
 
+[node name="BackToolHolder" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, 0.000515923, 0.2192, -0.359361)
+
 [node name="TileHighlighter" parent="." instance=ExtResource("4_pfgso")]
 highlight_height = 0.6
 

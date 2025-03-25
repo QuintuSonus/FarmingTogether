@@ -20,8 +20,6 @@ extends CharacterBody3D
 # Shared access to level manager - will be passed to components
 var level_manager: Node = null
 
-
-
 # Make current_tool directly accessible as a property with a getter
 var current_tool: Tool:
 	get:
@@ -29,6 +27,12 @@ var current_tool: Tool:
 			return tool_handler.current_tool
 		return null
 
+# Add a property for stored_tool as well
+var stored_tool: Tool:
+	get:
+		if tool_handler:
+			return tool_handler.stored_tool
+		return null
 
 func _ready():
 	# Find the level manager - will be passed to components
@@ -58,6 +62,10 @@ func _ready():
 func get_current_tool():
 	return tool_handler.current_tool
 
+# Simple delegator method to get stored tool
+func get_stored_tool():
+	return tool_handler.stored_tool
+
 # Input handling - delegates to appropriate components
 func _input(event):
 	if movement.movement_disabled:
@@ -69,6 +77,21 @@ func _input(event):
 			tool_handler.drop_tool()
 		elif interaction.interaction_manager:
 			interaction.interaction_manager.start_interaction()
+	
+	# Handle tool belt swapping
+	if event.is_action_pressed(movement.input_prefix + "swap_tool"):
+		if tool_handler.tool_belt_enabled():
+			# Swap tools if we have a stored tool
+			if tool_handler.stored_tool:
+				tool_handler.swap_tools()
+			# Otherwise store the current tool if we have one
+			elif tool_handler.current_tool:
+				tool_handler.store_current_tool()
+			
+			# Play a sound effect for tool swapping (if available)
+			var audio_player = get_node_or_null("ToolSwapAudio")
+			if audio_player:
+				audio_player.play()
 	
 	# Handle tool usage
 	if event.is_action_pressed(movement.input_prefix + "use_tool"):
@@ -90,3 +113,9 @@ func set_color(color: Color):
 func _update_player_index(index: int):
 	if movement:
 		movement.set_player_index(index)
+
+# Clear references to a tool (used when a tool is destroyed)
+func clear_tool_reference(tool_obj):
+	if tool_handler:
+		return tool_handler.clear_tool_reference(tool_obj)
+	return false
