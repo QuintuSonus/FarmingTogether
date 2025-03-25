@@ -63,6 +63,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
 
 [node name="PlayerMovement" type="Node" parent="."]
 script = ExtResource("5_ju8ue")
+move_acceleration = 20.0
+stop_acceleration = 50.0
 
 [node name="PlayerToolHandler" type="Node" parent="."]
 script = ExtResource("6_p53g4")

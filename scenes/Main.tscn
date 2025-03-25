@@ -75,6 +75,9 @@ script = ExtResource("17_pc3wf")
 
 [node name="CameraController" type="Node" parent="."]
 script = ExtResource("13_6p5wk")
+camera_height = 5.0
+camera_distance = 3.0
+camera_padding = 0.0
 
 [node name="ToolManager" type="Node" parent="."]
 script = ExtResource("15_7kdnr")

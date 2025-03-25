@@ -218,7 +218,7 @@ static func create_running_shoes() -> UpgradeData:
 	upgrade.description = "Increases movement speed by 15%."
 	upgrade.cost = 300
 	upgrade.type = UpgradeData.UpgradeType.PLAYER
-	upgrade.max_level = 2
+	upgrade.max_level = 3
 	upgrade.effects = {"speed_multiplier": 1.15}
 	upgrade.icon_path = "res://assets/textures/upgrades/running_shoes_icon.png"
 	return upgrade
@@ -254,7 +254,7 @@ static func create_order_insight() -> UpgradeData:
 	upgrade.description = "Orders remain visible 20% longer before expiring."
 	upgrade.cost = 250
 	upgrade.type = UpgradeData.UpgradeType.PLAYER
-	upgrade.max_level = 1
+	upgrade.max_level = 2
 	upgrade.effects = {"order_time_multiplier": 1.2}
 	upgrade.icon_path = "res://assets/textures/upgrades/order_insight_icon.png"
 	return upgrade

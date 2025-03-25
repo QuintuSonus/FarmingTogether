@@ -60,6 +60,7 @@ func _physics_process(delta):
 
 # Get current speed based on tile
 func get_current_speed() -> float:
+	update_player_speed_from_parameters()
 	if not level_manager:
 		return normal_speed
 		
@@ -94,3 +95,27 @@ func get_movement_vector() -> Vector2:
 func set_player_index(index: int):
 	input_prefix = "p" + str(index + 1) + "_"
 	print("PlayerMovement: Updated input prefix to " + input_prefix)
+
+func update_player_speed_from_parameters():
+	# Try to get parameter manager
+	var parameter_manager = get_parameter_manager()
+	
+	if parameter_manager:
+		# Get the base capacity from parameters
+		var new_speed = parameter_manager.get_value("player.movement_speed", normal_speed)
+		
+		# Update the capacity
+		var old_speed = normal_speed
+		normal_speed = new_speed
+		
+		print("PlayerSpeed: Updated capacity from ", old_speed, " to ", new_speed)
+	else:
+		print("PlayerSpeed: No parameter manager found, using default capacity: ", normal_speed)
+		
+
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+		print("parameters found")
+	return null

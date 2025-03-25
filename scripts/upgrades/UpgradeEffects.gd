@@ -125,10 +125,11 @@ func apply_player_upgrade_effects(upgrade_data: UpgradeData, level: int):
 	match upgrade_data.id:
 		"running_shoes":
 			# Increase movement speed
+
 			parameter_manager.add_modifier(
 				"player.movement_speed",
 				"upgrade.running_shoes",
-				1.15, # 15% increase
+				1.15**level, # 15% increase per level
 				GameParameter.ModifierType.MULTIPLY
 			)
 			
@@ -164,7 +165,7 @@ func apply_player_upgrade_effects(upgrade_data: UpgradeData, level: int):
 			parameter_manager.add_modifier(
 				"order.time_multiplier",
 				"upgrade.order_insight",
-				1.2, # 20% more time
+				1.2**level, # 20% more time per level
 				GameParameter.ModifierType.MULTIPLY
 			)
 			

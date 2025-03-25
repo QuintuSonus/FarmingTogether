@@ -8,6 +8,7 @@ extends Node
 @export var new_order_min_delay: float = 10.0
 @export var new_order_max_delay: float = 20.0
 @export var level_time_limit: float = 300.0  # 5 minutes for the level
+@export var time_multiplier: float = 1.0
 
 # Progression-based configuration
 @export var required_orders: int = 3  # How many orders must be completed to win
@@ -149,6 +150,7 @@ func create_new_order():
 	# Calculate a difficulty factor (0 to 1) based on:
 	# - How far into the level we are
 	# - Current player level
+
 	var time_factor = level_timer / level_time_limit
 	var level_factor = min((current_level - 1) / 5.0, 1.0)  # Caps at level 6
 	
@@ -199,6 +201,7 @@ func create_new_order():
 		crop_count -= 1
 	
 	# Determine time limit based on difficulty and order size
+	update_timer_multiplier_from_parameters()
 	var total_crop_count = 0
 	for count in order_crops.values():
 		total_crop_count += count
@@ -208,7 +211,7 @@ func create_new_order():
 	
 	# Time limit scales with order size and decreases with level
 	var time_base = max(60.0 - (current_level * 5.0), 30.0)
-	var time_limit = time_base + (time_per_crop * total_crop_count)
+	var time_limit = (time_base + (time_per_crop * total_crop_count))*time_multiplier
 	
 	# Create the order
 	var order = Order.new(next_order_id, order_crops, time_limit)
@@ -404,3 +407,26 @@ func reset_orders():
 	print("OrderManager: Orders reset for level " + str(current_level))
 	print("Required orders: " + str(required_orders))
 	print("Available crops: " + str(available_crop_types))
+
+func update_timer_multiplier_from_parameters():
+	# Try to get parameter manager
+	var parameter_manager = get_parameter_manager()
+	
+	if parameter_manager:
+		# Get the base capacity from parameters
+		var new_time_multiplier = parameter_manager.get_value("order.time_multiplier", time_multiplier)
+		print(new_time_multiplier)
+		# Update the capacity
+		var old_time_multiplier = time_multiplier
+		time_multiplier = new_time_multiplier
+		
+		print("OrderManager: Updated time multiplier from ", old_time_multiplier, " to ", time_multiplier)
+	else:
+		print("OrderManager: No parameter manager found, using default capacity: ", time_multiplier)
+
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+		print("parameters found")
+	return null
