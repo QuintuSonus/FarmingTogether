@@ -50,8 +50,17 @@ func apply_tile_upgrade_effects(upgrade_data: UpgradeData, level: int):
 			print("UpgradeEffects: Preservation Mulch effect registered")
 		
 		"sprinkler_system":
-			# This would require creating a sprinkler component for these tiles
-			print("UpgradeEffects: Sprinkler System effect registered")
+	# Find or create the SprinklerManager
+			var sprinkler_manager = get_sprinkler_manager()
+			if sprinkler_manager:
+				print("UpgradeEffects: Sprinkler System effect will be handled by SprinklerManager")
+			else:
+				print("UpgradeEffects: SprinklerManager not found - creating it")
+				# Create the sprinkler manager if it doesn't exist
+				var manager_scene = load("res://scripts/managers/SprinklerManager.gd")
+				sprinkler_manager = manager_scene.new()
+				sprinkler_manager.name = "SprinklerManager"
+				get_tree().root.get_node("Main").add_child(sprinkler_manager)
 		
 		"express_delivery_zone":
 			# This will be checked when orders are delivered
@@ -186,3 +195,20 @@ func update_existing_watering_cans():
 		if can.has_method("update_water_capacity_from_parameters"):
 			can.update_water_capacity_from_parameters()
 			print("UpgradeEffects: Updated existing watering can")
+			
+func get_sprinkler_manager():
+	# Try through service locator first
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		var manager = service_locator.get_service("sprinkler_manager")
+		if manager:
+			return manager
+	
+	# Try direct reference next
+	var main = get_node_or_null("/root/Main")
+	if main:
+		var manager = main.get_node_or_null("SprinklerManager")
+		if manager:
+			return manager
+	
+	return null

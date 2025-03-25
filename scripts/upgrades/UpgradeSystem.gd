@@ -151,6 +151,16 @@ func apply_upgrade_to_tile(tile_pos: Vector3i, upgrade_id: String) -> bool:
 		game_data.upgrades_data.tile_upgrades[pos_key] = {}
 	
 	game_data.upgrades_data.tile_upgrades[pos_key][upgrade_id] = level
+	
+	if upgrade_id == "sprinkler_system":
+	# Get reference to the sprinkler manager
+		var sprinkler_manager = get_sprinkler_manager()
+		if sprinkler_manager:
+			# Create a sprinkler at this position
+			sprinkler_manager.create_sprinkler(tile_pos)
+		else:
+			print("LevelEditor: Could not find SprinklerManager")
+		
 	game_data.save()
 	
 	print("UpgradeSystem: Applied " + upgrade_data.name + " to tile at " + pos_key)
@@ -194,3 +204,20 @@ func _on_level_completed(args):
 # Static accessor
 static func get_instance() -> UpgradeSystem:
 	return instance
+
+func get_sprinkler_manager():
+	# Try through service locator first
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		var manager = service_locator.get_service("sprinkler_manager")
+		if manager:
+			return manager
+	
+	# Try direct reference next
+	var main = get_node_or_null("/root/Main")
+	if main:
+		var manager = main.get_node_or_null("SprinklerManager")
+		if manager:
+			return manager
+	
+	return null

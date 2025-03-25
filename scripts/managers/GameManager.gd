@@ -129,6 +129,13 @@ func _ready():
 		#print("GameManager: Passing game_data_manager directly to level_editor")
 		#level_editor.game_data_manager = game_data_manager
 	# Start the game
+	var sprinkler_manager = $SprinklerManager
+	if sprinkler_manager:
+		print("GameManager: Found SprinklerManager")
+		if service_locator:
+			service_locator.register_service("sprinkler_manager", sprinkler_manager)
+	else:
+		push_error("GameManager: SprinklerManager not found")
 	start_game()
 	
 	print("GameManager: Game initialized")
