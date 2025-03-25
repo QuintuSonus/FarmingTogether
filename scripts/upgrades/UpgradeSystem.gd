@@ -111,12 +111,18 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 	game_data.progression_data.currency -= upgrade_data.cost
 	game_data.upgrades_data.purchased_upgrades[upgrade_id] = current_level + 1
 	
+	# NEW: If this upgrade unlocks a tile type, add it to unlocked types
+	if upgrade_data.unlocks_tile_type >= 0:
+		if not game_data.progression_data.unlocked_tile_types.has(upgrade_data.unlocks_tile_type):
+			game_data.progression_data.unlocked_tile_types.append(upgrade_data.unlocks_tile_type)
+			print("UpgradeSystem: Unlocked new tile type: " + str(upgrade_data.unlocks_tile_type))
+	
 	# Save the game data
 	game_data.save()
 	
 	print("UpgradeSystem: Purchased " + upgrade_data.name + " (Level " + str(current_level + 1) + ")")
 	
-	# Apply the upgrade
+	# Apply the upgrade effects
 	apply_upgrade(upgrade_id, current_level + 1)
 	
 	# Emit event
@@ -126,7 +132,13 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 			"level": current_level + 1,
 			"upgrade_data": upgrade_data
 		})
-	
+	# If the purchase was successful, refresh the editor UI if it's active
+	var level_editor = get_node_or_null("/root/LevelEditor")
+	if not level_editor:
+		level_editor = get_tree().get_root().find_child("LevelEditor", true, false)
+		
+	if level_editor and level_editor.visible and level_editor.has_method("refresh_after_upgrade"):
+		level_editor.refresh_after_upgrade()
 	return true
 
 # Apply an upgrade to a specific tile

@@ -81,6 +81,7 @@ class ProgressionData extends Resource:
 	# Unlocked items
 	@export var unlocked_seeds: Array = ["carrot"]
 	@export var unlocked_tools: Array = ["hoe", "watering_can", "basket"]
+	@export var unlocked_tile_types: Array[int] = [0, 1, 5, 6, 7, 8]
 	
 	# Save this resource
 	func save(path: String = "user://progression_data.tres"):
@@ -105,6 +106,7 @@ class ProgressionData extends Resource:
 		highest_score = 0
 		unlocked_seeds = ["carrot"]
 		unlocked_tools = ["hoe", "watering_can", "basket"]
+		unlocked_tile_types = [0, 1, 5, 6, 7, 8]  # Reset to default tiles
 
 class FarmLayoutData extends Resource:
 	# Tile data - stores positions and types of special tiles

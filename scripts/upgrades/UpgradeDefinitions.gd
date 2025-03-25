@@ -14,6 +14,7 @@ static func register_all_upgrades(registry: UpgradeRegistry):
 	registry.register_upgrade(create_crop_rotation())
 	registry.register_upgrade(create_quality_control())
 	registry.register_upgrade(create_greenhouse())
+	registry.register_upgrade(create_persistent_soil())
 	
 	# Register all tool upgrades
 	registry.register_upgrade(create_well_worn_hoe())
@@ -40,11 +41,11 @@ static func create_fertile_soil() -> UpgradeData:
 	var upgrade = UpgradeData.new()
 	upgrade.id = "fertile_soil"
 	upgrade.name = "Fertile Soil"
-	upgrade.description = "Crops planted on enhanced soil grow 20% faster."
+	upgrade.description = "Unlocks Fertile Dirt tiles that boost crop growth speed by 20%."
 	upgrade.cost = 300
 	upgrade.type = UpgradeData.UpgradeType.TILE
 	upgrade.max_level = 1
-	upgrade.effects = {"growth_speed_multiplier": 1.2}
+	upgrade.unlocks_tile_type = 2  # DIRT_FERTILE
 	upgrade.icon_path = "res://assets/textures/upgrades/fertile_soil_icon.png"
 	return upgrade
 
@@ -52,35 +53,47 @@ static func create_preservation_mulch() -> UpgradeData:
 	var upgrade = UpgradeData.new()
 	upgrade.id = "preservation_mulch"
 	upgrade.name = "Preservation Mulch"
-	upgrade.description = "Increases time before crops spoil by 25%."
-	upgrade.cost = 250
+	upgrade.description = "Unlocks Preserved Dirt tiles that increase crop spoil time by 25%."
+	upgrade.cost = 350
 	upgrade.type = UpgradeData.UpgradeType.TILE
 	upgrade.max_level = 1
-	upgrade.effects = {"spoil_time_multiplier": 1.25}
+	upgrade.unlocks_tile_type = 3  # DIRT_PRESERVED
 	upgrade.icon_path = "res://assets/textures/upgrades/preservation_mulch_icon.png"
+	return upgrade
+
+static func create_persistent_soil() -> UpgradeData:
+	var upgrade = UpgradeData.new()
+	upgrade.id = "persistent_soil"
+	upgrade.name = "Persistent Soil"
+	upgrade.description = "Unlocks Persistent Dirt tiles that remain as soil after harvesting."
+	upgrade.cost = 400
+	upgrade.type = UpgradeData.UpgradeType.TILE
+	upgrade.max_level = 1
+	upgrade.unlocks_tile_type = 4  # DIRT_PERSISTENT
+	upgrade.icon_path = "res://assets/textures/upgrades/persistent_soil_icon.png"
 	return upgrade
 
 static func create_sprinkler_system() -> UpgradeData:
 	var upgrade = UpgradeData.new()
 	upgrade.id = "sprinkler_system"
 	upgrade.name = "Sprinkler System"
-	upgrade.description = "Automatically waters adjacent soil tiles every 30 seconds."
+	upgrade.description = "Unlocks Sprinkler tiles that automatically water adjacent plants every 30 seconds."
 	upgrade.cost = 500
 	upgrade.type = UpgradeData.UpgradeType.TILE
 	upgrade.max_level = 1
-	upgrade.effects = {"auto_water": true}
+	upgrade.unlocks_tile_type = 11  # SPRINKLER
 	upgrade.icon_path = "res://assets/textures/upgrades/sprinkler_system_icon.png"
 	return upgrade
 
 static func create_express_delivery() -> UpgradeData:
 	var upgrade = UpgradeData.new()
 	upgrade.id = "express_delivery"
-	upgrade.name = "Express Delivery Zone"
-	upgrade.description = "Orders completed at upgraded delivery tiles earn 15% more points."
-	upgrade.cost = 400
+	upgrade.name = "Express Delivery Station"
+	upgrade.description = "Unlocks Express Delivery tiles that provide 15% more points for completed orders."
+	upgrade.cost = 450
 	upgrade.type = UpgradeData.UpgradeType.TILE
 	upgrade.max_level = 1
-	upgrade.effects = {"order_score_multiplier": 1.15}
+	upgrade.unlocks_tile_type = 10  # DELIVERY_EXPRESS
 	upgrade.icon_path = "res://assets/textures/upgrades/express_delivery_icon.png"
 	return upgrade
 

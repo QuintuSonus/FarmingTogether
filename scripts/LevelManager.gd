@@ -3,12 +3,17 @@ extends Node3D
 
 # Constants for tile types based on our GDD
 enum TileType {
-	REGULAR_GROUND,
-	DIRT_GROUND,
-	SOIL,
-	WATER,
-	MUD,
-	DELIVERY
+	REGULAR_GROUND = 0,
+	DIRT_GROUND = 1,
+	DIRT_FERTILE = 2,     # New: Enhanced dirt with faster growth
+	DIRT_PRESERVED = 3,   # New: Enhanced dirt with slower spoiling
+	DIRT_PERSISTENT = 4,  # New: Enhanced dirt that stays as soil after harvest
+	SOIL = 5,
+	WATER = 6, 
+	MUD = 7,
+	DELIVERY = 8,
+	DELIVERY_EXPRESS = 10, # New: Enhanced delivery with bonus points
+	SPRINKLER = 11        # New: Automatic watering of adjacent tiles
 }
 
 # Reference to the GridMap node
@@ -21,13 +26,21 @@ var level_height: int = 8
 # Dictionary to track tile states
 var tile_states = {}
 
-# Tile mesh IDs in the GridMap's MeshLibrary
+# Map tile types to mesh IDs in the MeshLibrary
 const REGULAR_GROUND_MESH_ID = 0
 const DIRT_GROUND_MESH_ID = 1
-const SOIL_MESH_ID = 2
-const WATER_MESH_ID = 3
-const MUD_MESH_ID = 4
-const DELIVERY_MESH_ID = 5
+const DIRT_FERTILE_MESH_ID = 2  # New
+const DIRT_PRESERVED_MESH_ID = 3  # New
+const DIRT_PERSISTENT_MESH_ID = 4  # New
+const SOIL_MESH_ID = 5
+const WATER_MESH_ID = 6
+const MUD_MESH_ID = 7
+const DELIVERY_MESH_ID = 8
+const DELIVERY_EXPRESS_MESH_ID = 10  # New
+const SPRINKLER_MESH_ID = 11  # New
+
+var sprinkler_timer: float = 0.0
+@export var sprinkler_interval: float = 30.0  # Water every 30 seconds
 
 # Signal for when a tile changes state
 signal tile_changed(position, old_type, new_type)
@@ -54,6 +67,14 @@ func _ready():
 	# Print debug info about tile states
 	print_all_tile_states()
 	print_level_state()
+
+func _process(delta):
+	# Update sprinklers if they exist in the level
+	if get_all_tiles_of_type(TileType.SPRINKLER).size() > 0:
+		sprinkler_timer += delta
+		if sprinkler_timer >= sprinkler_interval:
+			sprinkler_timer = 0.0
+			activate_sprinklers()
 
 # Load tile states from tiles placed in the editor
 func load_tile_states_from_editor():
@@ -94,10 +115,15 @@ func get_tile_type_from_mesh_id(mesh_id: int) -> int:
 	match mesh_id:
 		REGULAR_GROUND_MESH_ID: return TileType.REGULAR_GROUND
 		DIRT_GROUND_MESH_ID: return TileType.DIRT_GROUND
+		DIRT_FERTILE_MESH_ID: return TileType.DIRT_FERTILE
+		DIRT_PRESERVED_MESH_ID: return TileType.DIRT_PRESERVED
+		DIRT_PERSISTENT_MESH_ID: return TileType.DIRT_PERSISTENT
 		SOIL_MESH_ID: return TileType.SOIL
 		WATER_MESH_ID: return TileType.WATER
 		MUD_MESH_ID: return TileType.MUD
 		DELIVERY_MESH_ID: return TileType.DELIVERY
+		DELIVERY_EXPRESS_MESH_ID: return TileType.DELIVERY_EXPRESS
+		SPRINKLER_MESH_ID: return TileType.SPRINKLER
 		_: 
 			print("Warning: Unknown mesh ID: ", mesh_id)
 			return TileType.REGULAR_GROUND
@@ -212,6 +238,7 @@ func grid_to_world(grid_position: Vector3i) -> Vector3:
 	return world_pos
 
 # Set a tile to a specific type
+# Update set_tile_type to handle new tile types
 func set_tile_type(grid_position: Vector3i, type: int) -> bool:
 	print("set_tile_type called for position: ", grid_position, " type: ", type)
 	
@@ -229,6 +256,12 @@ func set_tile_type(grid_position: Vector3i, type: int) -> bool:
 			mesh_id = REGULAR_GROUND_MESH_ID
 		TileType.DIRT_GROUND:
 			mesh_id = DIRT_GROUND_MESH_ID
+		TileType.DIRT_FERTILE:
+			mesh_id = DIRT_FERTILE_MESH_ID
+		TileType.DIRT_PRESERVED:
+			mesh_id = DIRT_PRESERVED_MESH_ID
+		TileType.DIRT_PERSISTENT:
+			mesh_id = DIRT_PERSISTENT_MESH_ID
 		TileType.SOIL:
 			mesh_id = SOIL_MESH_ID
 		TileType.WATER:
@@ -237,6 +270,10 @@ func set_tile_type(grid_position: Vector3i, type: int) -> bool:
 			mesh_id = MUD_MESH_ID
 		TileType.DELIVERY:
 			mesh_id = DELIVERY_MESH_ID
+		TileType.DELIVERY_EXPRESS:
+			mesh_id = DELIVERY_EXPRESS_MESH_ID
+		TileType.SPRINKLER:
+			mesh_id = SPRINKLER_MESH_ID
 	
 	grid_map.set_cell_item(grid_position, mesh_id)
 	tile_states[grid_position] = type
@@ -251,7 +288,16 @@ func set_tile_type(grid_position: Vector3i, type: int) -> bool:
 func reset_soil_to_dirt(grid_position: Vector3i) -> bool:
 	print("reset_soil_to_dirt called for position: ", grid_position)
 	
-	if is_tile_type(grid_position, TileType.SOIL):
+	# Check tile type
+	var current_type = get_tile_type(grid_position)
+	
+	# Handle persistent dirt - don't reset to dirt
+	if current_type == TileType.DIRT_PERSISTENT:
+		print("Persistent soil tile - keeping as soil")
+		return true
+	
+	# Normal behavior for other soil tiles
+	if current_type == TileType.SOIL:
 		return set_tile_type(grid_position, TileType.DIRT_GROUND)
 	
 	print("Tile is not soil, cannot reset")
@@ -416,3 +462,46 @@ func reset_all_soil_tiles():
 				soil_count += 1
 	
 	print("LevelManager: Reset " + str(soil_count) + " soil tiles to dirt")
+
+# Activate all sprinklers in the level
+func activate_sprinklers():
+	var sprinkler_tiles = get_all_tiles_of_type(TileType.SPRINKLER)
+	print("Activating " + str(sprinkler_tiles.size()) + " sprinklers")
+	
+	for pos in sprinkler_tiles:
+		water_adjacent_tiles(pos)
+
+# Water tiles adjacent to a position
+func water_adjacent_tiles(center_pos: Vector3i):
+	# Define the four adjacent directions
+	var directions = [
+		Vector3i(0, 0, -1),  # North
+		Vector3i(1, 0, 0),   # East
+		Vector3i(0, 0, 1),   # South
+		Vector3i(-1, 0, 0)   # West
+	]
+	
+	# Check each adjacent tile
+	for dir in directions:
+		var adjacent_pos = center_pos + dir
+		
+		# Only water soil tiles
+		if is_tile_type(adjacent_pos, TileType.SOIL):
+			water_plants_at_position(adjacent_pos)
+
+# Water any plants at a specific position
+func water_plants_at_position(grid_pos: Vector3i):
+	for obj in get_tree().get_nodes_in_group("plants"):
+		if obj is Plant and obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
+			var plant_grid_pos = world_to_grid(obj.global_position)
+			
+			# Also check using direct coordinates
+			var obj_direct_grid = Vector3i(
+				int(floor(obj.global_position.x)),
+				0,
+				int(floor(obj.global_position.z))
+			)
+			
+			if plant_grid_pos == grid_pos or obj_direct_grid == grid_pos:
+				obj.water()
+				print("Sprinkler watered plant at " + str(grid_pos))

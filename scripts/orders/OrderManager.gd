@@ -266,17 +266,17 @@ func check_basket_for_exact_order_match(basket) -> Order:
 	return null
 
 # Try to complete any order with exact basket match
-func try_complete_any_order(basket) -> bool:
+func try_complete_any_order(basket, is_express_delivery: bool = false) -> bool:
 	var matching_order = check_basket_for_exact_order_match(basket)
 	
 	if matching_order:
-		return complete_order(matching_order.order_id, basket)
+		return complete_order(matching_order.order_id, basket, is_express_delivery)
 	
 	# If we get here, no exact match was found
 	return false
 
 # Complete an order
-func complete_order(order_id: int, basket) -> bool:
+func complete_order(order_id: int, basket, is_express_delivery: bool = false) -> bool:
 	var order_index = -1
 	var matched_order = null
 	
@@ -292,6 +292,12 @@ func complete_order(order_id: int, basket) -> bool:
 	
 	# Calculate score
 	var score = matched_order.complete()
+	
+	# Apply express delivery bonus if applicable
+	if is_express_delivery:
+		score = int(score * 1.15)  # 15% bonus
+		print("Express delivery bonus applied! Score increased to " + str(score))
+	
 	current_score += score
 	
 	# Clear the basket after successful order completion

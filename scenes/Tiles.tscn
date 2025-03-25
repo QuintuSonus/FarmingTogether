@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://dc3iajov3ejjf"]
+[gd_scene load_steps=26 format=3 uid="uid://dc3iajov3ejjf"]
 
 [ext_resource type="Material" uid="uid://bespvujd6cgt5" path="res://assets/materials/regular_ground.tres" id="1_gewny"]
 [ext_resource type="Material" uid="uid://dd8hndmooc1o" path="res://assets/materials/dirt_ground.tres" id="2_0wu6n"]
@@ -6,6 +6,7 @@
 [ext_resource type="Material" uid="uid://dcffy47gdki1k" path="res://assets/materials/water.tres" id="4_e7r6u"]
 [ext_resource type="Material" uid="uid://doopkbxy0unne" path="res://assets/materials/mud.tres" id="5_g1vam"]
 [ext_resource type="Material" uid="uid://c8c8fnbvo4yad" path="res://assets/materials/delivery.tres" id="6_rp8ur"]
+[ext_resource type="CylinderMesh" uid="uid://dxvr6e8qus1v0" path="res://assets/meshes/particule.tres" id="7_5hnaj"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_dtc2a"]
 material = ExtResource("1_gewny")
@@ -32,6 +33,53 @@ size = Vector3(1, 0.5, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_qfyo7"]
 material = ExtResource("6_rp8ur")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fertile"]
+albedo_color = Color(0.439216, 0.290196, 0.141176, 1)
+emission = Color(0.133333, 0.25098, 0.113725, 1)
+emission_energy_multiplier = 0.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_fertile"]
+material = SubResource("StandardMaterial3D_fertile")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_preserved"]
+albedo_color = Color(0.333333, 0.231373, 0.141176, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_preserved"]
+material = SubResource("StandardMaterial3D_preserved")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_persistent"]
+albedo_color = Color(0.498039, 0.333333, 0.145098, 1)
+metallic_specular = 0.0
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_persistent"]
+material = SubResource("StandardMaterial3D_persistent")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sprinkler"]
+albedo_color = Color(0.666667, 0.666667, 0.666667, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sprinkler"]
+material = SubResource("StandardMaterial3D_sprinkler")
+size = Vector3(1, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sprheadmat"]
+albedo_color = Color(0.196078, 0.462745, 0.666667, 1)
+metallic = 0.7
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_express"]
+albedo_color = Color(1, 0.85098, 0.113725, 1)
+emission = Color(0.866667, 0.678431, 0.0980392, 1)
+emission_energy_multiplier = 0.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_express"]
+material = SubResource("StandardMaterial3D_express")
 size = Vector3(1, 0.5, 1)
 
 [node name="Tiles" type="Node3D"]
@@ -88,3 +136,121 @@ mesh = SubResource("BoxMesh_qfyo7")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="delivery/StaticBody3D"]
 shape = SubResource("BoxShape3D_vt10d")
+
+[node name="dirt_fertile" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.47, 2, 0)
+mesh = SubResource("BoxMesh_fertile")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="dirt_fertile"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="dirt_fertile/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="Particles" type="CPUParticles3D" parent="dirt_fertile"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+amount = 10
+lifetime = 2.0
+explosiveness = 0.1
+randomness = 0.5
+local_coords = true
+mesh = ExtResource("7_5hnaj")
+emission_shape = 3
+emission_box_extents = Vector3(0.5, 0.1, 0.5)
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, -0.2, 0)
+initial_velocity_min = 0.1
+initial_velocity_max = 0.2
+scale_amount_min = 0.02
+scale_amount_max = 0.05
+color = Color(0.113725, 0.372549, 0.0901961, 1)
+
+[node name="dirt_preserved" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.76, 2, 0)
+mesh = SubResource("BoxMesh_preserved")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="dirt_preserved"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="dirt_preserved/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="Straw" type="CPUParticles3D" parent="dirt_preserved"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
+emitting = false
+amount = 20
+lifetime = 0.5
+one_shot = true
+preprocess = 1.0
+explosiveness = 0.8
+randomness = 0.5
+lifetime_randomness = 0.5
+local_coords = true
+mesh = ExtResource("7_5hnaj")
+emission_shape = 3
+emission_box_extents = Vector3(0.5, 0.02, 0.5)
+direction = Vector3(0, 1, 0)
+spread = 20.0
+gravity = Vector3(0, -0.5, 0)
+initial_velocity_min = 0.1
+initial_velocity_max = 0.3
+angular_velocity_min = -90.0
+angular_velocity_max = 90.0
+angle_min = -90.0
+angle_max = 90.0
+scale_amount_min = 0.02
+scale_amount_max = 0.05
+color = Color(0.764706, 0.627451, 0.223529, 1)
+
+[node name="dirt_persistent" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.96, 2, 0)
+mesh = SubResource("BoxMesh_persistent")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="dirt_persistent"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="dirt_persistent/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="RootParticles" type="CPUParticles3D" parent="dirt_persistent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.350334, 0)
+amount = 15
+lifetime = 0.5
+mesh = ExtResource("7_5hnaj")
+emission_shape = 3
+emission_box_extents = Vector3(0.5, 0.01, 0.5)
+gravity = Vector3(0, 0, 0)
+scale_amount_min = 0.05
+scale_amount_max = 0.1
+color = Color(0.545098, 0.388235, 0.239216, 1)
+
+[node name="sprinkler" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.93, 2, 0)
+mesh = SubResource("BoxMesh_sprinkler")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="sprinkler"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="sprinkler/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="SprinklerHead" type="MeshInstance3D" parent="sprinkler"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = ExtResource("7_5hnaj")
+surface_material_override/0 = SubResource("StandardMaterial3D_sprheadmat")
+
+[node name="delivery_express" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("BoxMesh_express")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="delivery_express"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="delivery_express/StaticBody3D"]
+shape = SubResource("BoxShape3D_vt10d")
+
+[node name="Arrow1" type="CSGBox3D" parent="delivery_express"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0.253, 0.251, -0.253)
+size = Vector3(0.1, 0.002, 0.5)
+material = SubResource("StandardMaterial3D_express")
+
+[node name="Arrow2" type="CSGBox3D" parent="delivery_express"]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, -0.253, 0.251, -0.253)
+size = Vector3(0.1, 0.002, 0.5)
+material = SubResource("StandardMaterial3D_express")

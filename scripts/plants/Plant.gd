@@ -14,6 +14,10 @@ enum GrowthStage {
 @export var growth_time: float = 20.0  # Seconds to grow
 @export var spoil_time: float = 15.0  # Seconds until spoiled
 
+# Variables to store modifiers
+var growth_speed_modifier: float = 1.0
+var spoil_time_modifier: float = 1.0
+
 # State
 var current_stage = GrowthStage.SEED
 var growth_progress: float = 0.0
@@ -102,9 +106,34 @@ func create_simple_progress_bar(color: Color) -> MeshInstance3D:
 	return mesh_instance
 
 func _process(delta):
+	# Get level manager reference
+	var level_manager = get_node_or_null("/root/Main/LevelManager")
+	if not level_manager:
+		level_manager = get_tree().get_root().find_child("LevelManager", true, false)
+	
+	if level_manager:
+		# Get current tile type
+		var grid_pos = level_manager.world_to_grid(global_position)
+		var tile_type = level_manager.get_tile_type(grid_pos)
+		
+		# Set modifiers based on tile type
+		match tile_type:
+			2:  # DIRT_FERTILE
+				growth_speed_modifier = 1.2  # 20% faster growth
+				spoil_time_modifier = 1.0   # Normal spoil time
+			3:  # DIRT_PRESERVED
+				growth_speed_modifier = 1.0  # Normal growth
+				spoil_time_modifier = 1.25  # 25% longer spoil time
+			4:  # DIRT_PERSISTENT
+				growth_speed_modifier = 1.1  # 10% faster growth
+				spoil_time_modifier = 1.1   # 10% longer spoil time
+			_:  # Default for other tile types
+				growth_speed_modifier = 1.0
+				spoil_time_modifier = 1.0
+	
 	# Only grow if watered
 	if is_watered and current_stage == GrowthStage.GROWING:
-		growth_progress += delta / growth_time
+		growth_progress += (delta / growth_time) * growth_speed_modifier
 		
 		# Update growth bar scale to show progress
 		if growth_bar:
@@ -134,7 +163,7 @@ func _process(delta):
 	
 	# Track spoiling progress if in harvestable stage
 	if current_stage == GrowthStage.HARVESTABLE:
-		spoil_progress += delta / spoil_time
+		spoil_progress += (delta / (spoil_time * spoil_time_modifier))
 		
 		# Update spoil bar scale to show progress - starts at 1.0 and shrinks to 0
 		if spoil_bar:

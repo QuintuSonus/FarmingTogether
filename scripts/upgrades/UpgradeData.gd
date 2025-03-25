@@ -8,6 +8,7 @@ enum UpgradeType {
 	PLAYER
 }
 
+# These properties need to be properly exported for GDScript to serialize them
 @export var id: String = ""
 @export var name: String = ""
 @export var description: String = ""
@@ -16,10 +17,20 @@ enum UpgradeType {
 @export var max_level: int = 1
 @export var icon_path: String = ""
 @export var effects: Dictionary = {}  # Parameters that this upgrade modifies
+@export var unlocks_tile_type: int = -1  # NEW: The tile type this upgrade unlocks (-1 = none)
 
-func _init():
-	# Default initialization
-	pass
+func _init(p_id: String = "", p_name: String = "", p_description: String = "", p_cost: int = 100,
+		p_type: int = UpgradeType.TILE, p_max_level: int = 1, p_icon_path: String = "",
+		p_effects: Dictionary = {}, p_unlocks_tile_type: int = -1):
+	id = p_id
+	name = p_name
+	description = p_description
+	cost = p_cost
+	type = p_type
+	max_level = p_max_level
+	icon_path = p_icon_path
+	effects = p_effects
+	unlocks_tile_type = p_unlocks_tile_type
 
 func get_effect(key: String, default_value = 0):
 	if effects.has(key):

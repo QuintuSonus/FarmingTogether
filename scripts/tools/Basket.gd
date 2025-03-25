@@ -331,40 +331,39 @@ func complete_use(target_position):
 					return true
 	
 	# If we didn't harvest anything, try to deliver
-	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY):
-	
+	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY) or level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS):
+		# Get order manager
+		var order_manager = get_node_or_null("/root/Main/OrderManager")
 		
-		# Only proceed if we have crops to deliver
-		if get_total_crops() > 0:
-			# Try to find an order manager
-			var order_manager = get_node_or_null("/root/Main/OrderManager")
+		if order_manager and get_total_crops() > 0:
+			# Set express delivery flag if applicable
+			var is_express = level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS)
 			
-			if order_manager:
-				# Try to complete any exact matching order
-				var order_completed = order_manager.try_complete_any_order(self)
+			# Try to complete matching order with optional express bonus
+			var order_completed = order_manager.try_complete_any_order(self, is_express)
 				
-				if order_completed:
-					print("Basket: Successfully delivered order!")
-					# Basket was emptied by order manager
-					return true
-				else:
-					# No exact matching order found, crops are lost
-					
-					
-					# Provide feedback to the player that crops were lost
-					# You could add a visual effect or sound here
-					var crops_summary = get_crops_summary()
-					print("Basket: Lost " + crops_summary)
-					
-					# Clear all crops without scoring
-					clear_crops()
-					return true
+			if order_completed:
+				print("Basket: Successfully delivered order!")
+				# Basket was emptied by order manager
+				return true
 			else:
+				# No exact matching order found, crops are lost
 				
+				
+				# Provide feedback to the player that crops were lost
+				# You could add a visual effect or sound here
+				var crops_summary = get_crops_summary()
+				print("Basket: Lost " + crops_summary)
+				
+				# Clear all crops without scoring
 				clear_crops()
 				return true
 		else:
-			print("Basket: Nothing to deliver")
+			
+			clear_crops()
+			return true
+	else:
+		print("Basket: Nothing to deliver")
 	
 	return false
 
