@@ -156,7 +156,7 @@ func apply_player_upgrade_effects(upgrade_data: UpgradeData, level: int):
 			parameter_manager.add_modifier(
 				"tool.global.usage_time_multiplier",
 				"upgrade.energy_drink",
-				0.9, # 10% faster
+				0.9**level, # 10% faster
 				GameParameter.ModifierType.MULTIPLY
 			)
 			

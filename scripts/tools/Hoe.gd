@@ -21,8 +21,13 @@ func get_usage_duration() -> float:
 	var duration = 3.0  # Default
 	
 	if parameter_manager:
+		# Get the base duration
 		duration = parameter_manager.get_value("tool.hoe.usage_time", 3.0)
-		print("Hoe: Retrieved usage time: " + str(duration) + "s")
+		
+		# Apply global tool speed multiplier from Energy Drink upgrade
+		duration *= get_global_tool_speed_multiplier()
+		
+		print("Hoe: Retrieved usage time: " + str(duration) + "s (with global multiplier)")
 	else:
 		print("Hoe: Parameter manager not found!")
 		

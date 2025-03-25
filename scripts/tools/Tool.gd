@@ -71,3 +71,17 @@ func complete_use(target_position: Vector3i) -> bool:
 func set_highlighted(is_highlighted: bool):
 	# Implement highlighting logic (e.g., change material)
 	pass
+
+# Add this to scripts/tools/Tool.gd
+func get_global_tool_speed_multiplier() -> float:
+	var parameter_manager = get_parameter_manager()
+	if parameter_manager:
+		return parameter_manager.get_value("tool.global.usage_time_multiplier", 1.0)
+	return 1.0
+
+# Helper function to get parameter manager reference
+func get_parameter_manager():
+	var service_locator = get_node_or_null("/root/ServiceLocator")
+	if service_locator and service_locator.has_method("get_service"):
+		return service_locator.get_service("parameter_manager")
+	return null

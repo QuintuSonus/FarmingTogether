@@ -77,14 +77,15 @@ func get_usage_interaction_type() -> int:
 	
 func get_usage_duration() -> float:
 	var parameter_manager = get_parameter_manager()
-	var duration = 3.0  # Default
-		
-	if parameter_manager:
-		duration = parameter_manager.get_value("tool.hoe.usage_time", 2.0)
+	var duration = 2.0  # Default
 	
-	else:
-		print("Hoe: Parameter manager not found!")
-			
+	if parameter_manager:
+		# Get the base duration
+		duration = parameter_manager.get_value("tool.seeding.usage_time", 2.0)
+		
+		# Apply global tool speed multiplier from Energy Drink upgrade
+		duration *= get_global_tool_speed_multiplier()
+	
 	return duration
 
 # Check if can use at position
