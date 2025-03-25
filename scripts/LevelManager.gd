@@ -391,10 +391,6 @@ func reset_level():
 	# Reset all soil tiles back to dirt
 	reset_all_soil_tiles()
 	
-	var sprinkler_manager = get_node_or_null("/root/Main/SprinklerManager")
-	if sprinkler_manager:
-		sprinkler_manager.clear_all_sprinklers()
-	
 	# Apply saved farm layout (now handled by Main.apply_saved_farm_layout)
 	print("LevelManager: Level reset complete")
 
