@@ -79,10 +79,11 @@ func connect_tool_buttons():
 			
 # Handle tile button presses
 func _on_tile_button_pressed(tile_type: String):
+	print("EditorUI: Tile button pressed with tile_type: " + tile_type)
+	
+	# If this is being called directly on the LevelEditor, the parameter might be missing
 	if level_editor:
 		level_editor.select_tile_type(tile_type)
-		update_selected_tile(tile_type)
-			
 # Helper to find nodes within tab containers
 func find_node_in_tabs(node_name: String) -> Node:
 	# Check in the TabContainer

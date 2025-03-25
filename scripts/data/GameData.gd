@@ -106,6 +106,7 @@ class ProgressionData extends Resource:
 		highest_score = 0
 		unlocked_seeds = ["carrot"]
 		unlocked_tools = ["hoe", "watering_can", "basket"]
+		
 		unlocked_tile_types = [0, 1, 5, 6, 7, 8]  # Reset to default tiles
 
 class FarmLayoutData extends Resource:

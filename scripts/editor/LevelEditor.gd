@@ -486,6 +486,7 @@ func setup_highlight_mesh():
 
 # Select a tile type
 func select_tile_type(type_name: String):
+	print("LevelEditor: Selecting tile type: " + type_name)
 	selected_tile_type = type_name
 	selected_tool_type = "none"
 	is_placing_tool = false
@@ -1320,25 +1321,26 @@ func get_available_tile_types() -> Array:
 	available_tiles.append("regular")
 	
 	if game_data and game_data.progression_data:
-		# Map integer tile types to names
+		# Define mapping from numeric tile types to names
 		var tile_type_to_name = {
-			0: "regular",      # REGULAR_GROUND
-			1: "dirt",         # DIRT_GROUND
-			2: "dirt_fertile",  # DIRT_FERTILE
-			3: "dirt_preserved", # DIRT_PRESERVED
-			4: "dirt_persistent", # DIRT_PERSISTENT
-			5: "soil",         # SOIL
-			6: "water",        # WATER
-			7: "mud",          # MUD
-			8: "delivery",     # DELIVERY
-			10: "delivery_express", # DELIVERY_EXPRESS
-			11: "sprinkler"    # SPRINKLER
+			0: "regular",
+			1: "dirt",
+			2: "dirt_fertile",
+			3: "dirt_preserved",
+			4: "dirt_persistent",
+			5: "soil",
+			6: "water",
+			7: "mud",
+			8: "delivery",
+			10: "delivery_express",
+			11: "sprinkler"
 		}
 		
+		# Add all unlocked tile types
 		for type_id in game_data.progression_data.unlocked_tile_types:
 			if tile_type_to_name.has(type_id):
 				var name = tile_type_to_name[type_id]
-				if name != "regular" and not available_tiles.has(name):
+				if not available_tiles.has(name):
 					available_tiles.append(name)
 	else:
 		# Fallback to defaults if game data isn't available
@@ -1347,52 +1349,57 @@ func get_available_tile_types() -> Array:
 	return available_tiles
 
 func update_tile_buttons():
-	print("LevelEditor: Updating tile buttons visibility")
-	
+	# Get available tile types
 	var available_tiles = get_available_tile_types()
-	print("LevelEditor: Available tiles: ", available_tiles)
 	
 	# Find the Tiles tab
 	var tiles_tab = find_tile_tab()
 	if not tiles_tab:
-		push_error("LevelEditor: Could not find Tiles tab!")
 		return
 	
+	# Define mapping between button names and tile types
+	var button_to_tile_map = {
+		"RegularButton": "regular",
+		"DirtButton": "dirt",
+		"SoilButton": "soil",
+		"WaterButton": "water",
+		"MudButton": "mud",
+		"DeliveryButton": "delivery",
+		"DirtFertileButton": "dirt_fertile",
+		"DirtPreservedButton": "dirt_preserved",
+		"DirtPersistentButton": "dirt_persistent",
+		"DeliveryExpressButton": "delivery_express",
+		"SprinklerButton": "sprinkler"
+	}
+	
 	# Update buttons visibility and text
-	var updated_count = 0
+	var visible_count = 0
 	
-	for child in tiles_tab.get_children():
-		if child is Button and "Button" in child.name:
-			var button_name = child.name.replace("Button", "").to_lower()
+	for button_name in button_to_tile_map.keys():
+		var button = tiles_tab.get_node_or_null(button_name)
+		if not button:
+			continue
 			
-			# Get normalized tile name 
-			# Convert from CamelCase to snake_case if needed
-			var tile_name = ""
-			for i in range(button_name.length()):
-				var c = button_name[i]
-				if i > 0 and c.capitalize() == c and c.is_valid_identifier():
-					tile_name += "_" + c.to_lower()
+		var tile_type = button_to_tile_map[button_name]
+		
+		# Check if this tile is available
+		if available_tiles.has(tile_type):
+			button.visible = true
+			visible_count += 1
+			
+			# Update text to include cost
+			var cost = get_tile_cost(tile_type)
+			if cost > 0:
+				# Preserve the original label but update the cost
+				var label_parts = button.text.split("(")
+				if label_parts.size() > 1:
+					button.text = label_parts[0] + "(" + str(cost) + ")"
 				else:
-					tile_name += c.to_lower()
-			
-			# Check if this tile is available
-			if available_tiles.has(tile_name):
-				child.visible = true
-				updated_count += 1
-				
-				# Update text to include cost
-				var cost = get_tile_cost(tile_name)
-				if cost > 0:
-					# Preserve the original label but update the cost
-					var label_parts = child.text.split("(")
-					if label_parts.size() > 1:
-						child.text = label_parts[0] + "(" + str(cost) + ")"
-					else:
-						child.text = child.text + " (" + str(cost) + ")"
-			else:
-				child.visible = false
+					button.text = button.text + " (" + str(cost) + ")"
+		else:
+			button.visible = false
 	
-	print("LevelEditor: Updated " + str(updated_count) + " visible tile buttons")
+	print("LevelEditor: Updated " + str(visible_count) + " visible tile buttons")
 				
 func initialize_tile_buttons():
 	print("LevelEditor: Initializing tile buttons")
@@ -1403,12 +1410,12 @@ func initialize_tile_buttons():
 		push_error("LevelEditor: Could not find Tiles tab!")
 		return
 	
-	# Define all possible tile types
+	# Define all possible tile types with proper properties
 	var all_tile_types = {
 		"regular": {"label": "Regular Ground", "cost": 0},
 		"dirt": {"label": "Dirt Ground", "cost": 100},
 		"dirt_fertile": {"label": "Fertile Dirt", "cost": 150},
-		"dirt_preserved": {"label": "Preserved Dirt", "cost": 200}, 
+		"dirt_preserved": {"label": "Preserved Dirt", "cost": 200},
 		"dirt_persistent": {"label": "Persistent Dirt", "cost": 250},
 		"soil": {"label": "Soil", "cost": 150},
 		"water": {"label": "Water", "cost": 250},
@@ -1418,23 +1425,18 @@ func initialize_tile_buttons():
 		"sprinkler": {"label": "Sprinkler", "cost": 500}
 	}
 	
-	# Check for existing buttons and add missing ones
-	var existing_buttons = []
-	
-	# Find existing buttons
-	for child in tiles_tab.get_children():
-		if child is Button and "Button" in child.name:
-			existing_buttons.append(child.name.replace("Button", "").to_lower())
-	
-	# Add missing buttons
+	# Add buttons for all tile types
 	for tile_type in all_tile_types.keys():
+		# Create a consistent button name without spaces or underscores
+		var button_name = tile_type.capitalize().replace("_", "") + "Button"
+		
 		# Skip if button already exists
-		if existing_buttons.has(tile_type):
+		if tiles_tab.has_node(button_name):
 			continue
 		
 		# Create new button
 		var button = Button.new()
-		button.name = tile_type.capitalize() + "Button"  # e.g., "DirtFertileButton"
+		button.name = button_name
 		
 		# Set text with cost
 		var cost = all_tile_types[tile_type].cost
@@ -1447,8 +1449,8 @@ func initialize_tile_buttons():
 		# Add to tile tab
 		tiles_tab.add_child(button)
 		
-		# Connect pressed signal
-		button.connect("pressed", Callable(self, "_on_tile_button_pressed").bind(tile_type))
+		# Connect the pressed signal with lambda function
+		button.pressed.connect(func(): select_tile_type(tile_type))
 		
 		print("LevelEditor: Added button for " + tile_type)
 	
@@ -1479,4 +1481,3 @@ func refresh_after_upgrade():
 	
 	# Refresh tile buttons
 	update_tile_buttons()
-	

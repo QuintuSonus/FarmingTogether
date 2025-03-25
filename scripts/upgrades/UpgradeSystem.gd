@@ -137,8 +137,14 @@ func purchase_upgrade(upgrade_id: String) -> bool:
 	if not level_editor:
 		level_editor = get_tree().get_root().find_child("LevelEditor", true, false)
 		
-	if level_editor and level_editor.visible and level_editor.has_method("refresh_after_upgrade"):
-		level_editor.refresh_after_upgrade()
+	if level_editor:
+		print("Found LevelEditor, calling refresh_after_upgrade()")
+		if level_editor.has_method("refresh_after_upgrade"):
+			level_editor.refresh_after_upgrade()
+		else:
+			print("LevelEditor doesn't have refresh_after_upgrade method!")
+	else:
+		print("LevelEditor not found!")
 	return true
 
 # Apply an upgrade to a specific tile
