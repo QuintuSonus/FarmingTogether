@@ -493,15 +493,8 @@ func select_tile_type(type_name: String):
 	selected_tool_type = "none"
 	is_placing_tool = false
 	
-	# Update UI
-	if editor_ui:
-		# Update the tile label
-		if editor_ui.has_method("update_selected_tile"):
-			editor_ui.update_selected_tile(type_name)
-		
-		# Also update the tool label if it exists
-		if editor_ui.has_method("update_selected_tool"):
-			editor_ui.update_selected_tool("None")
+	# The UI update is now handled by EditorUI directly, so we don't need
+	# to call editor_ui methods from here
 	
 	print("LevelEditor: Selected tile type: " + type_name)
 
@@ -1324,75 +1317,26 @@ func get_available_tile_types() -> Array:
 			var level = 0
 			if upgrade_system.has_method("get_upgrade_level"):
 				level = upgrade_system.get_upgrade_level(upgrade_id)
-			else:
-				print("Warning: upgrade_system doesn't have get_upgrade_level method")
 				
 			if level > 0:
 				available_tiles.append(upgrade_to_tile_map[upgrade_id])
 				print("Unlocked special tile: " + upgrade_to_tile_map[upgrade_id])
 	else:
-		print("LevelEditor: No upgrade system found when updating tile buttons")
+		print("LevelEditor: No upgrade system found when getting available tiles")
 	
 	return available_tiles
 
+
 # Replace update_tile_buttons() in LevelEditor.gd with this simplified version
+# Instead, add this function that delegates to EditorUI:
 func update_tile_buttons():
-	print("LevelEditor: Updating tile buttons visibility")
+	print("LevelEditor: Delegating update_tile_buttons to EditorUI")
 	
-	# Get available tile types
-	var available_tiles = get_available_tile_types()
-	# Find the Tiles tab
-	var tiles_tab = find_tile_tab()
-	if not tiles_tab:
-		push_error("LevelEditor: Could not find Tiles tab!")
-		return
-	
-	# Define mapping between button names and tile types
-	var button_to_tile_map = {
-		"RegularButton": "regular",
-		"DirtButton": "dirt",
-		"SoilButton": "soil",
-		"WaterButton": "water",
-		"MudButton": "mud",
-		"DeliveryButton": "delivery",
-		"DirtFertileButton": "dirt_fertile",
-		"DirtPreservedButton": "dirt_preserved",
-		"DirtPersistentButton": "dirt_persistent",
-		"DeliveryExpressButton": "delivery_express",
-		"SprinklerButton": "sprinkler"
-	}
-	
-	# Update buttons visibility and text
-	var visible_count = 0
-	
-	for button_name in button_to_tile_map.keys():
-		var button = tiles_tab.find_child(button_name, true, false)
-		if not button:
-			print("Button not found: " + button_name)
-			continue
-			
-		var tile_type = button_to_tile_map[button_name]
-		
-		# Check if this tile is available
-		if available_tiles.has(tile_type):
-			button.visible = true
-			visible_count += 1
-			
-			# Update text to include cost
-			var cost = get_tile_cost(tile_type)
-			# Format display name nicely
-			var display_name = tile_type.capitalize().replace("_", " ")
-			button.text = display_name + " (" + str(cost) + ")"
-			
-			# Connect the button if not already connected
-			if not button.is_connected("pressed", Callable(self, "_on_tile_button_pressed")):
-				print(button_name)
-				button.connect("pressed", Callable(self, "_on_tile_button_pressed").bind(tile_type))
-		else:
-			# Hide unavailable buttons
-			button.visible = false
-	
-	print("LevelEditor: Updated with " + str(visible_count) + " visible tile buttons")
+	if editor_ui and editor_ui.has_method("update_tile_buttons_visibility"):
+		var available_tiles = get_available_tile_types()
+		editor_ui.update_tile_buttons_visibility(available_tiles)
+	else:
+		print("LevelEditor: Cannot update tile buttons - editor_ui reference is invalid")
 				
 func initialize_tile_buttons():
 	print("LevelEditor: Initializing tile buttons")
@@ -1421,7 +1365,7 @@ func find_tile_tab():
 	return null
 	
 	
-# Public method that can be called to refresh the UI after an upgrade purchase
+# Update refresh_after_upgrade to delegate to EditorUI
 func refresh_after_upgrade():
 	print("LevelEditor: Refreshing UI after upgrade purchase")
 	
@@ -1431,12 +1375,16 @@ func refresh_after_upgrade():
 		if service_locator:
 			game_data = service_locator.get_service("game_data")
 	
-	# Simply update tile button visibility
-	update_tile_buttons()
-	
-	# Also update currency display
-	if editor_ui and editor_ui.has_method("update_currency_display"):
-		editor_ui.update_currency_display()
+	# Tell EditorUI to update
+	if editor_ui:
+		# Update currency display
+		if editor_ui.has_method("update_currency_display"):
+			editor_ui.update_currency_display()
+			
+		# Update button visibility
+		if editor_ui.has_method("update_tile_buttons_visibility"):
+			var available_tiles = get_available_tile_types()
+			editor_ui.update_tile_buttons_visibility(available_tiles)
 	
 func _on_game_data_changed():
 	# Update tile buttons to reflect changes in game data

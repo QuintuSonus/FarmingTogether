@@ -155,7 +155,7 @@ layout_mode = 2
 theme_override_constants/separation = 20
 theme_override_styles/separator = SubResource("StyleBoxFlat_separator")
 
-[node name="SelectedTileLabel2" type="Label" parent="LeftPanel/TabContainer/Tiles"]
+[node name="SelectedTileLabel" type="Label" parent="LeftPanel/TabContainer/Tiles"]
 layout_mode = 2
 text = "Selected: None"
 horizontal_alignment = 1
