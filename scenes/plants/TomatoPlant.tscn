@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://cn76l8vqkfhip"]
 
-[ext_resource type="Script" path="res://scripts/plants/TomatoPlant.gd" id="1_0cs3t"]
+[ext_resource type="Script" uid="uid://caw2jjosxa5wo" path="res://scripts/plants/TomatoPlant.gd" id="1_0cs3t"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_tgj65"]
 top_radius = 0.1

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://xbimmd14id3y"]
 
-[ext_resource type="Script" path="res://scripts/ui/InteractionFeedback.gd" id="1_e40xj"]
+[ext_resource type="Script" uid="uid://bhnqwrm4gqq1o" path="res://scripts/ui/InteractionFeedback.gd" id="1_e40xj"]
 
 [node name="InteractionFeedback" type="Control"]
 layout_mode = 3

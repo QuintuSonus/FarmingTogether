@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://coedm0si0il25"]
 
-[ext_resource type="Script" path="res://scripts/plants/CarrotPlant.gd" id="1_a4mq8"]
+[ext_resource type="Script" uid="uid://cijcxmr84ie2m" path="res://scripts/plants/CarrotPlant.gd" id="1_a4mq8"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_tgj65"]
 top_radius = 0.1

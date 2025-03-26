@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://5pbjpvwntwqe"]
 
-[ext_resource type="Script" path="res://scripts/editor/LevelEditor.gd" id="1_jel5f"]
+[ext_resource type="Script" uid="uid://e2dvj0jixosj" path="res://scripts/editor/LevelEditor.gd" id="1_jel5f"]
 [ext_resource type="PackedScene" uid="uid://cn1pfmba77kb1" path="res://scenes/editor/EditorUI.tscn" id="2_m4xht"]
 
 [node name="LevelEditor" type="Node3D"]

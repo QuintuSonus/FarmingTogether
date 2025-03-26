@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://ib8umngm0jhc"]
 
-[ext_resource type="Script" path="res://scripts/editor/UpgradeItem.gd" id="1_upgrade"]
+[ext_resource type="Script" uid="uid://egj3n318ufoq" path="res://scripts/editor/UpgradeItem.gd" id="1_upgrade"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
 content_margin_left = 10.0

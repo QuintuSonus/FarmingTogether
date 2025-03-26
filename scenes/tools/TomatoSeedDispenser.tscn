@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://sbseehkvk78e"]
 
-[ext_resource type="Script" path="res://scripts/tools/SeedBagDispenser.gd" id="1_tomato"]
+[ext_resource type="Script" uid="uid://bbwqmwoqpy0cc" path="res://scripts/tools/SeedBagDispenser.gd" id="1_tomato"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m743m"]
 albedo_color = Color(0.565703, 0.220726, 0.196285, 1)

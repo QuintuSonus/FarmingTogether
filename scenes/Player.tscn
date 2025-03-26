@@ -1,13 +1,13 @@
 [gd_scene load_steps=13 format=3 uid="uid://cykkbk3sjbrw3"]
 
-[ext_resource type="Script" path="res://scripts/player/PlayerController.gd" id="1_16aah"]
-[ext_resource type="Script" path="res://scripts/interaction/InteractionManager.gd" id="2_ljt2q"]
+[ext_resource type="Script" uid="uid://dnddc18a2aft7" path="res://scripts/player/PlayerController.gd" id="1_16aah"]
+[ext_resource type="Script" uid="uid://b5lpfcdr0telh" path="res://scripts/interaction/InteractionManager.gd" id="2_ljt2q"]
 [ext_resource type="PackedScene" uid="uid://xbimmd14id3y" path="res://scenes/ui/InteractionFeedback.tscn" id="3_sxwei"]
 [ext_resource type="PackedScene" uid="uid://3ypmhllqy7ns" path="res://scenes/ui/TileHighlighter.tscn" id="4_pfgso"]
-[ext_resource type="Script" path="res://scripts/player/PlayerMovement.gd" id="5_ju8ue"]
-[ext_resource type="Script" path="res://scripts/player/PlayerToolHandler.gd" id="6_p53g4"]
-[ext_resource type="Script" path="res://scripts/player/PlayerInteraction.gd" id="7_a8unj"]
-[ext_resource type="Script" path="res://scripts/player/PlayerGridTracker.gd" id="8_774td"]
+[ext_resource type="Script" uid="uid://d0aq0be0uu8r8" path="res://scripts/player/PlayerMovement.gd" id="5_ju8ue"]
+[ext_resource type="Script" uid="uid://mcuxct103pk2" path="res://scripts/player/PlayerToolHandler.gd" id="6_p53g4"]
+[ext_resource type="Script" uid="uid://d2uxdkssygefw" path="res://scripts/player/PlayerInteraction.gd" id="7_a8unj"]
+[ext_resource type="Script" uid="uid://b04nxkb1616uh" path="res://scripts/player/PlayerGridTracker.gd" id="8_774td"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_01bbd"]
 radius = 0.4

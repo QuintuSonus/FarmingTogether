@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://3ypmhllqy7ns"]
 
-[ext_resource type="Script" path="res://scripts/ui/TileHighlighter.gd" id="1_3k1ev"]
+[ext_resource type="Script" uid="uid://csuejp5vm0r76" path="res://scripts/ui/TileHighlighter.gd" id="1_3k1ev"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_o2ngn"]
 size = Vector2(0.95, 0.95)
