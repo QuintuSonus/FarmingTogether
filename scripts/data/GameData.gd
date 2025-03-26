@@ -72,7 +72,7 @@ func reset_all():
 # Individual data classes
 class ProgressionData extends Resource:
 	# Currency and progression
-	@export var currency: int = 1000
+	@export var currency: int = 10000
 	@export var current_level: int = 1
 	@export var highest_level_reached: int = 1
 	@export var run_count: int = 0

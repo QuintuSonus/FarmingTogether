@@ -47,10 +47,16 @@ func _ready():
 	var tile_buttons = {
 		"RegularButton": "regular",
 		"DirtButton": "dirt",
-		"SoilButton": "soil", 
+		"SoilButton": "soil",
 		"WaterButton": "water",
 		"MudButton": "mud",
-		"DeliveryButton": "delivery"
+		"DeliveryButton": "delivery",
+		"DirtFertileButton": "dirt_fertile",
+		"DirtPreservedButton": "dirt_preserved",
+		"DirtPersistentButton": "dirt_persistent",
+		"DeliveryExpressButton": "delivery_express",
+		"SprinklerButton": "sprinkler"
+
 	}
 	
 	for button_name in tile_buttons:
@@ -122,7 +128,8 @@ func update_button_states(currency: int):
 		"SoilButton": "soil", 
 		"WaterButton": "water",
 		"MudButton": "mud",
-		"DeliveryButton": "delivery"
+		"DeliveryButton": "delivery",
+		"DirtFertileButton": "dirt_fertile"
 	}
 	
 	var tool_buttons = {

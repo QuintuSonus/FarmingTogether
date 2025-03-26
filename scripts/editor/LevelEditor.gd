@@ -1303,42 +1303,6 @@ func get_tile_name_from_type(type_id: int) -> String:
 func get_available_tile_types() -> Array:
 	var available_tiles = []
 	
-	# Always include regular ground
-	available_tiles.append("regular")
-	
-	# Basic tiles that are always available
-	var basic_tiles = ["dirt", "soil", "water", "mud", "delivery"]
-	for tile in basic_tiles:
-		available_tiles.append(tile)
-	
-	# Special upgraded tiles that require upgrades
-	var upgrade_system = get_upgrade_system()
-	if upgrade_system:
-		# Check which upgrades are purchased
-		var upgraded_tile_map = {
-			"fertile_soil": "dirt_fertile",
-			"preservation_mulch": "dirt_preserved", 
-			"persistent_soil": "dirt_persistent",
-			"express_delivery": "delivery_express",
-			"sprinkler_system": "sprinkler"
-		}
-		
-		for upgrade_id in upgraded_tile_map:
-			if upgrade_system.get_upgrade_level(upgrade_id) > 0:
-				available_tiles.append(upgraded_tile_map[upgrade_id])
-				print("Unlocked special tile: " + upgraded_tile_map[upgrade_id])
-	else:
-		print("No upgrade system found, using only basic tiles")
-	
-	return available_tiles
-	print(available_tiles)
-
-func update_tile_buttons():
-	print("LevelEditor: Updating tile buttons visibility")
-	
-	# Get available tile types directly from the upgrade system
-	var available_tiles = []
-	
 	# Always include basic tiles
 	var basic_tiles = ["regular", "dirt", "soil", "water", "mud", "delivery"]
 	available_tiles.append_array(basic_tiles)
@@ -1349,21 +1313,34 @@ func update_tile_buttons():
 		# Map upgrade IDs to tile types
 		var upgrade_to_tile_map = {
 			"fertile_soil": "dirt_fertile",
-			"preservation_mulch": "dirt_preserved",
-			"persistent_soil": "dirt_persistent", 
+			"preservation_mulch": "dirt_preserved", 
+			"persistent_soil": "dirt_persistent",
 			"express_delivery": "delivery_express",
 			"sprinkler_system": "sprinkler"
 		}
 		
 		# Check each upgrade
 		for upgrade_id in upgrade_to_tile_map:
-			var level = upgrade_system.get_upgrade_level(upgrade_id)
+			var level = 0
+			if upgrade_system.has_method("get_upgrade_level"):
+				level = upgrade_system.get_upgrade_level(upgrade_id)
+			else:
+				print("Warning: upgrade_system doesn't have get_upgrade_level method")
+				
 			if level > 0:
 				available_tiles.append(upgrade_to_tile_map[upgrade_id])
-				print("LevelEditor: Special tile unlocked: " + upgrade_to_tile_map[upgrade_id])
+				print("Unlocked special tile: " + upgrade_to_tile_map[upgrade_id])
 	else:
 		print("LevelEditor: No upgrade system found when updating tile buttons")
 	
+	return available_tiles
+
+# Replace update_tile_buttons() in LevelEditor.gd with this simplified version
+func update_tile_buttons():
+	print("LevelEditor: Updating tile buttons visibility")
+	
+	# Get available tile types
+	var available_tiles = get_available_tile_types()
 	# Find the Tiles tab
 	var tiles_tab = find_tile_tab()
 	if not tiles_tab:
@@ -1391,6 +1368,7 @@ func update_tile_buttons():
 	for button_name in button_to_tile_map.keys():
 		var button = tiles_tab.find_child(button_name, true, false)
 		if not button:
+			print("Button not found: " + button_name)
 			continue
 			
 		var tile_type = button_to_tile_map[button_name]
@@ -1402,88 +1380,47 @@ func update_tile_buttons():
 			
 			# Update text to include cost
 			var cost = get_tile_cost(tile_type)
-			if cost > 0:
-				# Preserve the original label but update the cost
-				var label_parts = button.text.split("(")
-				if label_parts.size() > 1:
-					button.text = label_parts[0] + "(" + str(cost) + ")"
-				else:
-					button.text = button.text + " (" + str(cost) + ")"
+			# Format display name nicely
+			var display_name = tile_type.capitalize().replace("_", " ")
+			button.text = display_name + " (" + str(cost) + ")"
+			
+			# Connect the button if not already connected
+			if not button.is_connected("pressed", Callable(self, "_on_tile_button_pressed")):
+				print(button_name)
+				button.connect("pressed", Callable(self, "_on_tile_button_pressed").bind(tile_type))
 		else:
-			# Explicitly hide unavailable buttons
+			# Hide unavailable buttons
 			button.visible = false
-			print("LevelEditor: Hiding unavailable tile: " + tile_type)
 	
 	print("LevelEditor: Updated with " + str(visible_count) + " visible tile buttons")
 				
 func initialize_tile_buttons():
 	print("LevelEditor: Initializing tile buttons")
-	
-	# Find the Tiles tab
-	var tiles_tab = find_tile_tab()
-	if not tiles_tab:
-		push_error("LevelEditor: Could not find Tiles tab!")
-		return
-	
-	# Define all possible tile types with proper properties
-	var all_tile_types = {
-		"regular": {"label": "Regular Ground", "cost": 0},
-		"dirt": {"label": "Dirt Ground", "cost": 100},
-		"dirt_fertile": {"label": "Fertile Dirt", "cost": 150},
-		"dirt_preserved": {"label": "Preserved Dirt", "cost": 200},
-		"dirt_persistent": {"label": "Persistent Dirt", "cost": 250},
-		"soil": {"label": "Soil", "cost": 150},
-		"water": {"label": "Water", "cost": 250},
-		"mud": {"label": "Mud", "cost": 150},
-		"delivery": {"label": "Delivery", "cost": 300},
-		"delivery_express": {"label": "Express Delivery", "cost": 400},
-		"sprinkler": {"label": "Sprinkler", "cost": 500}
-	}
-	
-	# Add buttons for all tile types
-	for tile_type in all_tile_types.keys():
-		# Create a consistent button name without spaces or underscores
-		var button_name = tile_type.capitalize().replace("_", "") + "Button"
-		
-		# Skip if button already exists
-		if tiles_tab.has_node(button_name):
-			continue
-		
-		# Create new button
-		var button = Button.new()
-		button.name = button_name
-		
-		# Set text with cost
-		var cost = all_tile_types[tile_type].cost
-		var label = all_tile_types[tile_type].label
-		if cost > 0:
-			button.text = label + " (" + str(cost) + ")"
-		else:
-			button.text = label
-		
-		# Add to tile tab
-		tiles_tab.add_child(button)
-		
-		# Connect the pressed signal with lambda function
-		button.pressed.connect(func(): select_tile_type(tile_type))
-		
-		print("LevelEditor: Added button for " + tile_type)
-	
-	# Update visibility based on unlocked tiles
 	update_tile_buttons()
 	
 func find_tile_tab():
-	# Get tab container
-	var tab_container = find_child("TabContainer", true, false)
-	if not tab_container:
+	if not editor_ui:
 		return null
 		
-	# Find Tiles tab
-	for child in tab_container.get_children():
-		if "Tiles" in child.name:
-			return child
-			
+	# First try directly through TabContainer
+	var tab_container = editor_ui.find_child("TabContainer", true, false)
+	if tab_container:
+		for child in tab_container.get_children():
+			if "Tiles" in child.name:
+				return child
+	
+	# If not found, try secondary approach
+	var left_panel = editor_ui.find_child("LeftPanel", true, false) 
+	if left_panel:
+		tab_container = left_panel.find_child("TabContainer", true, false)
+		if tab_container:
+			for child in tab_container.get_children():
+				if "Tiles" in child.name:
+					return child
+					
 	return null
+	
+	
 # Public method that can be called to refresh the UI after an upgrade purchase
 func refresh_after_upgrade():
 	print("LevelEditor: Refreshing UI after upgrade purchase")
@@ -1494,10 +1431,19 @@ func refresh_after_upgrade():
 		if service_locator:
 			game_data = service_locator.get_service("game_data")
 	
-	# Refresh tile buttons
+	# Simply update tile button visibility
 	update_tile_buttons()
+	
+	# Also update currency display
+	if editor_ui and editor_ui.has_method("update_currency_display"):
+		editor_ui.update_currency_display()
 	
 func _on_game_data_changed():
 	# Update tile buttons to reflect changes in game data
 	if is_visible() and is_editing:
 		update_tile_buttons()
+		
+		# Also update currency display
+		if editor_ui and editor_ui.has_method("update_currency_display"):
+			editor_ui.update_currency_display()
+			
