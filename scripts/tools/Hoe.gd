@@ -35,8 +35,6 @@ func get_usage_duration() -> float:
 
 # Implement use logic
 func use(target_position: Vector3i) -> bool:
-	
-	
 	var level_manager = get_node("/root/Main/LevelManager")
 	if not level_manager:
 		return false
@@ -46,7 +44,7 @@ func use(target_position: Vector3i) -> bool:
 		if obj is Plant and obj.current_stage == Plant.GrowthStage.SPOILED:
 			var plant_grid_pos = level_manager.world_to_grid(obj.global_position)
 			
-			# Also check using direct grid calculation (to be thorough)
+			# Also check using direct grid calculation
 			var obj_direct_grid = Vector3i(
 				int(floor(obj.global_position.x)),
 				0,
@@ -56,9 +54,14 @@ func use(target_position: Vector3i) -> bool:
 			if plant_grid_pos == target_position or obj_direct_grid == target_position:
 				return true
 	
-	# If no spoiled plant, check if it's dirt ground as before
-	var result = level_manager.is_tile_type(target_position, level_manager.TileType.DIRT_GROUND)
-	return result
+	# Check if it's ANY type of dirt (not just DIRT_GROUND)
+	var current_type = level_manager.get_tile_type(target_position)
+	var is_dirt = (current_type == level_manager.TileType.DIRT_GROUND ||
+				  current_type == level_manager.TileType.DIRT_FERTILE ||
+				  current_type == level_manager.TileType.DIRT_PRESERVED ||
+				  current_type == level_manager.TileType.DIRT_PERSISTENT)
+	
+	return is_dirt
 
 # Implement completion logic
 func complete_use(target_position: Vector3i) -> bool:

@@ -36,11 +36,13 @@ const SOIL_MESH_ID = 5
 const WATER_MESH_ID = 6
 const MUD_MESH_ID = 7
 const DELIVERY_MESH_ID = 8
-const DELIVERY_EXPRESS_MESH_ID = 10  # New
-const SPRINKLER_MESH_ID = 11  # New
+const DELIVERY_EXPRESS_MESH_ID = 9  # New
+const SPRINKLER_MESH_ID = 10  # New
 
 var sprinkler_timer: float = 0.0
 @export var sprinkler_interval: float = 30.0  # Water every 30 seconds
+
+var soil_properties = {}  # Format: "x,z": {"source_type": original_dirt_type}
 
 # Signal for when a tile changes state
 signal tile_changed(position, old_type, new_type)
@@ -71,6 +73,7 @@ func _ready():
 func _process(delta):
 	# Update sprinklers if they exist in the level
 	if get_all_tiles_of_type(TileType.SPRINKLER).size() > 0:
+		print('coucou sprinkler')
 		sprinkler_timer += delta
 		if sprinkler_timer >= sprinkler_interval:
 			sprinkler_timer = 0.0
@@ -172,20 +175,30 @@ func initialize_level():
 # Function to change a dirt tile to soil (will be called when using hoe)
 func convert_to_soil(grid_position: Vector3i) -> bool:
 	print("convert_to_soil called for position: ", grid_position)
-	print("Current tile type: ", get_tile_type(grid_position))
-	print("Is dirt? ", is_tile_type(grid_position, TileType.DIRT_GROUND))
 	
-	if tile_states.has(grid_position) and tile_states[grid_position] == TileType.DIRT_GROUND:
-		var old_type = tile_states[grid_position]
+	var current_type = get_tile_type(grid_position)
+	var is_dirt = (current_type == TileType.DIRT_GROUND ||
+				   current_type == TileType.DIRT_FERTILE ||
+				   current_type == TileType.DIRT_PRESERVED ||
+				   current_type == TileType.DIRT_PERSISTENT)
+	
+	if is_dirt:
+		var old_type = current_type
+		
+		# Convert to soil
 		grid_map.set_cell_item(grid_position, SOIL_MESH_ID)
 		tile_states[grid_position] = TileType.SOIL
 		
+		# Store metadata about the soil's origin
+		var key = str(grid_position.x) + "," + str(grid_position.z)
+		soil_properties[key] = {"source_type": old_type}
+		
 		# Emit signal that tile has changed
 		emit_signal("tile_changed", grid_position, old_type, TileType.SOIL)
-		print("Successfully converted to soil!")
+		print("Successfully converted to soil with properties preserved!")
 		return true
 	
-	print("Failed to convert to soil.")
+	print("Failed to convert to soil - not a dirt type.")
 	return false
 
 # Function to get the type of tile at a given position
@@ -291,14 +304,24 @@ func reset_soil_to_dirt(grid_position: Vector3i) -> bool:
 	# Check tile type
 	var current_type = get_tile_type(grid_position)
 	
-	# Handle persistent dirt - don't reset to dirt
-	if current_type == TileType.DIRT_PERSISTENT:
-		print("Persistent soil tile - keeping as soil")
-		return true
+	# Check if this soil has special properties
+	var key = str(grid_position.x) + "," + str(grid_position.z)
+	var original_dirt_type = TileType.DIRT_GROUND  # Default
 	
-	# Normal behavior for other soil tiles
+	if soil_properties.has(key):
+		original_dirt_type = soil_properties[key].source_type
+		
+		# Handle persistent dirt - keep as soil
+		if original_dirt_type == TileType.DIRT_PERSISTENT:
+			print("Persistent soil tile - keeping as soil")
+			return true
+			
+		# Remove the property entry if we'll be converting back
+		soil_properties.erase(key)
+	
 	if current_type == TileType.SOIL:
-		return set_tile_type(grid_position, TileType.DIRT_GROUND)
+		# Convert back to the original dirt type, not just regular dirt
+		return set_tile_type(grid_position, original_dirt_type)
 	
 	print("Tile is not soil, cannot reset")
 	return false
@@ -333,7 +356,6 @@ func get_all_tiles_of_type(type: int) -> Array:
 	for pos in tile_states.keys():
 		if tile_states[pos] == type:
 			tiles.append(pos)
-	
 	return tiles
 
 # Check if there is a water source within a certain range

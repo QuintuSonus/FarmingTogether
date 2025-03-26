@@ -105,6 +105,7 @@ func create_simple_progress_bar(color: Color) -> MeshInstance3D:
 	
 	return mesh_instance
 
+# In scripts/plants/Plant.gd - update the _process method
 func _process(delta):
 	# Get level manager reference
 	var level_manager = get_node_or_null("/root/Main/LevelManager")
@@ -112,24 +113,43 @@ func _process(delta):
 		level_manager = get_tree().get_root().find_child("LevelManager", true, false)
 	
 	if level_manager:
-		# Get current tile type
+		# Get current tile type and special properties
 		var grid_pos = level_manager.world_to_grid(global_position)
-		var tile_type = level_manager.get_tile_type(grid_pos)
+		var key = str(grid_pos.x) + "," + str(grid_pos.z)
 		
-		# Set modifiers based on tile type
-		match tile_type:
-			2:  # DIRT_FERTILE
-				growth_speed_modifier = 1.2  # 20% faster growth
-				spoil_time_modifier = 1.0   # Normal spoil time
-			3:  # DIRT_PRESERVED
-				growth_speed_modifier = 1.0  # Normal growth
-				spoil_time_modifier = 1.25  # 25% longer spoil time
-			4:  # DIRT_PERSISTENT
-				growth_speed_modifier = 1.1  # 10% faster growth
-				spoil_time_modifier = 1.1   # 10% longer spoil time
-			_:  # Default for other tile types
-				growth_speed_modifier = 1.0
-				spoil_time_modifier = 1.0
+		# Reset modifiers to default
+		growth_speed_modifier = 1.0
+		spoil_time_modifier = 1.0
+		
+		# Check soil properties first (for converted soil)
+		if level_manager.soil_properties.has(key):
+			var source_type = level_manager.soil_properties[key].source_type
+			
+			# Apply effects based on source dirt type
+			match source_type:
+				level_manager.TileType.DIRT_FERTILE:
+					growth_speed_modifier = 1.2  # 20% faster growth
+				level_manager.TileType.DIRT_PRESERVED:
+					growth_speed_modifier = 1.2
+					spoil_time_modifier = 1.2  # 25% longer spoil time
+				level_manager.TileType.DIRT_PERSISTENT:
+					growth_speed_modifier = 1.2  # 10% faster growth
+					spoil_time_modifier = 1.2   # 10% longer spoil time
+		else:
+			# Direct tile type (fallback for non-converted tiles)
+			var tile_type = level_manager.get_tile_type(grid_pos)
+			
+			# Set modifiers based on tile type (existing code)
+			match tile_type:
+				2:  # DIRT_FERTILE
+					growth_speed_modifier = 1.2
+					spoil_time_modifier = 1.0
+				3:  # DIRT_PRESERVED
+					growth_speed_modifier = 1.0
+					spoil_time_modifier = 1.25
+				4:  # DIRT_PERSISTENT
+					growth_speed_modifier = 1.1
+					spoil_time_modifier = 1.1
 	
 	# Only grow if watered
 	if is_watered and current_stage == GrowthStage.GROWING:
