@@ -108,7 +108,6 @@ func update_player_speed_from_parameters():
 		var old_speed = normal_speed
 		normal_speed = new_speed
 		
-		print("PlayerSpeed: Updated capacity from ", old_speed, " to ", new_speed)
 	else:
 		print("PlayerSpeed: No parameter manager found, using default capacity: ", normal_speed)
 		

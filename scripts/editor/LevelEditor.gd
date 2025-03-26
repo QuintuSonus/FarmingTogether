@@ -107,7 +107,9 @@ func _ready():
 	if service_locator:
 		game_data = service_locator.get_service("game_data")
 		game_data_manager = service_locator.get_service("game_data_manager")
-	
+		
+		if game_data_manager and game_data_manager.has_signal("data_changed"):
+			game_data_manager.connect("data_changed", Callable(self, "_on_game_data_changed"))
 	# Initially hide editor (will be shown by Main when appropriate)
 	hide()
 	
@@ -1020,22 +1022,7 @@ func initialize_upgrades():
 		upgrade_system = service_locator.get_service("upgrade_system")
 		print("LevelEditor: Got upgrade_system from ServiceLocator: " + str(upgrade_system != null))
 	
-	# If not found, try direct node lookup
-	if not upgrade_system:
-		upgrade_system = get_node_or_null("/root/Main/UpgradeSystem")
-		if not upgrade_system:
-			upgrade_system = get_node_or_null("/root/Main/MinimalUpgradeSystem")
 		
-		if upgrade_system:
-			print("LevelEditor: Found upgrade_system in scene tree: " + str(upgrade_system.name))
-	
-	# If still not found, check if it's a property on the game manager
-	if not upgrade_system:
-		var game_manager = get_node_or_null("/root/Main")
-		if game_manager and "upgrade_system" in game_manager:
-			upgrade_system = game_manager.upgrade_system
-			print("LevelEditor: Found upgrade_system as property on GameManager")
-	
 	# If we have an upgrade system, populate the UI
 	if upgrade_system:
 		populate_upgrade_panels(upgrade_system)
@@ -1313,48 +1300,74 @@ func get_tile_name_from_type(type_id: int) -> String:
 	return "unknown"
 
 # Get available tile types based on unlocked tiles
-# Get available tile types based on unlocked tiles
 func get_available_tile_types() -> Array:
 	var available_tiles = []
 	
 	# Always include regular ground
 	available_tiles.append("regular")
 	
-	if game_data and game_data.progression_data:
-		# Define mapping from numeric tile types to names
-		var tile_type_to_name = {
-			0: "regular",
-			1: "dirt",
-			2: "dirt_fertile",
-			3: "dirt_preserved",
-			4: "dirt_persistent",
-			5: "soil",
-			6: "water",
-			7: "mud",
-			8: "delivery",
-			10: "delivery_express",
-			11: "sprinkler"
+	# Basic tiles that are always available
+	var basic_tiles = ["dirt", "soil", "water", "mud", "delivery"]
+	for tile in basic_tiles:
+		available_tiles.append(tile)
+	
+	# Special upgraded tiles that require upgrades
+	var upgrade_system = get_upgrade_system()
+	if upgrade_system:
+		# Check which upgrades are purchased
+		var upgraded_tile_map = {
+			"fertile_soil": "dirt_fertile",
+			"preservation_mulch": "dirt_preserved", 
+			"persistent_soil": "dirt_persistent",
+			"express_delivery": "delivery_express",
+			"sprinkler_system": "sprinkler"
 		}
 		
-		# Add all unlocked tile types
-		for type_id in game_data.progression_data.unlocked_tile_types:
-			if tile_type_to_name.has(type_id):
-				var name = tile_type_to_name[type_id]
-				if not available_tiles.has(name):
-					available_tiles.append(name)
+		for upgrade_id in upgraded_tile_map:
+			if upgrade_system.get_upgrade_level(upgrade_id) > 0:
+				available_tiles.append(upgraded_tile_map[upgrade_id])
+				print("Unlocked special tile: " + upgraded_tile_map[upgrade_id])
 	else:
-		# Fallback to defaults if game data isn't available
-		available_tiles = ["regular", "dirt", "soil", "water", "mud", "delivery"]
+		print("No upgrade system found, using only basic tiles")
 	
 	return available_tiles
+	print(available_tiles)
 
 func update_tile_buttons():
-	# Get available tile types
-	var available_tiles = get_available_tile_types()
+	print("LevelEditor: Updating tile buttons visibility")
+	
+	# Get available tile types directly from the upgrade system
+	var available_tiles = []
+	
+	# Always include basic tiles
+	var basic_tiles = ["regular", "dirt", "soil", "water", "mud", "delivery"]
+	available_tiles.append_array(basic_tiles)
+	
+	# Check for special tiles with the upgrade system
+	var upgrade_system = get_upgrade_system()
+	if upgrade_system:
+		# Map upgrade IDs to tile types
+		var upgrade_to_tile_map = {
+			"fertile_soil": "dirt_fertile",
+			"preservation_mulch": "dirt_preserved",
+			"persistent_soil": "dirt_persistent", 
+			"express_delivery": "delivery_express",
+			"sprinkler_system": "sprinkler"
+		}
+		
+		# Check each upgrade
+		for upgrade_id in upgrade_to_tile_map:
+			var level = upgrade_system.get_upgrade_level(upgrade_id)
+			if level > 0:
+				available_tiles.append(upgrade_to_tile_map[upgrade_id])
+				print("LevelEditor: Special tile unlocked: " + upgrade_to_tile_map[upgrade_id])
+	else:
+		print("LevelEditor: No upgrade system found when updating tile buttons")
 	
 	# Find the Tiles tab
 	var tiles_tab = find_tile_tab()
 	if not tiles_tab:
+		push_error("LevelEditor: Could not find Tiles tab!")
 		return
 	
 	# Define mapping between button names and tile types
@@ -1376,7 +1389,7 @@ func update_tile_buttons():
 	var visible_count = 0
 	
 	for button_name in button_to_tile_map.keys():
-		var button = tiles_tab.get_node_or_null(button_name)
+		var button = tiles_tab.find_child(button_name, true, false)
 		if not button:
 			continue
 			
@@ -1397,9 +1410,11 @@ func update_tile_buttons():
 				else:
 					button.text = button.text + " (" + str(cost) + ")"
 		else:
+			# Explicitly hide unavailable buttons
 			button.visible = false
+			print("LevelEditor: Hiding unavailable tile: " + tile_type)
 	
-	print("LevelEditor: Updated " + str(visible_count) + " visible tile buttons")
+	print("LevelEditor: Updated with " + str(visible_count) + " visible tile buttons")
 				
 func initialize_tile_buttons():
 	print("LevelEditor: Initializing tile buttons")
@@ -1481,3 +1496,8 @@ func refresh_after_upgrade():
 	
 	# Refresh tile buttons
 	update_tile_buttons()
+	
+func _on_game_data_changed():
+	# Update tile buttons to reflect changes in game data
+	if is_visible() and is_editing:
+		update_tile_buttons()

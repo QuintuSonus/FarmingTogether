@@ -73,7 +73,6 @@ func _ready():
 func _process(delta):
 	# Update sprinklers if they exist in the level
 	if get_all_tiles_of_type(TileType.SPRINKLER).size() > 0:
-		print('coucou sprinkler')
 		sprinkler_timer += delta
 		if sprinkler_timer >= sprinkler_interval:
 			sprinkler_timer = 0.0
