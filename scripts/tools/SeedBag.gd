@@ -166,7 +166,7 @@ func complete_use(target_position: Vector3i) -> bool:
 	# Add 0.5 to X and Z to center the plant on the tile
 	var world_pos = Vector3(
 		float(target_position.x) + 0.5, # Add 0.5 to center on X axis
-		0.55, # Fixed height above soil 
+		0.75, # Fixed height above soil 
 		float(target_position.z) + 0.5  # Add 0.5 to center on Z axis
 	)
 	

@@ -80,7 +80,7 @@ func create_water_indicator():
 	water_indicator.add_child(water_mesh)
 	
 	# Position the indicator inside the watering can
-	water_indicator.position = Vector3(0, -0.1, 0)  # Slightly lower than center
+	water_indicator.position = Vector3(0, 0, 0)  # Slightly lower than center
 	
 	# Update the water level visualization
 	update_water_level()
@@ -193,20 +193,20 @@ func update_appearance():
 	# Update water level visualization
 	update_water_level()
 	
-	# Change watering can color based on water level
-	var can_material = StandardMaterial3D.new()
-	
-	if current_water <= 0:
-		# Empty - brown/copper color
-		can_material.albedo_color = Color(0.6, 0.4, 0.2)
-	else:
-		# Has water - blue tint
-		var blue_amount = min(current_water / water_capacity, 1.0) * 0.5
-		can_material.albedo_color = Color(0.3, 0.4 + blue_amount, 0.7 + blue_amount)
-	
-	# Apply to mesh
-	if mesh_instance:
-		mesh_instance.set_surface_override_material(0, can_material)
+	## Change watering can color based on water level
+	#var can_material = StandardMaterial3D.new()
+	#
+	#if current_water <= 0:
+		## Empty - brown/copper color
+		#can_material.albedo_color = Color(0.6, 0.4, 0.2)
+	#else:
+		## Has water - blue tint
+		#var blue_amount = min(current_water / water_capacity, 1.0) * 0.5
+		#can_material.albedo_color = Color(0.3, 0.4 + blue_amount, 0.7 + blue_amount)
+	#
+	## Apply to mesh
+	#if mesh_instance:
+		#mesh_instance.set_surface_override_material(0, can_material)
 	
 	# Update water level label
 	update_water_label()
@@ -237,7 +237,7 @@ func update_water_level():
 	)
 	
 	# Position the water to sit at the bottom of the can
-	water_mesh.position.y = -0.2 + (base_size.y * fill_percent / 2)
+	water_mesh.position.y = 0 + (base_size.y * fill_percent / 2)
 	
 # Update the water level text label
 func update_water_label():

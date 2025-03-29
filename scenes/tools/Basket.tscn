@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://dte7i6vc4ohbf"]
+[gd_scene load_steps=6 format=3 uid="uid://dte7i6vc4ohbf"]
 
 [ext_resource type="Script" uid="uid://q6q4w2rho7pe" path="res://scripts/tools/Basket.gd" id="1_iugtt"]
+[ext_resource type="PackedScene" uid="uid://mq2gk5b7bas5" path="res://assets/meshes/basket.glb" id="2_rcxk4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ykiie"]
 albedo_color = Color(0.474108, 0.286657, 0.19824, 1)
@@ -18,7 +19,11 @@ collision_mask = 3
 script = ExtResource("1_iugtt")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+visible = false
 mesh = SubResource("BoxMesh_g5dny")
+
+[node name="basket" parent="." instance=ExtResource("2_rcxk4")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, -0.292174, -0.364072)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_x7hak")

@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://7pq2ir7ov7l3"]
+[gd_scene load_steps=5 format=3 uid="uid://7pq2ir7ov7l3"]
 
 [ext_resource type="Script" uid="uid://dsf62xuroa55a" path="res://scripts/tools/Hoe.gd" id="2_aq6f5"]
+[ext_resource type="PackedScene" uid="uid://bd35lhcx7nqlo" path="res://assets/meshes/hoe.glb" id="2_atpmf"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_3kqux"]
 size = Vector3(0.05, 1, 0.05)
@@ -9,12 +10,15 @@ size = Vector3(0.05, 1, 0.05)
 size = Vector3(0.1, 1, 0.1)
 
 [node name="Hoe" type="RigidBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 collision_layer = 3
 collision_mask = 3
 script = ExtResource("2_aq6f5")
 
+[node name="hoe" parent="." instance=ExtResource("2_atpmf")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.030866, -0.514198, 0.0412105)
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+visible = false
 layers = 3
 mesh = SubResource("BoxMesh_3kqux")
 

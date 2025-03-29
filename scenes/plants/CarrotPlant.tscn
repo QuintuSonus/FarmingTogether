@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://coedm0si0il25"]
+[gd_scene load_steps=7 format=3 uid="uid://coedm0si0il25"]
 
 [ext_resource type="Script" uid="uid://cijcxmr84ie2m" path="res://scripts/plants/CarrotPlant.gd" id="1_a4mq8"]
+[ext_resource type="ArrayMesh" uid="uid://v4pxctpt2joc" path="res://assets/meshes/Voxel/carrot.vox" id="2_beah6"]
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_tgj65"]
 top_radius = 0.1
@@ -9,15 +10,6 @@ height = 0.1
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfn3b"]
 albedo_color = Color(0.521569, 0.309804, 0.133333, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0lw2l"]
-albedo_color = Color(0.757016, 0.507586, 7.70092e-07, 1)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_jfreh"]
-material = SubResource("StandardMaterial3D_0lw2l")
-top_radius = 0.1
-bottom_radius = 0.05
-height = 0.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vg4j2"]
 albedo_color = Color(0.352051, 0.798202, 0.135316, 1)
@@ -37,10 +29,11 @@ surface_material_override/0 = SubResource("StandardMaterial3D_wfn3b")
 
 [node name="GrowingMesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00777337, 0, 0)
-mesh = SubResource("CylinderMesh_jfreh")
+mesh = ExtResource("2_beah6")
 
 [node name="Leaves" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.115966, 0)
+visible = false
 
 [node name="Leaf1" type="CSGBox3D" parent="Leaves"]
 transform = Transform3D(0.481386, 0, 0.876508, 0, 1, 0, -0.876508, 0, 0.481386, 0.0659428, 0.130478, 0.0380861)

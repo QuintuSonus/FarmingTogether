@@ -1,7 +1,8 @@
-[gd_scene load_steps=13 format=3 uid="uid://cykkbk3sjbrw3"]
+[gd_scene load_steps=14 format=3 uid="uid://cykkbk3sjbrw3"]
 
 [ext_resource type="Script" uid="uid://dnddc18a2aft7" path="res://scripts/player/PlayerController.gd" id="1_16aah"]
 [ext_resource type="Script" uid="uid://b5lpfcdr0telh" path="res://scripts/interaction/InteractionManager.gd" id="2_ljt2q"]
+[ext_resource type="PackedScene" uid="uid://b7w7kf7jqkphu" path="res://assets/meshes/farmer.glb" id="2_msfty"]
 [ext_resource type="PackedScene" uid="uid://xbimmd14id3y" path="res://scenes/ui/InteractionFeedback.tscn" id="3_sxwei"]
 [ext_resource type="PackedScene" uid="uid://3ypmhllqy7ns" path="res://scenes/ui/TileHighlighter.tscn" id="4_pfgso"]
 [ext_resource type="Script" uid="uid://d0aq0be0uu8r8" path="res://scripts/player/PlayerMovement.gd" id="5_ju8ue"]
@@ -24,9 +25,14 @@ height = 1.8
 size = Vector3(1, 2.04773, 1)
 
 [node name="Player" type="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48688, 0)
 script = ExtResource("1_16aah")
 
+[node name="farmer" parent="." instance=ExtResource("2_msfty")]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, -0.8, 0)
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+visible = false
 mesh = SubResource("CapsuleMesh_01bbd")
 skeleton = NodePath("../CollisionShape3D")
 
@@ -39,9 +45,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.195936, 0.259848, 0.52371)
 mesh = SubResource("BoxMesh_6kvam")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.179345)
 shape = SubResource("CapsuleShape3D_3uv8d")
 
 [node name="InteractionArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.165048, -0.145238)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.200231, 0.739627)
@@ -53,13 +61,12 @@ script = ExtResource("2_ljt2q")
 [node name="InteractionFeedback" parent="." instance=ExtResource("3_sxwei")]
 
 [node name="ToolHolder" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, -0.18679, 0.2192, 0.671672)
+transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, -0.821775, 0.111099, 0.144584)
 
 [node name="BackToolHolder" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, 0.000515923, 0.2192, -0.359361)
+transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806, 0.000515923, 0.2192, -0.507139)
 
 [node name="TileHighlighter" parent="." instance=ExtResource("4_pfgso")]
-highlight_height = 0.6
 
 [node name="TileTargetingPoint" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)

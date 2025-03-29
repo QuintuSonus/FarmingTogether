@@ -264,7 +264,7 @@ func start_next_level():
 	var player_nodes = get_tree().get_nodes_in_group("players")
 	for player in player_nodes:
 		if player:
-			player.global_position = Vector3(4, 1, 2)  # Default spawn position
+			player.global_position = Vector3(4, 2, 2)  # Default spawn position
 	
 	# Ensure main camera is active
 	if camera_controller:

@@ -4,7 +4,7 @@ extends Node3D
 # References
 @export var player_scene: PackedScene
 @export var max_players: int = 2
-@export var spawn_positions: Array[Vector3] = [Vector3(4, 1, 2), Vector3(5, 1, 4)]
+@export var spawn_positions: Array[Vector3] = [Vector3(4, 1.5, 2), Vector3(5, 1.5, 4)]
 @export var player_colors: Array[Color] = [Color(0.2, 0.8, 0.2), Color(0.2, 0.2, 0.8)]
 
 # Player tracking

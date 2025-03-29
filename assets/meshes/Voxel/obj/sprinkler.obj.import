@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://dpsc6sre4xp8t"
+path="res://.godot/imported/sprinkler.obj-1c555187bcdded473b4956c78096997d.mesh"
+
+[deps]
+
+files=["res://.godot/imported/sprinkler.obj-1c555187bcdded473b4956c78096997d.mesh"]
+
+source_file="res://assets/meshes/Voxel/obj/sprinkler.obj"
+dest_files=["res://.godot/imported/sprinkler.obj-1c555187bcdded473b4956c78096997d.mesh", "res://.godot/imported/sprinkler.obj-1c555187bcdded473b4956c78096997d.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false

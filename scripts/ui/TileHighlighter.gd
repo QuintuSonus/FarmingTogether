@@ -1,7 +1,8 @@
 # scripts/ui/TileHighlighter.gd
 extends Node3D
 
-@export var highlight_height: float = 0.26  # Slightly above tile surface
+@export var highlight_height: float = .81
+  # Slightly above tile surface
 @export var can_interact_color: Color = Color(0, 1, 0, 0.4)  # Translucent green
 @export var cannot_interact_color: Color = Color(1, 0, 0, 0.4)  # Translucent red
 @export var neutral_color: Color = Color(1, 1, 1, 0.3)  # Translucent white
