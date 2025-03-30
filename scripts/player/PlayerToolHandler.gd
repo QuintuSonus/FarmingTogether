@@ -4,8 +4,10 @@ extends Node
 
 # References
 var player: CharacterBody3D = null
-@onready var tool_holder = $"../ToolHolder"
+@export var tool_holder: Node3D = null
+
 @onready var back_tool_holder = $"../BackToolHolder" if $"..".has_node("BackToolHolder") else null
+@onready var animation_controller = $"../PlayerAnimationController" if $"..".has_node("PlayerAnimationController") else null
 
 # Tool state
 var current_tool = null
@@ -16,6 +18,9 @@ var tool_use_start_time: int = 0
 var tool_use_position = null
 var tool_use_duration: float = 0.0
 
+# For bone attachment adjustments
+var using_bone_attachment: bool = false
+
 # Static dictionary to track which tiles are being used by tools
 static var tiles_being_used = {}
 
@@ -23,6 +28,13 @@ func _ready():
 	# Create back tool holder if it doesn't exist but tool belt is active
 	if tool_belt_enabled() and not back_tool_holder:
 		create_back_tool_holder()
+		
+	# Check if we're using a bone attachment
+	if tool_holder:
+		var parent = tool_holder.get_parent()
+		if parent and "BoneAttachment" in parent.get_class():
+			using_bone_attachment = true
+			print("PlayerToolHandler: Using bone attachment for tool holder")
 
 func _process(delta):
 	# Update tool use progress if in progress
@@ -49,23 +61,47 @@ func create_back_tool_holder():
 	back_tool_holder = holder
 	print("PlayerToolHandler: Created BackToolHolder")
 
-# Pick up a tool
+# Pick up a tool - FIXED FOR BONE ATTACHMENT
+# Pick up a tool - FIXED FOR BONE ATTACHMENT WITH DEBUG
 func pick_up_tool(tool_obj):
 	if not is_instance_valid(tool_obj):
+		print("ERROR: Tool object is not valid!")
 		return
-		
+	
+	print("========== TOOL PICKUP START ==========")
+	print("Picking up tool: " + tool_obj.name)
+	print("Tool class: " + tool_obj.get_class())
+	
+	# Debug the tool holder
+	print("Tool holder exists: " + str(is_instance_valid(tool_holder)))
+	if tool_holder:
+		print("Tool holder path: " + str(tool_holder.get_path()))
+		print("Tool holder parent: " + tool_holder.get_parent().name)
+		if "BoneAttachment" in tool_holder.get_parent().get_class():
+			print("Tool holder is attached to a bone!")
+			using_bone_attachment = true
+	
+	# Debug initial tool state
+	print("Initial tool state:")
+	print(tool_obj.transform)
+	print("Tool visibility: " + str(tool_obj.visible))
+	
 	# If we have a tool belt and already have a tool, store the current tool
 	if current_tool and tool_belt_enabled() and not stored_tool:
+		print("Storing current tool in belt")
 		store_current_tool()
 	elif current_tool:
 		# First drop the current tool
+		print("Dropping current tool")
 		drop_tool()
 	
 	# Get the original parent to restore when dropping
 	tool_obj.original_parent = tool_obj.get_parent()
+	print("Original parent: " + (tool_obj.original_parent.name if tool_obj.original_parent else "null"))
 	
 	# Disable physics on the tool
 	if tool_obj is RigidBody3D:
+		print("Tool is a RigidBody3D, disabling physics")
 		# Store original physics properties
 		tool_obj.original_freeze = tool_obj.freeze
 		tool_obj.freeze = true
@@ -79,20 +115,87 @@ func pick_up_tool(tool_obj):
 		tool_obj.collision_mask = 0
 	
 	# Attach the tool to the tool holder
+	print("Removing tool from original parent")
 	if tool_obj.get_parent():
 		tool_obj.get_parent().remove_child(tool_obj)
+	else:
+		print("WARNING: Tool had no parent")
 		
 	if tool_holder:
+		print("Adding tool to tool holder")
+		
+		# Store the tool's visibility before adding
+		var was_visible = tool_obj.visible
+		print("Tool visibility before adding: " + str(was_visible))
+		
+		# Add the tool to the tool holder
 		tool_holder.add_child(tool_obj)
 		
-		# Reset transform relative to holder
-		tool_obj.position = Vector3.ZERO
-		tool_obj.rotation = Vector3.ZERO
+		# Check visibility after adding
+		print("Tool visibility after adding: " + str(tool_obj.visible))
+		
+		# Force visibility if needed
+		if !tool_obj.visible and was_visible:
+			print("Tool disappeared! Forcing visibility back on")
+			tool_obj.visible = true
 		
 		# Store reference to current tool
 		current_tool = tool_obj
+		
+		# Debug tool state after adding to holder
+		print("Tool state after adding to holder:")
+		print(tool_obj.transform)
+		
+		print("Applying tool-specific adjustments")
+		print(tool_obj.get_class())
+		# Apply tool-specific adjustments
+		apply_tool_specific_adjustments(tool_obj)
+		
+		# Debug tool state after adjustments
+		print("Tool state after adjustments:")
+		print(tool_obj.transform)
+		print("Final visibility: " + str(tool_obj.visible))
 	else:
+		print("ERROR: ToolHolder node not found!")
 		push_error("Player: ToolHolder node not found!")
+		
+	print("========== TOOL PICKUP END ==========")
+
+# Apply the right transform for each tool type
+func apply_tool_specific_adjustments(tool_obj):
+	if not tool_obj:
+		return
+	
+	# Get the tool class and tool type (if available)
+	var tool_name = tool_obj.name
+	var tool_type = ""
+	
+	if tool_obj.has_method("get_tool_type"):
+		tool_type = tool_obj.get_tool_type()
+	
+	# Apply different adjustments based on the tool type
+	if tool_name == "Hoe":
+		tool_obj.position = Vector3(0, 0.1, -0.05)
+		tool_obj.rotation = Vector3(-0.736529, -1.26588, 0.204204)
+		
+	elif tool_name == "WateringCan":
+		tool_obj.position = Vector3(0, 0.5, 0)
+		tool_obj.rotation_degrees = Vector3(45, 0, -150)
+		
+	elif tool_name == "Basket":
+		tool_obj.position = Vector3(0, 0, -0.1)
+		tool_obj.rotation_degrees = Vector3(0, 0, -90)
+		
+	elif tool_name == "SeedBag":
+		tool_obj.position = Vector3(0, 0, 0.05)
+		tool_obj.rotation_degrees = Vector3(0, 0, -90)
+		
+	else:
+		# Default position and rotation
+		tool_obj.position = Vector3.ZERO
+		tool_obj.rotation = Vector3.ZERO
+	
+	print("Applied adjustments for tool: " + tool_name)
 
 # Store the current tool on the player's back
 func store_current_tool():
@@ -151,9 +254,9 @@ func swap_tools():
 	# Move back tool to hand
 	if tool_holder and back_tool:
 		tool_holder.add_child(back_tool)
-		back_tool.position = Vector3.ZERO
-		back_tool.rotation = Vector3.ZERO
 		current_tool = back_tool
+		# Apply tool-specific adjustments for the tool now in hand
+		apply_tool_specific_adjustments(back_tool)
 	
 	# Move hand tool to back
 	if back_tool_holder and hand_tool:
@@ -311,8 +414,25 @@ func start_tool_use():
 			var interaction_feedback = player.get_node_or_null("InteractionFeedback")
 			if interaction_feedback:
 				interaction_feedback.show_progress(0.0)
+				
+			# Play appropriate animation if we have animation controller
+			if animation_controller:
+				var tool_action = "hoe"
+				
+				# Determine appropriate animation based on tool type
+				if current_tool.get_class() == "Hoe":
+					tool_action = "hoe"
+				elif current_tool.get_class() == "WateringCan":
+					tool_action = "water"
+				elif current_tool.get_class() == "SeedBag" or "Seed" in current_tool.get_class():
+					tool_action = "plant"
+				elif current_tool.get_class() == "Basket":
+					tool_action = "harvest"
+					
+				animation_controller.play_action_animation(tool_action)
 		else:
 			# Instant tool use
+
 			current_tool.complete_use(target_pos)
 			
 			# Clear the tile usage immediately for instant tools
@@ -344,6 +464,7 @@ func _on_tool_use_completed(position):
 	
 	# Complete the tool use
 	if current_tool and current_tool.has_method("complete_use"):
+		print("calling complete use from player tool handler")
 		current_tool.complete_use(position)
 	
 	# Reset the tool use state

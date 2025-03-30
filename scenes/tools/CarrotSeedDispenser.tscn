@@ -1,13 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://diushxjvndfo7"]
+[gd_scene load_steps=4 format=3 uid="uid://diushxjvndfo7"]
 
 [ext_resource type="Script" uid="uid://bbwqmwoqpy0cc" path="res://scripts/tools/SeedBagDispenser.gd" id="1_carrot"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8hhot"]
-albedo_color = Color(0.994835, 0.294822, 0, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_carrot"]
-material = SubResource("StandardMaterial3D_8hhot")
-size = Vector3(0.8, 1, 0.8)
+[ext_resource type="ArrayMesh" uid="uid://cteynonci0wpy" path="res://assets/meshes/Voxel/carrot_dispenser.vox" id="2_vir1d"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_carrot"]
 size = Vector3(0.8, 1, 0.8)
@@ -18,9 +12,10 @@ collision_mask = 3
 script = ExtResource("1_carrot")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_carrot")
+mesh = ExtResource("2_vir1d")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.500764, 0)
 shape = SubResource("BoxShape3D_carrot")
 
 [node name="Label3D" type="Label3D" parent="."]

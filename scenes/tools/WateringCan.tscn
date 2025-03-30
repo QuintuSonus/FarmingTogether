@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://37i3fwe8cg5w"]
 
 [ext_resource type="Script" uid="uid://cx25egpc2hs72" path="res://scripts/tools/WateringCan.gd" id="1_rj3b4"]
-[ext_resource type="ArrayMesh" uid="uid://ddenm7eelkx41" path="res://assets/meshes/Voxel/WateringCan.vox" id="2_7lab4"]
+[ext_resource type="ArrayMesh" uid="uid://bon4t1fm7rs1n" path="res://assets/meshes/Voxel/WateringCan2.vox" id="2_7lab4"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_vv5ey"]
 size = Vector3(0.5, 0.5, 0.5)
@@ -11,6 +11,7 @@ script = ExtResource("1_rj3b4")
 water_capacity = 10.0
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
 mesh = ExtResource("2_7lab4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

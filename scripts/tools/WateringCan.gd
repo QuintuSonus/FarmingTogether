@@ -228,7 +228,7 @@ func update_water_level():
 	
 	# Scale water mesh based on current water level
 	var fill_percent = current_water / water_capacity
-	var base_size = Vector3(0.4, 0.4, 0.4)  # Size at full capacity
+	var base_size = Vector3(0.3, 0.3, 0.3)  # Size at full capacity
 	
 	water_mesh.mesh.size = Vector3(
 		base_size.x, 

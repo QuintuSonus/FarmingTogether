@@ -1,13 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://sbseehkvk78e"]
+[gd_scene load_steps=4 format=3 uid="uid://sbseehkvk78e"]
 
 [ext_resource type="Script" uid="uid://bbwqmwoqpy0cc" path="res://scripts/tools/SeedBagDispenser.gd" id="1_tomato"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m743m"]
-albedo_color = Color(0.565703, 0.220726, 0.196285, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_tomato"]
-material = SubResource("StandardMaterial3D_m743m")
-size = Vector3(0.8, 1, 0.8)
+[ext_resource type="ArrayMesh" uid="uid://swmhx8ptvnl4" path="res://assets/meshes/Voxel/tomato_dispenser.vox" id="2_cdncd"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_tomato"]
 size = Vector3(0.8, 1, 0.8)
@@ -19,9 +13,10 @@ script = ExtResource("1_tomato")
 seed_type = "tomato"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_tomato")
+mesh = ExtResource("2_cdncd")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.488934, 0)
 shape = SubResource("BoxShape3D_tomato")
 
 [node name="Label3D" type="Label3D" parent="."]

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c77ou5e8dcrgi"]
+
+[ext_resource type="ArrayMesh" uid="uid://dmd77klgx4xuu" path="res://assets/meshes/Voxel/seedingBagCarrot.vox" id="1_8ijrk"]
+
+[node name="CarrotSeedBag" type="MeshInstance3D"]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+mesh = ExtResource("1_8ijrk")

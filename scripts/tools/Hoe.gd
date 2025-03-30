@@ -65,7 +65,7 @@ func use(target_position: Vector3i) -> bool:
 
 # Implement completion logic
 func complete_use(target_position: Vector3i) -> bool:
-	
+	print("complete_used called")
 	
 	var level_manager = get_node("/root/Main/LevelManager")
 	if not level_manager:

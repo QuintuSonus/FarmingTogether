@@ -13,6 +13,7 @@ extends CharacterBody3D
 @onready var tool_handler: PlayerToolHandler = $PlayerToolHandler
 @onready var interaction: PlayerInteraction = $PlayerInteraction
 @onready var grid_tracker: PlayerGridTracker = $PlayerGridTracker
+@onready var animation_controller: PlayerAnimationController = $PlayerAnimationController
 
 # Simple access to frequently needed nodes
 @onready var interaction_feedback = $InteractionFeedback
@@ -48,6 +49,10 @@ func _ready():
 	tool_handler.player = self
 	interaction.player = self
 	grid_tracker.player = self
+	
+	# Set up animation controller if it exists
+	if animation_controller:
+		animation_controller.player = self
 	
 	# Pass level manager to components
 	movement.set_level_manager(level_manager)
@@ -97,6 +102,23 @@ func _input(event):
 	if event.is_action_pressed(movement.input_prefix + "use_tool"):
 		if tool_handler.current_tool and tool_handler.current_tool.has_method("use"):
 			tool_handler.start_tool_use()
+			
+			# Play appropriate animation for the tool type
+			if animation_controller:
+				var tool_type = "hoe"  # Default animation
+				print(tool_handler.current_tool.name)
+				# Determine tool type
+				if tool_handler.current_tool.name == "Hoe":
+					tool_type = "hoe"
+				elif tool_handler.current_tool.name == "WateringCan":
+					tool_type = "water"
+				elif tool_handler.current_tool.name == "SeedingBag":
+					tool_type = "plant"
+				elif tool_handler.current_tool.name == "Basket":
+					tool_type = "harvest"
+				
+				animation_controller.play_action_animation(tool_type)
+			
 	elif event.is_action_released(movement.input_prefix + "use_tool"):
 		if tool_handler.is_tool_use_in_progress:
 			tool_handler.cancel_tool_use()
