@@ -2,175 +2,239 @@
 class_name SeedBag
 extends Tool
 
-# Tool configuration
 @export var seed_type: String = "carrot"
-@export var usage_time: float = 1.0
+@export_file("*.tscn") var plant_scene_path: String = "res://scenes/plants/CarrotPlant.tscn"
+var plant_scene: PackedScene
+var has_been_used: bool = false
 
-# Custom mesh resources
-@export var carrot_seed_mesh: PackedScene = null
-@export var tomato_seed_mesh: PackedScene = null
-
-@onready var seed_type_label = $SeedTypeLabel
+# Reference to mesh for changing appearance
+@onready var mesh_instance = $MeshInstance3D
 
 func _ready():
-	# Call the parent _ready function to set up tool basics
-	super._ready()
+	super._ready()  # Call parent's _ready function
 	
-	# Apply the correct mesh based on seed type
-	apply_seed_mesh()
+	# Load the plant scene
+	plant_scene = load(plant_scene_path)
+	if not plant_scene:
+		push_error("SeedBag: Failed to load plant scene from path: " + plant_scene_path)
 	
-	# Set the label text
-	if has_node("SeedTypeLabel"):
-		$SeedTypeLabel.text = seed_type.capitalize() + " Seeds"
+	# Update visual appearance based on seed type
+	update_appearance()
 	
-	print("SeedBag initialized for type: " + seed_type)
+	
 
-# Function to apply the correct mesh
-func apply_seed_mesh():
-	# Find any existing custom mesh and remove it
-	var existing_custom = find_child("custom_mesh", false)
-	if existing_custom:
-		existing_custom.queue_free()
+# Update the visual appearance based on seed type
+func update_appearance():
+	# Make sure we have a mesh to work with
+	if not mesh_instance:
+		print("SeedBag: No mesh instance found!")
+		return
 	
-	# Choose the right mesh based on seed type
-	var mesh_to_use = null
-	if seed_type == "carrot" and carrot_seed_mesh != null:
-		mesh_to_use = carrot_seed_mesh
-	elif seed_type == "tomato" and tomato_seed_mesh != null:
-		mesh_to_use = tomato_seed_mesh
+	# Create a new material
+	var material = StandardMaterial3D.new()
 	
-	# If we have a mesh to use, add it and hide the default
-	if mesh_to_use != null:
-		var mesh_instance = mesh_to_use.instantiate()
-		mesh_instance.name = "custom_mesh"
-		add_child(mesh_instance)
+	# Set color based on seed type
+	match seed_type.to_lower():
+		"carrot":
+			material.albedo_color = Color(1.0, 0.5, 0.0)  # Orange for carrots
+		"tomato":
+			material.albedo_color = Color(0.9, 0.1, 0.1)  # Red for tomatoes
+		_:
+			material.albedo_color = Color(0.8, 0.8, 0.1)  # Yellow default
+	
+	# Apply the material to the mesh
+	mesh_instance.material_override = material
+	
+	# Add/update text label if it exists
+	var label = get_node_or_null("SeedTypeLabel")
+	if label:
+		label.text = seed_type.capitalize() + " Seeds"
+
+# Set seed type and update appearance
+func set_seed_type(new_type: String):
+	seed_type = new_type
+	
+	# Update plant scene path based on seed type
+	match seed_type.to_lower():
+		"carrot":
+			plant_scene_path = "res://scenes/plants/CarrotPlant.tscn"
+		"tomato":
+			plant_scene_path = "res://scenes/plants/TomatoPlant.tscn"
+	
+	# Reload plant scene
+	plant_scene = load(plant_scene_path)
+	
+	# Update appearance
+	update_appearance()
+
+# Override to specify this tool's capabilities
+func get_capabilities() -> int:
+	return ToolCapabilities.Capability.PLANT_SEEDS
+
+# For tool usage - progress-based
+func get_usage_interaction_type() -> int:
+	return Interactable.InteractionType.PROGRESS_BASED
+	
+func get_usage_duration() -> float:
+	var parameter_manager = get_parameter_manager()
+	var duration = 2.0  # Default
+	
+	if parameter_manager:
+		# Get the base duration
+		duration = parameter_manager.get_value("tool.seeding.usage_time", 2.0)
 		
-		# Hide the default mesh
-		if has_node("MeshInstance3D"):
-			$MeshInstance3D.visible = false
-	else:
-		# No custom mesh available, make sure default is visible
-		if has_node("MeshInstance3D"):
-			$MeshInstance3D.visible = true
+		# Apply global tool speed multiplier from Energy Drink upgrade
+		duration *= get_global_tool_speed_multiplier()
+	
+	return duration
+
+# Check if can use at position
+func use(target_position: Vector3i) -> bool:
+
+	
+	# Don't allow using if already used
+	if has_been_used:
+		print("SeedBag: Already used - cannot plant again")
+		return false
+	
+	# Get the level manager
+	var level_manager = get_node("/root/Main/LevelManager")
+	
+	# Check if the target position is soil
+	if level_manager.is_tile_type(target_position, level_manager.TileType.SOIL):
+		# Check for existing plants at this position
+		var existing_plants = 0
+		for obj in get_tree().get_nodes_in_group("plants"):
+			if obj is Plant:
+				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+				if obj_grid_pos == target_position:
+					existing_plants += 1
+		
+		if existing_plants > 0:
+			print("SeedBag: Cannot plant - already " + str(existing_plants) + " plants at this position!")
+			return false
 			
-			# Set color based on seed type
-			var material = StandardMaterial3D.new()
-			if seed_type == "carrot":
-				material.albedo_color = Color(1.0, 0.5, 0.0)  # Orange
-			elif seed_type == "tomato":
-				material.albedo_color = Color(0.9, 0.1, 0.1)  # Red
-			else:
-				material.albedo_color = Color(1.0, 0.8, 0.0)  # Yellow default
-			
-			$MeshInstance3D.material_override = material
-
-# Set the seed type
-func set_seed_type(type: String):
-	seed_type = type
+		
+		return true
 	
-	# Update the label
-	if has_node("SeedTypeLabel"):
-		$SeedTypeLabel.text = seed_type.capitalize() + " Seeds"
-	
-	# Apply the correct mesh
-	apply_seed_mesh()
-
-# Override the get_tool_type method from the Tool class
-func get_tool_type() -> String:
-	return "seed_bag"
-
-# Check if tool can be used on this tile
-func use(grid_pos) -> bool:
-	print("SeedBag.use called at position: " + str(grid_pos))
-	
-	# Find level manager
-	var level_manager = find_level_manager()
-	if level_manager:
-		# Check if the tile is soil
-		if level_manager.is_tile_type(grid_pos, level_manager.TileType.SOIL):
-			print("SeedBag can be used - soil tile found")
-			return true
-		else:
-			print("SeedBag cannot be used - not a soil tile")
-	else:
-		print("SeedBag cannot be used - no level manager found")
 	
 	return false
 
-# Called when tool use is completed
-func complete_use(grid_pos) -> bool:
-	print("SeedBag.complete_use called at position: " + str(grid_pos))
+# Complete the planting action
+func complete_use(target_position: Vector3i) -> bool:
 	
-	# Find level manager
-	var level_manager = find_level_manager()
-	if not level_manager:
-		print("ERROR: SeedBag.complete_use - Level manager not found")
+	
+	# Don't allow completing if already used
+	if has_been_used:
+		print("SeedBag: Already used - cannot complete planting")
 		return false
+	
+	var level_manager = get_node("/root/Main/LevelManager")
+	
+	# Check if this is a valid soil tile
+	if not level_manager.is_tile_type(target_position, level_manager.TileType.SOIL):
+		print("SeedBag: Cannot plant - not a soil tile")
+		return false
+	
+	if not plant_scene:
+		print("SeedBag: Cannot plant - plant scene not loaded")
+		return false
+	
+	# Check for existing plants at this position again (safety check)
+	var existing_plants = []
+	for obj in get_tree().get_nodes_in_group("plants"):
+		if obj is Plant:
+			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+			if obj_grid_pos == target_position:
+				existing_plants.append(obj)
+	
+	if existing_plants.size() > 0:
+		print("SeedBag: ERROR - Already " + str(existing_plants.size()) + " plants at this position!")
+		print("SeedBag: Removing duplicate plants before creating a new one")
 		
-	# Check if the tile is soil
-	if not level_manager.is_tile_type(grid_pos, level_manager.TileType.SOIL):
-		print("ERROR: SeedBag.complete_use - Not a soil tile")
-		return false
+		# Remove all existing plants at this position except the first one
+		for i in range(1, existing_plants.size()):
+			print("Removing duplicate plant: " + str(i))
+			existing_plants[i].queue_free()
+			
+		# Don't create a new plant, but still mark as used and remove the bag
+		has_been_used = true
+		call_deferred("remove_seed_bag")
+		return true
 	
-	# Instead of creating a plant directly, we'll just log that planting was successful
-	# In a real implementation, you would create a crop or plant based on your game's systems
-	print("SeedBag: Successfully planted " + seed_type + " at position " + str(grid_pos))
+	# DIRECT CALCULATION with CENTERING
+	# Add 0.5 to X and Z to center the plant on the tile
+	var world_pos = Vector3(
+		float(target_position.x) + 0.5, # Add 0.5 to center on X axis
+		0.75, # Fixed height above soil 
+		float(target_position.z) + 0.5  # Add 0.5 to center on Z axis
+	)
 	
-	# You'd typically want to convert the soil tile to some kind of planted state
-	# This depends on your game's mechanics
+	print("SeedBag: Using centered world position: ", world_pos)
 	
-	# For now, just update statistics if your game has that
-	var main = get_node("/root/Main")
-	if main:
-		var game_data_manager = main.get_node_or_null("GameDataManager")
-		if game_data_manager and game_data_manager.has_method("add_stat"):
-			game_data_manager.add_stat("seeds_planted")
+	# Instantiate the plant
+	var plant = plant_scene.instantiate()
+	plant.crop_type = seed_type
+	plant.global_position = world_pos
 	
-	print("SeedBag.complete_use - Successfully completed")
+	# EXPLICIT INITIALIZATION - Ensure proper initial state
+	plant.current_stage = Plant.GrowthStage.SEED
+	plant.is_watered = false
+	plant.growth_progress = 0.0
+	plant.spoil_progress = 0.0
+	
+	print("SeedBag: Plant spawned at: ", plant.global_position)
+	
+	get_node("/root/Main").add_child(plant)
+	
+	# Force update appearance after adding to scene
+	plant.call_deferred("update_appearance")
+	
+	# Mark as used and remove - use call_deferred to avoid immediate deletion
+	has_been_used = true
+	call_deferred("remove_seed_bag")
+	
 	return true
 
-# Tool usage interaction type
-func get_usage_interaction_type() -> int:
-	return 1  # PROGRESS_BASED
-
-# Tool usage duration
-func get_usage_duration() -> float:
-	# Get parameter manager for possible modifications
-	var parameter_manager = get_parameter_manager()
-	if parameter_manager:
-		return parameter_manager.get_value("tool.seeding.usage_time", usage_time)
-	return usage_time
-
-# Interaction prompt
-func get_interaction_prompt() -> String:
-	return "Take " + seed_type.capitalize() + " Seeds"
-
-# Helper function to reliably find the level manager
-func find_level_manager():
-	# Try first through service locator
-	var service_locator = get_node_or_null("/root/ServiceLocator")
-	if service_locator and service_locator.has_method("get_service"):
-		var lm = service_locator.get_service("level_manager")
-		if lm:
-			return lm
+# Method to remove the seed bag after use
+func remove_seed_bag():
+	print("SeedBag: Single-use complete - removing bag")
 	
-	# Try through player's grid tracker
-	var player = find_parent("Player")
-	if player and player.has_node("PlayerGridTracker"):
-		var grid_tracker = player.get_node("PlayerGridTracker")
-		if grid_tracker and grid_tracker.level_manager:
-			return grid_tracker.level_manager
+	# Find all players that might be holding this tool
+	var players = get_tree().get_nodes_in_group("players")
+	if players.size() == 0:
+		# Fallback to direct path if players group not used
+		var player = get_node_or_null("/root/Main/Player")
+		if player:
+			players = [player]
+			
+		# Try PlayerManager path - all players from PlayerManager
+		var player_manager = get_node_or_null("/root/Main/PlayerManager")
+		if player_manager and player_manager.has_method("get_players"):
+			players = player_manager.get_players()
+		elif player_manager and player_manager.has("players"):
+			players = player_manager.players
 	
-	# Try getting from Main scene
-	var main = get_node("/root/Main")
-	if main and main.has_node("LevelManager"):
-		return main.get_node("LevelManager")
+	# Check each player for holding this tool
+	for player in players:
+		if player and player.has_method("get_current_tool") and player.get_current_tool() == self:
+			print("SeedBag: Clearing reference from player " + str(player.name))
+			
+			# Safer way to clear the reference - use a method instead of direct property access
+			if player.has_method("clear_tool_reference"):
+				player.clear_tool_reference(self)
+			else:
+				# Fallback to direct assignment if method doesn't exist
+				player.tool_handler.current_tool = null
+				
+	# Delete after two frames to ensure all references are cleared
+	await get_tree().process_frame
+	await get_tree().process_frame
+	queue_free()
 	
-	return null
-
-# Helper function to get parameter manager
 func get_parameter_manager():
 	var service_locator = get_node_or_null("/root/ServiceLocator")
 	if service_locator and service_locator.has_method("get_service"):
 		return service_locator.get_service("parameter_manager")
+		print("parameters found")
 	return null

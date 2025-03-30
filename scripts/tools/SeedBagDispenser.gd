@@ -1,110 +1,111 @@
 # scripts/tools/SeedBagDispenser.gd
+class_name SeedBagDispenser
 extends StaticBody3D
 
 # Configuration
 @export var seed_type: String = "carrot"
-@export var cooldown_time: float = 3.0
-@export var seed_bag_scene: PackedScene = null
+@export_file("*.tscn") var seed_bag_scene_path: String = "res://scenes/tools/SeedingBag.tscn"
+var seed_bag_scene: PackedScene
 
-# NEW: Mesh resources to assign to seed bags
-@export var carrot_seed_mesh: PackedScene = null
-@export var tomato_seed_mesh: PackedScene = null
-
-# State
-var can_dispense: bool = true
-var cooldown_timer: float = 0.0
-
-# References
-@onready var label_3d = $Label3D
+# Visual properties
+@onready var mesh_instance = $MeshInstance3D
+@onready var label = $Label3D if has_node("Label3D") else null
 
 func _ready():
-	# Add to group
+	# Add to interactables group for player interaction
 	add_to_group("interactables")
 	
-	# Set default label text
-	if label_3d:
-		label_3d.text = seed_type.capitalize() + " Seeds"
-	
-	# Set default seed bag scene if not specified
+	# Load the seed bag scene
+	seed_bag_scene = load(seed_bag_scene_path)
 	if not seed_bag_scene:
-		seed_bag_scene = load("res://scenes/tools/SeedingBag.tscn")
-
-func _process(delta):
-	# Update cooldown timer
-	if not can_dispense:
-		cooldown_timer -= delta
-		if cooldown_timer <= 0:
-			can_dispense = true
-			if label_3d:
-				label_3d.text = seed_type.capitalize() + " Seeds"
-
-# INTERACTION METHODS
-func get_interaction_prompt() -> String:
-	if can_dispense:
-		return "Get " + seed_type.capitalize() + " Seeds"
-	else:
-		return "Wait..."
-
-func get_interaction_type() -> int:
-	return 0  # INSTANTANEOUS
-
-func can_interact(actor) -> bool:
-	# Check if actor already has a tool
-	if actor.has_method("get_current_tool"):
-		var current_tool = actor.get_current_tool()
-		if current_tool != null:
-			return false
+		push_error("SeedBagDispenser: Failed to load seed bag scene from path: " + seed_bag_scene_path)
 	
-	return can_dispense
+	# Update appearance based on seed type
+	update_appearance()
+	
+	print("SeedBagDispenser initialized for crop type: " + seed_type)
 
-func get_priority() -> float:
+# Update visual appearance based on seed type
+func update_appearance():
+	if not mesh_instance:
+		return
+		
+	var material = StandardMaterial3D.new()
+	
+	# Set color based on seed type
+	match seed_type.to_lower():
+		"carrot":
+			material.albedo_color = Color(1.0, 0.5, 0.0)  # Orange
+		"tomato":
+			material.albedo_color = Color(0.9, 0.1, 0.1)  # Red
+		_:
+			material.albedo_color = Color(0.8, 0.8, 0.1)  # Yellow default
+			
+	mesh_instance.material_override = material
+	
+	# Update label if it exists
+	if label:
+		label.text = seed_type.capitalize() + " Seeds"
+		label.visible = false  # Make sure it's visible
+
+# Interactable implementation
+func can_interact(actor):
+	return true
+
+func get_interaction_type():
+	return Interactable.InteractionType.INSTANTANEOUS
+	
+func get_interaction_prompt():
+	return "Take " + seed_type.capitalize() + " Seeds"
+
+func get_priority():
 	return 1.0
 
-func interact(actor) -> bool:
-	if !can_dispense:
+func interact(actor, _progress = 1.0):
+	# Create a new seed bag
+	if not seed_bag_scene:
+		push_error("SeedBagDispenser: Cannot create seed bag - scene not loaded")
 		return false
 		
-	# Create seed bag
-	if seed_bag_scene:
-		var bag = seed_bag_scene.instantiate()
-		get_tree().current_scene.add_child(bag)
+	print("SeedBagDispenser: Creating new " + seed_type + " seed bag")
+	
+	var new_seed_bag = seed_bag_scene.instantiate()
+	if not new_seed_bag:
+		push_error("SeedBagDispenser: Failed to instantiate seed bag")
+		return false
 		
-		# Set seed type
-		bag.seed_type = seed_type
-		
-		# NEW: Assign the appropriate mesh resource
-		if seed_type == "carrot" and carrot_seed_mesh != null:
-			bag.carrot_seed_mesh = carrot_seed_mesh
-		elif seed_type == "tomato" and tomato_seed_mesh != null:
-			bag.tomato_seed_mesh = tomato_seed_mesh
-			
-		# Apply the mesh - ensure the method exists first
-		if bag.has_method("apply_seed_mesh"):
-			bag.apply_seed_mesh()
-		
-		# Position in front of dispenser
-		var spawn_pos = global_position
-		spawn_pos.y += 1.0  # Above the dispenser
-		bag.global_position = spawn_pos
-		
-		# Have player pick it up
-		if actor.has_method("pick_up_tool"):
-			actor.pick_up_tool(bag)
-		
-		# Start cooldown
-		can_dispense = false
-		cooldown_timer = cooldown_time
-		
-		# Update label
-		if label_3d:
-			label_3d.text = "Reloading..."
-		
+	# Configure the seed bag
+	new_seed_bag.seed_type = seed_type
+	
+	# Set the appropriate plant scene path based on seed type
+	match seed_type.to_lower():
+		"carrot":
+			new_seed_bag.plant_scene_path = "res://scenes/plants/CarrotPlant.tscn"
+		"tomato":
+			new_seed_bag.plant_scene_path = "res://scenes/plants/TomatoPlant.tscn"
+	
+	# Add it to the scene
+	get_tree().root.add_child(new_seed_bag)
+	
+	# Position it at the dispenser
+	new_seed_bag.global_position = global_position + Vector3(0, 1, 0)
+	
+	# Force visual update after adding to scene
+	new_seed_bag.call_deferred("update_appearance")
+	
+	# Give it to the player directly
+	if actor.has_method("pick_up_tool"):
+		actor.pick_up_tool(new_seed_bag)
 		return true
 	
 	return false
 
-# Set highlighted state
+# Highlight when player looks at it
 func set_highlighted(is_highlighted: bool):
-	# Show/hide 3D label
-	if label_3d:
-		label_3d.visible = is_highlighted
+	if not mesh_instance:
+		return
+		
+	if is_highlighted:
+		mesh_instance.scale = Vector3(1.1, 1.1, 1.1)
+	else:
+		mesh_instance.scale = Vector3.ONE
