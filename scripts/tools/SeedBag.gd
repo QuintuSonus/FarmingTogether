@@ -7,8 +7,15 @@ extends Tool
 var plant_scene: PackedScene
 var has_been_used: bool = false
 
-# Reference to mesh for changing appearance
-@onready var mesh_instance = $MeshInstance3D
+## Reference to mesh for changing appearance
+#@onready var mesh_instance = $MeshInstance3D
+
+# Reference to different seed bag meshes
+@export var carrot_seed_mesh: PackedScene
+@export var tomato_seed_mesh: PackedScene
+
+# Instances
+var current_mesh_instance = null
 
 func _ready():
 	super._ready()  # Call parent's _ready function
@@ -26,9 +33,9 @@ func _ready():
 # Update the visual appearance based on seed type
 func update_appearance():
 	# Make sure we have a mesh to work with
-	if not mesh_instance:
-		print("SeedBag: No mesh instance found!")
-		return
+	#if not mesh_instance:
+		#print("SeedBag: No mesh instance found!")
+		#return
 	
 	# Create a new material
 	var material = StandardMaterial3D.new()
@@ -36,14 +43,15 @@ func update_appearance():
 	# Set color based on seed type
 	match seed_type.to_lower():
 		"carrot":
-			material.albedo_color = Color(1.0, 0.5, 0.0)  # Orange for carrots
+			current_mesh_instance = carrot_seed_mesh.instantiate()
 		"tomato":
-			material.albedo_color = Color(0.9, 0.1, 0.1)  # Red for tomatoes
-		_:
-			material.albedo_color = Color(0.8, 0.8, 0.1)  # Yellow default
+			current_mesh_instance = tomato_seed_mesh.instantiate()
 	
-	# Apply the material to the mesh
-	mesh_instance.material_override = material
+	# Add the mesh to the scene
+	if current_mesh_instance != null:
+		add_child(current_mesh_instance)
+		# Ensure it's positioned correctly
+		current_mesh_instance.position = Vector3.ZERO
 	
 	# Add/update text label if it exists
 	var label = get_node_or_null("SeedTypeLabel")

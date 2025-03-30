@@ -30,19 +30,7 @@ func update_appearance():
 	if not mesh_instance:
 		return
 		
-	var material = StandardMaterial3D.new()
-	
-	# Set color based on seed type
-	match seed_type.to_lower():
-		"carrot":
-			material.albedo_color = Color(1.0, 0.5, 0.0)  # Orange
-		"tomato":
-			material.albedo_color = Color(0.9, 0.1, 0.1)  # Red
-		_:
-			material.albedo_color = Color(0.8, 0.8, 0.1)  # Yellow default
-			
-	mesh_instance.material_override = material
-	
+		
 	# Update label if it exists
 	if label:
 		label.text = seed_type.capitalize() + " Seeds"

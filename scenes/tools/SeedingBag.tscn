@@ -21,7 +21,7 @@ _surfaces = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_w4wxe"]
-size = Vector3(0.5, 1.25629, 1.02124)
+size = Vector3(0.398499, 0.622284, 0.553101)
 
 [node name="SeedingBag" type="RigidBody3D"]
 script = ExtResource("1_kmb7f")
@@ -29,10 +29,11 @@ carrot_seed_mesh = ExtResource("2_fj1ef")
 tomato_seed_mesh = ExtResource("3_8qqef")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+visible = false
 mesh = SubResource("ArrayMesh_1pbl0")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.642912, 0.00158691)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0116272, 0.325911, 0.0022583)
 shape = SubResource("BoxShape3D_w4wxe")
 
 [node name="SeedTypeLabel" type="Label3D" parent="."]

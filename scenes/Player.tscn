@@ -1590,7 +1590,7 @@ transform = Transform3D(1, 0, 0, 0, 0.998806, -0.0488498, 0, 0.0488498, 0.998806
 [node name="TileHighlighter" parent="." instance=ExtResource("4_pfgso")]
 
 [node name="TileTargetingPoint" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.713153)
 
 [node name="PlayerToolHandler" type="Node" parent="." node_paths=PackedStringArray("tool_holder")]
 script = ExtResource("6_p53g4")
