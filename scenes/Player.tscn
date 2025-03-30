@@ -1416,7 +1416,7 @@ bones/7/parent = 3
 bones/7/rest = Transform3D(-2.31266e-05, 0.979788, -0.200037, 0.000163048, -0.200037, -0.979788, -1, -5.52749e-05, -0.000155127, 0.366641, 0.292799, 1.56035e-05)
 bones/7/enabled = true
 bones/7/position = Vector3(0.366641, 0.292799, 1.56035e-05)
-bones/7/rotation = Quaternion(0.612928, 0.378974, -0.564232, 0.402915)
+bones/7/rotation = Quaternion(0.612928, 0.378973, -0.564232, 0.402915)
 bones/7/scale = Vector3(1, 1, 1)
 bones/8/name = "mixamorig_LeftArm"
 bones/8/parent = 7
@@ -1430,7 +1430,7 @@ bones/9/parent = 8
 bones/9/rest = Transform3D(0.998548, 0.0532097, 0.00837521, -0.0538648, 0.986404, 0.15526, -3.25963e-08, -0.155485, 0.987838, 2.09548e-08, 0.259973, -2.90689e-07)
 bones/9/enabled = true
 bones/9/position = Vector3(2.09548e-08, 0.259973, -2.90689e-07)
-bones/9/rotation = Quaternion(-0.00270728, 0.02, 0.706859, 0.707066)
+bones/9/rotation = Quaternion(-0.00270727, 0.02, 0.706859, 0.707066)
 bones/9/scale = Vector3(1, 1, 1)
 bones/10/name = "mixamorig_LeftHand"
 bones/10/parent = 9
@@ -1486,7 +1486,7 @@ bones/17/parent = 16
 bones/17/rest = Transform3D(0.884763, -0.321661, -0.337236, 1.63913e-07, 0.723619, -0.6902, 0.46604, 0.610664, 0.640231, -8.25094e-09, 0.607756, -8.73115e-10)
 bones/17/enabled = true
 bones/17/position = Vector3(-8.25094e-09, 0.607756, -8.73115e-10)
-bones/17/rotation = Quaternion(0.542596, -0.259894, -0.00520394, 0.79876)
+bones/17/rotation = Quaternion(0.542596, -0.259894, -0.00520396, 0.79876)
 bones/17/scale = Vector3(1, 1, 1)
 bones/18/name = "mixamorig_LeftToeBase"
 bones/18/parent = 17
@@ -1543,7 +1543,7 @@ mesh = SubResource("ArrayMesh_6eyey")
 skin = SubResource("Skin_d3wef")
 
 [node name="BoneAttachment3D" type="BoneAttachment3D" parent="Armature/Skeleton3D"]
-transform = Transform3D(0.435879, 0.438279, 0.78608, -0.114911, 0.89337, -0.434381, -0.892639, 0.0990085, 0.439764, -0.954201, 0.65161, -2.05384)
+transform = Transform3D(0.435879, 0.438279, 0.78608, -0.114911, 0.893369, -0.434381, -0.89264, 0.0990084, 0.439764, -0.954201, 0.65161, -2.05384)
 bone_name = "mixamorig_RightHand"
 bone_idx = 14
 
