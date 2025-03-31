@@ -1,7 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://37i3fwe8cg5w"]
+[gd_scene load_steps=7 format=3 uid="uid://37i3fwe8cg5w"]
 
 [ext_resource type="Script" uid="uid://cx25egpc2hs72" path="res://scripts/tools/WateringCan.gd" id="1_rj3b4"]
 [ext_resource type="ArrayMesh" uid="uid://bon4t1fm7rs1n" path="res://assets/meshes/Voxel/WateringCan2.vox" id="2_7lab4"]
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_nlpqy"]
+[ext_resource type="Resource" uid="uid://cjh8rdpom40bj" path="res://resources/can_fill.tres" id="3_x7io4"]
+[ext_resource type="Resource" uid="uid://clf4os2ly74tj" path="res://resources/can_water_plant.tres" id="4_3lhts"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_vv5ey"]
 size = Vector3(0.5, 0.5, 0.5)
@@ -9,6 +12,7 @@ size = Vector3(0.5, 0.5, 0.5)
 [node name="WateringCan" type="RigidBody3D"]
 script = ExtResource("1_rj3b4")
 water_capacity = 10.0
+possible_interactions = Array[ExtResource("2_nlpqy")]([ExtResource("3_x7io4"), ExtResource("4_3lhts")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InteractionDefinition" load_steps=2 format=3 uid="uid://da7iqvxgoena5"]
+
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="1_lsobm"]
+
+[resource]
+script = ExtResource("1_lsobm")
+interaction_id = "plant_seed"
+display_name = "Plant"
+interaction_type = 1
+duration = 1.0
+duration_parameter_id = "tool.seeding.usage_time"
+required_target_type = "SoilTile"
+required_tool_capability = 2
+effect_function_name = "_effect_plant_seed"
+metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

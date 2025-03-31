@@ -1,8 +1,10 @@
-[gd_scene load_steps=7 format=4 uid="uid://bvtce7c1opcsk"]
+[gd_scene load_steps=9 format=4 uid="uid://bvtce7c1opcsk"]
 
 [ext_resource type="Script" uid="uid://buqahi5leodcb" path="res://scripts/tools/SeedBag.gd" id="1_kmb7f"]
 [ext_resource type="PackedScene" uid="uid://c77ou5e8dcrgi" path="res://scenes/tools/CarrotSeedBag.tscn" id="2_fj1ef"]
 [ext_resource type="PackedScene" uid="uid://ct7rtkjdhmks1" path="res://scenes/tools/TomatoSeedBag.tscn" id="3_8qqef"]
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="4_7a07n"]
+[ext_resource type="Resource" uid="uid://da7iqvxgoena5" path="res://resources/seed_plant.tres" id="5_34ipy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dicv8"]
 vertex_color_use_as_albedo = true
@@ -27,6 +29,7 @@ size = Vector3(0.398499, 0.622284, 0.553101)
 script = ExtResource("1_kmb7f")
 carrot_seed_mesh = ExtResource("2_fj1ef")
 tomato_seed_mesh = ExtResource("3_8qqef")
+possible_interactions = Array[ExtResource("4_7a07n")]([ExtResource("5_34ipy")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 visible = false

@@ -2,29 +2,22 @@
 class_name WateringCan
 extends Tool
 
-@export var water_capacity: float = 5.0  # Number of uses
+# Note: possible_interactions array is assigned in the editor Inspector
+# Assign can_water_plant.tres and can_fill.tres here.
+
+@export var water_capacity: float = 5.0
 var current_water: float = 5.0
 
 @onready var mesh_instance = $MeshInstance3D
 @onready var water_indicator = null
 
 func _ready():
-	super._ready()  # Call parent's _ready function
-	
-	# Add to special group for identification
+	super._ready()
 	add_to_group("watering_can_tools")
-	
-	 # Update water capacity based on parameter system
 	update_water_capacity_from_parameters()
-	
-	# Create a water level indicator
 	create_water_indicator()
-	
-	# Update the appearance based on initial water level
 	update_appearance()
-	
-	print("WateringCan initialized with ", current_water, "/", water_capacity, " water")
-
+	# print("WateringCan initialized...") # Optional debug
 # Custom method to identify this as a watering can
 func get_tool_type():
 	return "WateringCan"
@@ -85,103 +78,6 @@ func create_water_indicator():
 	# Update the water level visualization
 	update_water_level()
 
-func use(target_position: Vector3i) -> bool:
-	var level_manager = get_node("/root/Main/LevelManager")
-	
-	# If we're on a water tile, always allow refill action
-	if level_manager.is_tile_type(target_position, level_manager.TileType.WATER):
-		return true
-	
-	# Check if we have water
-	if current_water <= 0:
-		return false
-	
-	# Get positions to check
-	var positions_to_check = [target_position]
-	
-	# If hose attachment is active, add adjacent tiles
-	if has_hose_attachment():
-		positions_to_check.append_array(get_adjacent_positions(target_position))
-	
-	# Check for plants needing water at all relevant positions
-	var plants_to_water = []
-	
-	for pos in positions_to_check:
-		for obj in get_tree().get_nodes_in_group("plants"):
-			if obj is Plant and obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
-				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-				var obj_direct_grid = Vector3i(
-					int(floor(obj.global_position.x)),
-					0,
-					int(floor(obj.global_position.z))
-				)
-				
-				if (obj_grid_pos == pos or obj_direct_grid == pos) and not plants_to_water.has(obj):
-					plants_to_water.append(obj)
-	
-	return plants_to_water.size() > 0
-
-func complete_use(target_position: Vector3i) -> bool:
-	var level_manager = get_node("/root/Main/LevelManager")
-	
-	# If on water tile, refill
-	if level_manager.is_tile_type(target_position, level_manager.TileType.WATER):
-		var old_water = current_water
-		current_water = water_capacity
-		print("WateringCan: REFILLED from ", old_water, " to ", current_water)
-		update_appearance()
-		return true
-	
-	# Check if we have water
-	if current_water <= 0:
-		return false
-	
-	# Get positions to water
-	var positions_to_water = [target_position]
-	
-	# If hose attachment is active, add adjacent tiles
-	if has_hose_attachment():
-		positions_to_water.append_array(get_adjacent_positions(target_position))
-		print("WateringCan: Hose attachment active - watering " + str(positions_to_water.size()) + " tiles")
-	
-	# Find all plants at the positions
-	var plants_watered = 0
-	var all_interactables = get_tree().get_nodes_in_group("plants")
-	
-	# Try to water plants at all relevant positions
-	for pos in positions_to_water:
-		var plants_at_position = []
-		
-		for obj in all_interactables:
-			if obj is Plant and obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
-				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-				var obj_direct_grid = Vector3i(
-					int(floor(obj.global_position.x)),
-					0,
-					int(floor(obj.global_position.z))
-				)
-				
-				if (obj_grid_pos == pos or obj_direct_grid == pos) and not plants_at_position.has(obj):
-					plants_at_position.append(obj)
-		
-		# Water the first plant at this position (avoid duplicates)
-		if plants_at_position.size() > 0:
-			print("Watering plant at position " + str(pos))
-			if plants_at_position[0].water():
-				plants_watered += 1
-
-				# Only use water if we successfully watered something
-	# Only use 1 water total if any plants were watered
-	if plants_watered > 0 and current_water > 0:
-		current_water -= 1
-		update_appearance()
-		print("WateringCan: Used 1 water to water " + str(plants_watered) + " plants")
-		return true
-	
-	return plants_watered > 0
-
-func get_interaction_type():
-	return Interactable.InteractionType.PROGRESS_BASED
 	
 # Update the visual appearance based on water level
 func update_appearance():
@@ -282,3 +178,35 @@ func get_adjacent_positions(center_position: Vector3i) -> Array:
 		adjacent_positions.append(center_position + dir)
 	
 	return adjacent_positions
+
+func _effect_water_plant(target_position: Vector3i):
+	var level_manager = get_node_or_null("/root/Main/LevelManager")
+	if not level_manager or current_water <= 0: return
+
+	var positions_to_water = [target_position]
+	if has_hose_attachment():
+		positions_to_water.append_array(get_adjacent_positions(target_position))
+
+	var plants_watered = 0
+	var all_plants = get_tree().get_nodes_in_group("plants")
+
+	for pos in positions_to_water:
+		for obj in all_plants:
+			if obj is Plant and obj.current_stage == Plant.GrowthStage.SEED and not obj.is_watered:
+				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
+				if obj_grid_pos == pos:
+					if obj.water():
+						plants_watered += 1
+					break # Only water one plant per tile in the area effect
+
+	if plants_watered > 0:
+		current_water -= 1
+		update_appearance()
+		print("WateringCan effect 'water_plant': Used 1 water, %d plants watered." % plants_watered)
+
+
+func _effect_fill_can(_target_position: Vector3i): # Target position might not be needed here
+	var old_water = current_water
+	current_water = water_capacity
+	update_appearance()
+	print("WateringCan effect 'fill_can': REFILLED from %f to %f" % [old_water, current_water])

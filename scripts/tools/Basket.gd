@@ -296,7 +296,7 @@ func use(target_position):
 	
 	return false
 
-func complete_use(target_position):
+func _effect_harvest_crop(target_position):
 	
 	var level_manager = get_node("/root/Main/LevelManager")
 	
@@ -329,7 +329,9 @@ func complete_use(target_position):
 					obj.queue_free()
 					harvested = true
 					return true
-	
+
+func _effect_deliver_crop(target_position):
+	var level_manager = get_node("/root/Main/LevelManager")
 	# If we didn't harvest anything, try to deliver
 	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY) or level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS):
 		# Get order manager

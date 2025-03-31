@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InteractionDefinition" load_steps=2 format=3 uid="uid://snblypif6uor"]
+
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="1_x8dtw"]
+
+[resource]
+script = ExtResource("1_x8dtw")
+interaction_id = "till_soil"
+display_name = "Till"
+interaction_type = 1
+duration = 3.0
+duration_parameter_id = "tool.hoe.usage_time"
+required_target_type = "DirtTile"
+required_tool_capability = 1
+effect_function_name = "_effect_till_soil"
+metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

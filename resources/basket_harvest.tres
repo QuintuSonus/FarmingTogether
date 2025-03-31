@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InteractionDefinition" load_steps=2 format=3 uid="uid://b5d6l4u488xlw"]
+
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="1_bntx6"]
+
+[resource]
+script = ExtResource("1_bntx6")
+interaction_id = "harvest_crop"
+display_name = "Harvest"
+interaction_type = 1
+duration = 1.0
+duration_parameter_id = ""
+required_target_type = "PlantHarvestable"
+required_tool_capability = 8
+effect_function_name = "_effect_harvest_crop"
+metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

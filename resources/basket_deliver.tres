@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InteractionDefinition" load_steps=2 format=3 uid="uid://bxmeyiaungnj7"]
+
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="1_1olk6"]
+
+[resource]
+script = ExtResource("1_1olk6")
+interaction_id = "deliver_crop"
+display_name = "Deliver"
+interaction_type = 0
+duration = 1.0
+duration_parameter_id = ""
+required_target_type = "DeliveryTile"
+required_tool_capability = 16
+effect_function_name = "_effect_deliver_crop"
+metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="InteractionDefinition" load_steps=2 format=3 uid="uid://cjh8rdpom40bj"]
+
+[ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="1_sl71y"]
+
+[resource]
+script = ExtResource("1_sl71y")
+interaction_id = "fill_can"
+display_name = "Fill"
+interaction_type = 1
+duration = 1.0
+duration_parameter_id = ""
+required_target_type = "WaterTile"
+required_tool_capability = 4
+effect_function_name = "_effect_fill_can"
+metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

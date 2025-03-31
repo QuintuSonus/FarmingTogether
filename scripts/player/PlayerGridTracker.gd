@@ -56,8 +56,9 @@ func update_tile_highlight():
 		# Check if current tool can interact with this tile
 		var can_interact = false
 		var tool_handler = player.get_node_or_null("PlayerToolHandler")
-		if tool_handler and tool_handler.current_tool and tool_handler.current_tool.has_method("use"):
-			can_interact = tool_handler.current_tool.use(front_grid_position)
+		if tool_handler and tool_handler.current_tool and tool_handler.has_method("can_use_tool"):
+
+			can_interact = tool_handler.can_use_tool(front_grid_position)
 			
 			# Update highlighter with interaction status
 			tile_highlighter.highlight_tile(highlight_pos, can_interact)

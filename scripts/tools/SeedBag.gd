@@ -79,97 +79,9 @@ func set_seed_type(new_type: String):
 func get_capabilities() -> int:
 	return ToolCapabilities.Capability.PLANT_SEEDS
 
-# For tool usage - progress-based
-func get_usage_interaction_type() -> int:
-	return Interactable.InteractionType.PROGRESS_BASED
-	
-func get_usage_duration() -> float:
-	var parameter_manager = get_parameter_manager()
-	var duration = 2.0  # Default
-	
-	if parameter_manager:
-		# Get the base duration
-		duration = parameter_manager.get_value("tool.seeding.usage_time", 2.0)
-		
-		# Apply global tool speed multiplier from Energy Drink upgrade
-		duration *= get_global_tool_speed_multiplier()
-	
-	return duration
-
-# Check if can use at position
-func use(target_position: Vector3i) -> bool:
-
-	
-	# Don't allow using if already used
-	if has_been_used:
-		print("SeedBag: Already used - cannot plant again")
-		return false
-	
-	# Get the level manager
-	var level_manager = get_node("/root/Main/LevelManager")
-	
-	# Check if the target position is soil
-	if level_manager.is_tile_type(target_position, level_manager.TileType.SOIL):
-		# Check for existing plants at this position
-		var existing_plants = 0
-		for obj in get_tree().get_nodes_in_group("plants"):
-			if obj is Plant:
-				var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-				if obj_grid_pos == target_position:
-					existing_plants += 1
-		
-		if existing_plants > 0:
-			print("SeedBag: Cannot plant - already " + str(existing_plants) + " plants at this position!")
-			return false
-			
-		
-		return true
-	
-	
-	return false
 
 # Complete the planting action
-func complete_use(target_position: Vector3i) -> bool:
-	
-	
-	# Don't allow completing if already used
-	if has_been_used:
-		print("SeedBag: Already used - cannot complete planting")
-		return false
-	
-	var level_manager = get_node("/root/Main/LevelManager")
-	
-	# Check if this is a valid soil tile
-	if not level_manager.is_tile_type(target_position, level_manager.TileType.SOIL):
-		print("SeedBag: Cannot plant - not a soil tile")
-		return false
-	
-	if not plant_scene:
-		print("SeedBag: Cannot plant - plant scene not loaded")
-		return false
-	
-	# Check for existing plants at this position again (safety check)
-	var existing_plants = []
-	for obj in get_tree().get_nodes_in_group("plants"):
-		if obj is Plant:
-			var obj_grid_pos = level_manager.world_to_grid(obj.global_position)
-			if obj_grid_pos == target_position:
-				existing_plants.append(obj)
-	
-	if existing_plants.size() > 0:
-		print("SeedBag: ERROR - Already " + str(existing_plants.size()) + " plants at this position!")
-		print("SeedBag: Removing duplicate plants before creating a new one")
-		
-		# Remove all existing plants at this position except the first one
-		for i in range(1, existing_plants.size()):
-			print("Removing duplicate plant: " + str(i))
-			existing_plants[i].queue_free()
-			
-		# Don't create a new plant, but still mark as used and remove the bag
-		has_been_used = true
-		call_deferred("remove_seed_bag")
-		return true
-	
+func _effect_plant_seed(target_position: Vector3i) -> bool:#
 	# DIRECT CALCULATION with CENTERING
 	# Add 0.5 to X and Z to center the plant on the tile
 	var world_pos = Vector3(
