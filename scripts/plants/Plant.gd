@@ -269,9 +269,7 @@ func can_interact(actor):
 	else:
 		# Tool is no longer valid
 		tool_info = "freed tool"
-	
-	print("Plant.can_interact() - Stage: " + str(current_stage) + ", Tool: " + tool_info)
-	
+		
 	var required_capability = get_required_tool_capability()
 	if required_capability < 0:
 		return false
