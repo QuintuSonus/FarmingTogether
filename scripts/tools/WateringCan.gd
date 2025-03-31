@@ -181,7 +181,7 @@ func complete_use(target_position: Vector3i) -> bool:
 	return plants_watered > 0
 
 func get_interaction_type():
-	return Interactable.InteractionType.INSTANTANEOUS
+	return Interactable.InteractionType.PROGRESS_BASED
 	
 # Update the visual appearance based on water level
 func update_appearance():
