@@ -112,9 +112,9 @@ func _initialize():
 	is_initialized = true
 	print("PlayerAnimationController initialized for AnimationTree.")
 
-	# Set initial state based on current movement
-	_update_movement_state()
-	print("DEBUG: Called _update_movement_state.")
+	## Set initial state based on current movement
+	#_update_movement_state()
+	#print("DEBUG: Called _update_movement_state.")
 
 	# Check the state immediately
 	if state_machine: # Check if variable holds an object
@@ -143,51 +143,85 @@ func _find_animation_player() -> AnimationPlayer:
 
 # --- State Updates ---
 # (Keep _physics_process and _update_movement_state as they were)
-func _physics_process(_delta):
-	if not is_initialized: return
-	_update_movement_state()
+#func _physics_process(_delta):
+	#if not is_initialized: return
+	#_update_movement_state()
+#
+#func _update_movement_state():
+	#if not is_initialized or not is_instance_valid(player) or not player is CharacterBody3D:
+		#return
+#
+	#var currently_moving = player.velocity.length_squared() > 0.01
+	## --- DEBUG PRINT ---
+		## --- END DEBUG ---
 
-func _update_movement_state():
-	if not is_initialized or not is_instance_valid(player) or not player is CharacterBody3D:
-		return
-	var currently_moving = player.velocity.length_squared() > 0.01
-	if is_instance_valid(animation_tree):
-		animation_tree.set("parameters/conditions/is_moving", currently_moving)
+	#if is_instance_valid(animation_tree):
+		## Ensure the path here EXACTLY matches your AnimationTree parameter
+		#animation_tree.set("parameters/conditions/is_moving", currently_moving)
+	## else: # Optional: Add warning if tree is invalid
+		## print("DEBUG Anim: AnimationTree invalid in _update_movement_state")
 
 
-# --- Animation Playback (Simplified) ---
-# (Keep play_action_animation and stop_action_animation as they were)
+# --- Animation Playback (Simplified & Fixed) ---
 func play_action_animation(action_anim_name: String):
+	# Ensure initialized and state_machine is valid
 	if not is_initialized or not state_machine:
 		print("DEBUG (play_action): Not initialized or state machine invalid.")
 		return
-	if state_machine.has_node(action_anim_name):
-		if state_machine.get_current_node() == action_anim_name: return
-		print("AnimationTree: Travelling to action state -> " + action_anim_name)
-		state_machine.travel(action_anim_name)
-	else:
-		print("AnimationTree: Action state not found: " + action_anim_name)
+
+	# Check if already in the target state to avoid unnecessary travel
+	if state_machine.get_current_node() == action_anim_name:
+		return
+
+	print("AnimationTree: Travelling to action state -> " + action_anim_name)
+	# Directly call travel. Godot's travel function will print a warning
+	# if action_anim_name is not a valid state, but typically won't crash.
+	state_machine.travel(action_anim_name)
+
+	# Removed the problematic check:
+	# if state_machine.has_node(action_anim_name): # <--- INCORRECT CHECK REMOVED
+	#     if state_machine.get_current_node() == action_anim_name: return
+	#     print("AnimationTree: Travelling to action state -> " + action_anim_name)
+	#     state_machine.travel(action_anim_name)
+	# else:
+	#     print("AnimationTree: Action state not found: " + action_anim_name) # No longer needed if travel handles it
 
 func stop_action_animation():
 	if not is_initialized or not state_machine:
 		print("DEBUG (stop_action): Not initialized or state machine invalid.")
 		return
+
 	var current_state = state_machine.get_current_node()
-	var action_states = ["Planting", "Hoe", "Watering", "Harvesting"]
-	if not current_state in action_states: return
+	# Define which states are considered "action" states that can be stopped/interrupted
+	var action_states = ["Planting", "Hoe", "Watering", "Harvesting"] # Add any other action state names here
+
+	# Only proceed if we are currently in an action state
+	if not current_state in action_states:
+		return
+
 	print("Interrupting action animation state: " + current_state)
+
+	# Determine the target state (Idle or Running)
 	var target_state = "Idle"
 	if is_instance_valid(player) and player is CharacterBody3D and player.velocity.length_squared() > 0.01:
-		target_state = "RunningInPlace"
-	if state_machine.has_node(target_state):
-		if state_machine.get_current_node() == current_state:
-			print("AnimationTree: Forcing travel back to state -> " + target_state)
-			state_machine.travel(target_state)
-	else:
-		print("AnimationTree: Cannot force travel back, target state '%s' not found." % target_state)
+		target_state = "RunningInPlace" # Ensure this state name matches your AnimationTree
+
+	# Directly travel to the target state.
+	# Godot's travel function will print a warning if target_state is invalid.
+	print("AnimationTree: Travelling back to state -> " + target_state)
+	state_machine.travel(target_state)
+
+	# --- REMOVED THE PROBLEMATIC CHECK ---
+	# if state_machine.has_node(target_state): # <--- INCORRECT CHECK REMOVED
+	#     if state_machine.get_current_node() == current_state: # Check if still in the action state
+	#         print("AnimationTree: Forcing travel back to state -> " + target_state)
+	#         state_machine.travel(target_state)
+	# else:
+	#     print("AnimationTree: Cannot force travel back, target state '%s' not found." % target_state)
+	# --- END REMOVED BLOCK ---
 
 
 # --- Public Methods ---
 func force_update_state():
 	if not is_initialized: return
-	_update_movement_state()
+	#_update_movement_state()

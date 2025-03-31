@@ -571,6 +571,7 @@ func _on_tool_use_completed(position):
 
 
 # Cancel the current progress-based tool use
+# In player/PlayerToolHandler.gd
 func cancel_tool_use():
 	if not is_tool_use_in_progress or tool_use_completed:
 		return # Can only cancel if in progress and not yet completed
@@ -602,23 +603,24 @@ func cancel_tool_use():
 	var movement = player.get_node_or_null("PlayerMovement")
 	if movement:
 		movement.set_movement_disabled(false)
-		
-	# --- ADD THIS BLOCK ---
+
+	# --- Stop the animation ---
 	# Stop the current animation and return to Idle/Run
 	if is_instance_valid(animation_controller):
-		animation_controller.stop_action_animation()
-	# --- END ADD BLOCK ---
+		animation_controller.stop_action_animation() # This is the correct way
 
+	# --- REMOVED THE PROBLEMATIC BLOCK ---
 	# Stop the current animation and return to Idle/Run
 	# We need to tell the animation controller to stop the action
-	if animation_controller:
+	# if animation_controller:
 		# Option A: If AnimationTree handles transitions well, just force update
 		# animation_controller.force_update_state()
 		# Option B: Explicitly stop and update (safer if tree transitions are complex)
-		if animation_controller.animation_player:
-			animation_controller.animation_player.stop() # Stop current animation
-		animation_controller.is_playing_action_anim = false # Manually reset flag
-		animation_controller.force_update_state() # Trigger Idle/Run check
+		# if animation_controller.animation_player:
+			# animation_controller.animation_player.stop() # Stop current animation
+		# REMOVED: animation_controller.is_playing_action_anim = false # Manually reset flag
+		# animation_controller.force_update_state() # Trigger Idle/Run check
+	# --- END REMOVED BLOCK ---
 
 
 # Clear references to a tool (called when a tool is destroyed externally)

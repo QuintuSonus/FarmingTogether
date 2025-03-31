@@ -1,6 +1,6 @@
 [gd_scene load_steps=21 format=3 uid="uid://bpr653sxwfe1t"]
 
-[ext_resource type="Script" uid="uid://c2upt432vsbp2" path="res://scripts/LevelManager.gd" id="1_et6yy"]
+[ext_resource type="Script" uid="uid://bf1r37j63x4eo" path="res://scripts/LevelManager.gd" id="1_et6yy"]
 [ext_resource type="Script" uid="uid://bufq3used1ewf" path="res://scripts/managers/GameManager.gd" id="1_ho4xx"]
 [ext_resource type="Script" uid="uid://d284oeta4o6hf" path="res://scripts/parameters/ParameterManager.gd" id="2_spmqx"]
 [ext_resource type="PackedScene" uid="uid://cd84u8mftwl3" path="res://scenes/GridMap.tscn" id="2_ugdbk"]
@@ -13,12 +13,12 @@
 [ext_resource type="PackedScene" uid="uid://dwtu6a0ypc6ic" path="res://scenes/ui/LevelDisplay.tscn" id="10_rurev"]
 [ext_resource type="PackedScene" uid="uid://cr5dy8no3004" path="res://scenes/ui/OrderUI.tscn" id="11_e62db"]
 [ext_resource type="PackedScene" uid="uid://diushxjvndfo7" path="res://scenes/tools/CarrotSeedDispenser.tscn" id="12_0lop4"]
-[ext_resource type="Script" uid="uid://bruagrb68ehim" path="res://scripts/managers/CameraController.gd" id="13_6p5wk"]
+[ext_resource type="Script" uid="uid://ckl0lbwo8x4po" path="res://scripts/managers/CameraController.gd" id="13_6p5wk"]
 [ext_resource type="PackedScene" uid="uid://cm1c8l7g4cgyb" path="res://scenes/PlayerManager.tscn" id="13_y6ahl"]
-[ext_resource type="Script" uid="uid://bg8mt2r4x63su" path="res://scripts/managers/ToolManager.gd" id="15_7kdnr"]
-[ext_resource type="Script" uid="uid://ceb4ipo660tts" path="res://scripts/managers/UIManager.gd" id="16_63cbe"]
-[ext_resource type="Script" uid="uid://cqiiqjpgfj080" path="res://scripts/managers/GameDataManager.gd" id="17_pc3wf"]
-[ext_resource type="Script" uid="uid://bfwuckni6lq53" path="res://scripts/upgrades/UpgradeSystem.gd" id="17_rllxr"]
+[ext_resource type="Script" uid="uid://b7mgnitwtkma7" path="res://scripts/managers/ToolManager.gd" id="15_7kdnr"]
+[ext_resource type="Script" uid="uid://clhwsi7fpw546" path="res://scripts/managers/UIManager.gd" id="16_63cbe"]
+[ext_resource type="Script" uid="uid://bixslh521ionq" path="res://scripts/managers/GameDataManager.gd" id="17_pc3wf"]
+[ext_resource type="Script" uid="uid://dxdatmqjgxk25" path="res://scripts/upgrades/UpgradeSystem.gd" id="17_rllxr"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_p8tdh"]
 size = Vector3(12, 10, 1)
