@@ -330,43 +330,55 @@ func _effect_harvest_crop(target_position):
 					harvested = true
 					return true
 
-func _effect_deliver_crop(target_position):
-	var level_manager = get_node("/root/Main/LevelManager")
-	# If we didn't harvest anything, try to deliver
-	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY) or level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS):
-		# Get order manager
-		var order_manager = get_node_or_null("/root/Main/OrderManager")
-		
-		if order_manager and get_total_crops() > 0:
-			# Set express delivery flag if applicable
-			var is_express = level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS)
-			
-			# Try to complete matching order with optional express bonus
-			var order_completed = order_manager.try_complete_any_order(self, is_express)
-				
-			if order_completed:
-				print("Basket: Successfully delivered order!")
-				# Basket was emptied by order manager
-				return true
-			else:
-				# No exact matching order found, crops are lost
-				
-				
-				# Provide feedback to the player that crops were lost
-				# You could add a visual effect or sound here
-				var crops_summary = get_crops_summary()
-				print("Basket: Lost " + crops_summary)
-				
-				# Clear all crops without scoring
-				clear_crops()
-				return true
+func _effect_deliver_crop(target_position: Vector3i) -> bool:
+	var level_manager = get_node_or_null("/root/Main/LevelManager")
+	if not level_manager: return false
+
+	if level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY) or \
+	   level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS):
+
+		var total_items = get_total_crops()
+		if total_items == 0:
+			print("Basket: Nothing to deliver.")
+			return false
+
+		# --- UPDATED SCORING LOGIC ---
+		var score = 0
+		# Get GameDataManager for adding stats
+		var gdm = get_node_or_null("/root/Main/GameDataManager") # Or use ServiceLocator
+
+		# Calculate base score using CropRegistry
+		for crop_type in self.contained_crops:
+			var quantity = self.contained_crops[crop_type]
+			# Use the NEW static function from CropRegistry Autoload
+			var value = CropRegistry.get_crop_score(crop_type)
+			score += quantity * value
+
+		# Optional: Apply quantity bonus
+		if total_items > 1:
+			var quantity_bonus_multiplier = 1.0 + (0.1 * (total_items - 1))
+			score = int(score * quantity_bonus_multiplier)
+
+		# Optional: Apply Express Delivery bonus
+		var is_express = level_manager.is_tile_type(target_position, level_manager.TileType.DELIVERY_EXPRESS)
+		if is_express:
+			score = int(score * 1.15)
+			print("Basket: Express delivery bonus applied!")
+
+		# Add score to stats via GameDataManager
+		if gdm:
+			gdm.add_stat("total_score", score)
+			print("Basket: Delivered crops for a score of: " + str(score))
 		else:
-			
-			clear_crops()
-			return true
+			push_error("Basket: GameDataManager not found for adding score stat!")
+		# --- END UPDATED SCORING LOGIC ---
+
+		clear_crops()
+		return true
 	else:
-		print("Basket: Nothing to deliver")
-	
+		print("Basket: Not a delivery tile.")
+		return false
+
 	return false
 
 func _process(delta):

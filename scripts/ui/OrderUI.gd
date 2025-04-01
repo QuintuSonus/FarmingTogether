@@ -16,6 +16,7 @@ var order_slots = {}
 
 # Reference to the order manager
 var order_manager: OrderManager
+var game_manager: GameManager
 
 func _ready():
 	print("OrderUI: _ready() called")
@@ -66,7 +67,7 @@ func _ready():
 	
 	# Initialize UI
 	update_score_display(0)
-	update_timer_display(order_manager.level_time_limit)
+	update_timer_display(game_manager.level_time_limit)
 	
 	# Make sure all size flags are set correctly for the container
 	if order_container:

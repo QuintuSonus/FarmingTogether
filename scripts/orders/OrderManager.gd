@@ -7,8 +7,6 @@ extends Node
 @export var initial_order_delay: float = 5.0
 @export var new_order_min_delay: float = 10.0
 @export var new_order_max_delay: float = 20.0
-@export var level_time_limit: float = 300.0  # 5 minutes for the level
-@export var time_multiplier: float = 1.0
 
 # Progression-based configuration
 @export var required_orders: int = 3  # How many orders must be completed to win
@@ -20,7 +18,6 @@ var completed_orders: Array = []
 var failed_orders: Array = []
 var available_crop_types: Array = ["carrot"]  # Will be updated based on unlocked dispensers
 var current_score: int = 0
-var level_timer: float = 0.0
 var new_order_timer: float = 0.0
 var orders_completed_this_run: int = 0
 
@@ -36,9 +33,7 @@ signal order_created(order)
 signal order_completed(order, score)
 signal order_failed(order)
 signal score_changed(new_score)
-signal level_time_updated(time_remaining)
-signal level_completed(score, currency_earned)
-signal level_failed()
+
 
 func _ready():
 	print("OrderManager initialized")
@@ -48,9 +43,6 @@ func _ready():
 	
 	# Get available crops from game data
 	update_available_crops()
-	
-	# Set required orders based on level
-	set_level_parameters()
 	
 	print("OrderManager level " + str(current_level) + " started")
 	print("Required orders: " + str(required_orders))
@@ -82,13 +74,13 @@ func get_game_data_references():
 
 func _process(delta):
 	# Update level timer
-	level_timer += delta
-	emit_signal("level_time_updated", level_time_limit - level_timer)
-	
-	# Check if the level is over
-	if level_timer >= level_time_limit:
-		check_level_completion()
-		return
+	#level_timer += delta
+	#emit_signal("level_time_updated", level_time_limit - level_timer)
+	#
+	## Check if the level is over
+	#if level_timer >= level_time_limit:
+		#check_level_completion()
+		#return
 	
 	# Update active orders
 	for order in active_orders:
@@ -98,16 +90,16 @@ func _process(delta):
 		if order.state == Order.OrderState.FAILED:
 			handle_failed_order(order)
 	
-	# Process new order timer
-	if active_orders.size() < max_active_orders:
-		new_order_timer -= delta
-		
-		if new_order_timer <= 0:
-			create_new_order()
-			# Set new timer for next order - shorter for higher levels
-			var min_delay = max(new_order_min_delay - (current_level * 0.5), 5.0)
-			var max_delay = max(new_order_max_delay - (current_level * 1.0), 10.0)
-			new_order_timer = randf_range(min_delay, max_delay)
+	## Process new order timer
+	#if active_orders.size() < max_active_orders:
+		#new_order_timer -= delta
+		#
+		#if new_order_timer <= 0:
+			#create_new_order()
+			## Set new timer for next order - shorter for higher levels
+			#var min_delay = max(new_order_min_delay - (current_level * 0.5), 5.0)
+			#var max_delay = max(new_order_max_delay - (current_level * 1.0), 10.0)
+			#new_order_timer = randf_range(min_delay, max_delay)
 
 # Update available crops based on game data
 func update_available_crops():
@@ -128,112 +120,97 @@ func update_available_crops():
 	
 	print("Available crops updated: " + str(available_crop_types))
 
-# Set level parameters based on current level
-func set_level_parameters():
-	# Adjust required orders based on level
-	required_orders = 3 + (current_level - 1)  # Level 1: 3, Level 2: 4, etc.
-	
-	# Cap at 10 orders
-	required_orders = min(required_orders, 10)
-	
-	# Adjust time limit (more time for higher levels with more orders)
-	level_time_limit = 180.0 + (current_level * 30.0)  # Level 1: 3:30, Level 2: 4:00, etc.
-	
-	# Cap at 8 minutes
-	level_time_limit = min(level_time_limit, 480.0)
-	
-	# Adjust max active orders based on level
-	max_active_orders = min(3 + floor(current_level / 2), 5)  # Level 1-2: 3, Level 3-4: 4, Level 5+: 5
+
 
 # Create a new order based on current difficulty
-func create_new_order():
-	# Calculate a difficulty factor (0 to 1) based on:
-	# - How far into the level we are
-	# - Current player level
-
-	var time_factor = level_timer / level_time_limit
-	var level_factor = min((current_level - 1) / 5.0, 1.0)  # Caps at level 6
-	
-	# Combined difficulty rises through the level and with player level
-	var difficulty_factor = (time_factor * 0.3) + (level_factor * 0.7)
-	
-	# Determine order parameters based on difficulty
-	var order_crops = {}
-	var crop_count = 1
-	var crop_types = 1
-	
-	# Scale complexity with difficulty
-	if difficulty_factor > 0.3 or current_level >= 2:
-		crop_count += 1  # Base: 1, After threshold: 2
-		
-	if difficulty_factor > 0.6 or current_level >= 3:
-		crop_count += 1  # Base: 2, After threshold: 3
-		
-	if difficulty_factor > 0.4 or current_level >= 3:
-		crop_types = min(2, available_crop_types.size())  # Introduce mixed orders
-	
-	if difficulty_factor > 0.7 or current_level >= 5:
-		crop_count += 1  # Base: 3, After threshold: 4
-	
-	# Force single-crop simple orders at level 1
-	if current_level == 1:
-		crop_count = 1 + floor(time_factor * 2)  # Level 1: 1-2 crops max
-		crop_types = 1  # Always single type in level 1
-	
-	# Cap crop count based on available types
-	crop_count = min(crop_count, crop_types * 3)  # Maximum 3 of each type
-	
-	# Generate required crops
-	var types_to_use = []
-	available_crop_types.shuffle()
-	
-	for i in range(min(crop_types, available_crop_types.size())):
-		types_to_use.append(available_crop_types[i])
-	
-	# Distribute crop count among crop types
-	while crop_count > 0:
-		var crop_type = types_to_use[randi() % types_to_use.size()]
-		
-		if not order_crops.has(crop_type):
-			order_crops[crop_type] = 0
-		
-		order_crops[crop_type] += 1
-		crop_count -= 1
-	
-	# Determine time limit based on difficulty and order size
-	update_timer_multiplier_from_parameters()
-	var total_crop_count = 0
-	for count in order_crops.values():
-		total_crop_count += count
-	
-	# Base time per crop, decreasing with level
-	var time_per_crop = max(20.0 - (current_level * 1.5), 10.0)
-	
-	# Time limit scales with order size and decreases with level
-	var time_base = max(60.0 - (current_level * 5.0), 30.0)
-	var time_limit = (time_base + (time_per_crop * total_crop_count))*time_multiplier
-	
-	# Create the order
-	var order = Order.new(next_order_id, order_crops, time_limit)
-	
-	# Set difficulty directly for UI purposes
-	order.order_difficulty = 1 + floor(difficulty_factor * 2)  # 1-3
-	
-	# Scale up score value with order complexity
-	order.score_value = 100 * order.order_difficulty * total_crop_count
-	
-	next_order_id += 1
-	
-	# Add to active orders
-	active_orders.append(order)
-	
-	# Emit signal
-	emit_signal("order_created", order)
-	
-	print("New order created: ", order.display_name, " (", order.order_id, ")")
-	print("Required crops: ", order.required_crops)
-	print("Time limit: ", order.time_limit, " seconds")
-	print("Difficulty: ", order.order_difficulty, " (Score value: ", order.score_value, ")")
+#func create_new_order():
+	## Calculate a difficulty factor (0 to 1) based on:
+	## - How far into the level we are
+	## - Current player level
+#
+	#
+	#var level_factor = min((current_level - 1) / 5.0, 1.0)  # Caps at level 6
+	#
+	## Combined difficulty rises through the level and with player level
+	#var difficulty_factor = (time_factor * 0.3) + (level_factor * 0.7)
+	#
+	## Determine order parameters based on difficulty
+	#var order_crops = {}
+	#var crop_count = 1
+	#var crop_types = 1
+	#
+	## Scale complexity with difficulty
+	#if difficulty_factor > 0.3 or current_level >= 2:
+		#crop_count += 1  # Base: 1, After threshold: 2
+		#
+	#if difficulty_factor > 0.6 or current_level >= 3:
+		#crop_count += 1  # Base: 2, After threshold: 3
+		#
+	#if difficulty_factor > 0.4 or current_level >= 3:
+		#crop_types = min(2, available_crop_types.size())  # Introduce mixed orders
+	#
+	#if difficulty_factor > 0.7 or current_level >= 5:
+		#crop_count += 1  # Base: 3, After threshold: 4
+	#
+	## Force single-crop simple orders at level 1
+	#if current_level == 1:
+		#crop_count = 1 + floor(time_factor * 2)  # Level 1: 1-2 crops max
+		#crop_types = 1  # Always single type in level 1
+	#
+	## Cap crop count based on available types
+	#crop_count = min(crop_count, crop_types * 3)  # Maximum 3 of each type
+	#
+	## Generate required crops
+	#var types_to_use = []
+	#available_crop_types.shuffle()
+	#
+	#for i in range(min(crop_types, available_crop_types.size())):
+		#types_to_use.append(available_crop_types[i])
+	#
+	## Distribute crop count among crop types
+	#while crop_count > 0:
+		#var crop_type = types_to_use[randi() % types_to_use.size()]
+		#
+		#if not order_crops.has(crop_type):
+			#order_crops[crop_type] = 0
+		#
+		#order_crops[crop_type] += 1
+		#crop_count -= 1
+	#
+	## Determine time limit based on difficulty and order size
+	#update_timer_multiplier_from_parameters()
+	#var total_crop_count = 0
+	#for count in order_crops.values():
+		#total_crop_count += count
+	#
+	## Base time per crop, decreasing with level
+	#var time_per_crop = max(20.0 - (current_level * 1.5), 10.0)
+	#
+	## Time limit scales with order size and decreases with level
+	#var time_base = max(60.0 - (current_level * 5.0), 30.0)
+	#var time_limit = (time_base + (time_per_crop * total_crop_count))*time_multiplier
+	#
+	## Create the order
+	#var order = Order.new(next_order_id, order_crops, time_limit)
+	#
+	## Set difficulty directly for UI purposes
+	#order.order_difficulty = 1 + floor(difficulty_factor * 2)  # 1-3
+	#
+	## Scale up score value with order complexity
+	#order.score_value = 100 * order.order_difficulty * total_crop_count
+	#
+	#next_order_id += 1
+	#
+	## Add to active orders
+	#active_orders.append(order)
+	#
+	## Emit signal
+	#emit_signal("order_created", order)
+	#
+	#print("New order created: ", order.display_name, " (", order.order_id, ")")
+	#print("Required crops: ", order.required_crops)
+	#print("Time limit: ", order.time_limit, " seconds")
+	#print("Difficulty: ", order.order_difficulty, " (Score value: ", order.score_value, ")")
 
 # Check if a basket EXACTLY matches any current order
 func check_basket_for_exact_order_match(basket) -> Order:
@@ -317,9 +294,7 @@ func complete_order(order_id: int, basket, is_express_delivery: bool = false) ->
 	emit_signal("score_changed", current_score)
 	
 	# Check if level is complete
-	if orders_completed_this_run >= required_orders:
-		check_level_completion()
-	
+
 	print("Order completed: ", matched_order.display_name, " (", matched_order.order_id, ")")
 	print("Score: ", score, " | Total score: ", current_score)
 	print("Orders completed: ", orders_completed_this_run, "/", required_orders)
@@ -340,39 +315,6 @@ func handle_failed_order(order):
 		print("Order failed: ", order.display_name, " (", order.order_id, ")")
 
 # Check if level is completed
-func check_level_completion():
-	# If we have enough completed orders, level is successful
-	if orders_completed_this_run >= required_orders:
-		print("Level " + str(current_level) + " completed!")
-		
-		# Calculate rewards - base amount plus bonus based on score
-		var base_reward = 100 + (current_level * 50)  # 150, 200, 250, etc.
-		var score_bonus = floor(current_score / 100) * 10  # Every 100 points = 10 currency
-		var total_reward = base_reward + score_bonus
-		
-		# Emit level completed signal with score and reward
-		emit_signal("level_completed", current_score, total_reward)
-		
-		# Update game data stats using new architecture
-		if game_data_manager:
-			game_data_manager.add_stat("orders_completed", orders_completed_this_run)
-			game_data_manager.add_stat("levels_completed", 1)
-			game_data_manager.add_stat("total_score", current_score)
-		elif game_data and game_data.stats_data:
-			game_data.stats_data.add_stat("orders_completed", orders_completed_this_run)
-			game_data.stats_data.add_stat("levels_completed", 1)
-			game_data.stats_data.add_stat("total_score", current_score)
-			game_data.save()
-		
-		# Pause processing
-		set_process(false)
-	else:
-		# Level failed - not enough orders completed
-		print("Level failed! Completed " + str(orders_completed_this_run) + "/" + str(required_orders) + " required orders")
-		emit_signal("level_failed")
-		
-		# Pause processing
-		set_process(false)
 
 # Reset orders for a new level
 func reset_orders():
@@ -390,19 +332,12 @@ func reset_orders():
 	orders_completed_this_run = 0
 	current_score = 0
 	emit_signal("score_changed", current_score)
-	
-	# Reset level timer
-	level_timer = 0.0
-	emit_signal("level_time_updated", level_time_limit)
-	
+		
 	# Reset order ID counter
 	next_order_id = 1
 	
 	# Update available crops
 	update_available_crops()
-	
-	# Set parameters for current level
-	set_level_parameters()
 	
 	# Set initial order timer
 	new_order_timer = initial_order_delay
@@ -414,21 +349,6 @@ func reset_orders():
 	print("Required orders: " + str(required_orders))
 	print("Available crops: " + str(available_crop_types))
 
-func update_timer_multiplier_from_parameters():
-	# Try to get parameter manager
-	var parameter_manager = get_parameter_manager()
-	
-	if parameter_manager:
-		# Get the base capacity from parameters
-		var new_time_multiplier = parameter_manager.get_value("order.time_multiplier", time_multiplier)
-		print(new_time_multiplier)
-		# Update the capacity
-		var old_time_multiplier = time_multiplier
-		time_multiplier = new_time_multiplier
-		
-		print("OrderManager: Updated time multiplier from ", old_time_multiplier, " to ", time_multiplier)
-	else:
-		print("OrderManager: No parameter manager found, using default capacity: ", time_multiplier)
 
 func get_parameter_manager():
 	var service_locator = get_node_or_null("/root/ServiceLocator")

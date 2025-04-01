@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=3 format=3 uid="uid://dg4sw7qmvrrxe"]
+
+[ext_resource type="Texture2D" uid="uid://bb4r1mosdf8mb" path="res://assets/textures/crops/tomato_icon.png" id="1_8lunm"]
+[ext_resource type="Script" uid="uid://sixl5d23hxmp" path="res://scripts/data/CropData.gd" id="1_545nk"]
+
+[resource]
+script = ExtResource("1_545nk")
+crop_id = "tomato"
+display_name = "Tomato"
+score_value = 15
+growth_time = 30.0
+spoil_time = 15.0
+icon = ExtResource("1_8lunm")
+plant_scene_path = "uid://cn76l8vqkfhip"
+metadata/_custom_type_script = "uid://sixl5d23hxmp"
