@@ -19,7 +19,6 @@ config/icon="res://icon.svg"
 
 DebugDraw="res://scripts/DebugDraw.gd"
 ServiceLocator="*res://scripts/managers/ServiceLocator.gd"
-CropRegistry="*res://scripts/managers/CropRegistry.gd"
 
 [editor_plugins]
 

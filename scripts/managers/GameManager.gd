@@ -6,8 +6,7 @@ extends Node3D
 var game_running: bool = false
 var current_level: int = 1
 var current_score: int = 0
-var level_timer: float = 0.0
-@export var level_time_limit: float = 180.0 # Default 3 minutes, adjust as needed
+
 # Configuration
 @export var always_reset_on_startup: bool = true
 
@@ -39,7 +38,7 @@ func _ready():
 	# Initialize references to main nodes
 	
 	level_manager = $LevelManager
-	#order_manager = $OrderManager if has_node("OrderManager") else null
+	order_manager = $OrderManager if has_node("OrderManager") else null
 	player_manager = $PlayerManager if has_node("PlayerManager") else null
 	ui_layer = $UILayer if has_node("UILayer") else null
 	
@@ -95,11 +94,11 @@ func _ready():
 		if order_manager:
 			service_locator.register_service("order_manager", order_manager)
 	
-	## Connect order manager signals
-	#if order_manager:
-		#order_manager.connect("level_completed", Callable(self, "on_level_completed"))
-		#order_manager.connect("level_failed", Callable(self, "on_level_failed"))
-		#order_manager.connect("level_time_updated", Callable(self, "_on_level_time_updated"))
+	# Connect order manager signals
+	if order_manager:
+		order_manager.connect("level_completed", Callable(self, "on_level_completed"))
+		order_manager.connect("level_failed", Callable(self, "on_level_failed"))
+		order_manager.connect("level_time_updated", Callable(self, "_on_level_time_updated"))
 	
 	# Add debug button for editor testing (only in debug mode)
 	if OS.is_debug_build():
@@ -134,29 +133,6 @@ func _ready():
 	
 	print("GameManager: Game initialized")
 
-func _process(delta):
-	# Update level timer if game is running
-	if game_running:
-		level_timer += delta
-
-		# Update UI Timer Display
-		if ui_manager:
-			var time_remaining = max(0.0, level_time_limit - level_timer)
-			 # Ensure ui_manager has this method or adapt
-			if ui_manager.has_method("update_timer_display"):
-				ui_manager.update_timer_display(time_remaining)
-			else: # Fallback if method doesn't exist
-				var timer_label = ui_layer.get_node_or_null("LevelDisplay/TimeLabel") # Adjust path
-				if timer_label:
-					var minutes = int(time_remaining) / 60
-					var seconds = int(time_remaining) % 60
-					timer_label.text = "%d:%02d" % [minutes, seconds]
-
-
-		# Check for level time completion
-		if level_timer >= level_time_limit:
-			_trigger_level_end() # Call the new function
-
 # Start the game
 func start_game():
 	game_running = true
@@ -189,27 +165,6 @@ func start_game():
 		tool_manager.spawn_saved_tools()
 	
 	print("GameManager: Game started at level " + str(current_level))
-
-func _trigger_level_end():
-	if not game_running: # Prevent double execution
-		return
-	print("GameManager: Level timer reached!")
-	game_running = false # Stop timer updates etc.
-
-	# Get score from GameDataManager
-	var score = 0
-	var currency_earned = 0
-	if game_data_manager and game_data_manager.game_data and game_data_manager.game_data.stats_data:
-		 # Assuming score is now tracked in "total_score" stat
-		score = game_data_manager.game_data.stats_data.stats.get("total_score", 0)
-
-	# Calculate currency (example logic, adjust as needed)
-	currency_earned = floor(score / 10.0)
-
-	# Directly call the existing on_level_completed logic
-	# This function already handles adding currency, updating stats, and showing the editor
-	on_level_completed(score, currency_earned)
-
 
 # Handle level completion
 func on_level_completed(score: int, currency_earned: int):
@@ -276,9 +231,6 @@ func on_level_failed():
 
 # Start a new run
 func start_next_level():
-	
-	level_timer = 0.0
-
 	print("GameManager: Starting level " + str(current_level + 1))
 	
 	# Increment level counter
@@ -340,13 +292,10 @@ func start_next_level():
 
 # Retry the current level
 func retry_level():
-	
 	print("GameManager: Retrying level " + str(current_level))
 	
 	# Update game state
 	game_running = true
-	level_timer = 0.0
-
 	
 	# Reset level state
 	if level_manager and level_manager.has_method("reset_level"):
@@ -449,6 +398,11 @@ func _on_editor_canceled():
 	print("GameManager: Editor changes canceled")
 	if tool_manager:
 		tool_manager.spawn_saved_tools()
+
+# Signal handler for order manager
+func _on_level_time_updated(time_remaining):
+	# Update UI if needed
+	pass
 
 # Dialog response handlers
 func _on_retry_level():

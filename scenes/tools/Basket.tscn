@@ -3,8 +3,8 @@
 [ext_resource type="Script" uid="uid://q6q4w2rho7pe" path="res://scripts/tools/Basket.gd" id="1_iugtt"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_548d0"]
 [ext_resource type="PackedScene" uid="uid://mq2gk5b7bas5" path="res://assets/meshes/basket.glb" id="2_rcxk4"]
-[ext_resource type="Resource" uid="uid://bxmeyiaungnj7" path="res://resources/tools_interactions/basket_deliver.tres" id="3_uficv"]
-[ext_resource type="Resource" uid="uid://b5d6l4u488xlw" path="res://resources/tools_interactions/basket_harvest.tres" id="4_moc1j"]
+[ext_resource type="Resource" uid="uid://bxmeyiaungnj7" path="res://resources/basket_deliver.tres" id="3_uficv"]
+[ext_resource type="Resource" uid="uid://b5d6l4u488xlw" path="res://resources/basket_harvest.tres" id="4_moc1j"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ykiie"]
 albedo_color = Color(0.474108, 0.286657, 0.19824, 1)
