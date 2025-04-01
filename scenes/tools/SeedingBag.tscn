@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://c77ou5e8dcrgi" path="res://scenes/tools/CarrotSeedBag.tscn" id="2_fj1ef"]
 [ext_resource type="PackedScene" uid="uid://ct7rtkjdhmks1" path="res://scenes/tools/TomatoSeedBag.tscn" id="3_8qqef"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="4_7a07n"]
-[ext_resource type="Resource" uid="uid://da7iqvxgoena5" path="res://resources/seed_plant.tres" id="5_34ipy"]
+[ext_resource type="Resource" uid="uid://da7iqvxgoena5" path="res://resources/tools_interactions/seed_plant.tres" id="5_34ipy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dicv8"]
 vertex_color_use_as_albedo = true

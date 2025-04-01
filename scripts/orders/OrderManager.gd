@@ -7,432 +7,254 @@ extends Node
 @export var initial_order_delay: float = 5.0
 @export var new_order_min_delay: float = 10.0
 @export var new_order_max_delay: float = 20.0
-@export var level_time_limit: float = 300.0  # 5 minutes for the level
-@export var time_multiplier: float = 1.0
-
-# Progression-based configuration
-@export var required_orders: int = 3  # How many orders must be completed to win
-@export var current_level: int = 1    # Player's current progression level
+@export var time_multiplier: float = 1.0 # Multiplier for individual order timers
 
 # State
-var active_orders: Array = []
-var completed_orders: Array = []
-var failed_orders: Array = []
-var available_crop_types: Array = ["carrot"]  # Will be updated based on unlocked dispensers
-var current_score: int = 0
-var level_timer: float = 0.0
+var active_orders: Array[Order] = []
+var completed_orders: Array[Order] = []
+var failed_orders: Array[Order] = []
+var available_crop_types: Array = ["carrot"]
 var new_order_timer: float = 0.0
 var orders_completed_this_run: int = 0
+
+# Reference for current level difficulty scaling
+var current_level: int = 1
 
 # Order ID counter
 var next_order_id: int = 1
 
-# References to new architecture
+# References (obtained in _ready)
 var game_data: GameData = null
 var game_data_manager: GameDataManager = null
 
 # Signals
 signal order_created(order)
-signal order_completed(order, score)
 signal order_failed(order)
-signal score_changed(new_score)
-signal level_time_updated(time_remaining)
-signal level_completed(score, currency_earned)
-signal level_failed()
+signal order_completed_bonus(order, bonus_score)
 
 func _ready():
 	print("OrderManager initialized")
-	
-	# Get references to GameData and GameDataManager
 	get_game_data_references()
-	
-	# Get available crops from game data
 	update_available_crops()
-	
-	# Set required orders based on level
 	set_level_parameters()
-	
-	print("OrderManager level " + str(current_level) + " started")
-	print("Required orders: " + str(required_orders))
+	print("OrderManager ready for level " + str(current_level))
+	print("Max active orders: " + str(max_active_orders))
 	print("Available crops: " + str(available_crop_types))
+	new_order_timer = initial_order_delay
 
-# Get references to GameData and GameDataManager
 func get_game_data_references():
-	# Try to get from ServiceLocator first
-	var service_locator = get_node_or_null("/root/ServiceLocator")
+	var service_locator = ServiceLocator.get_instance() # Correct way
 	if service_locator:
-		game_data = service_locator.get_service("game_data")
-		game_data_manager = service_locator.get_service("game_data_manager")
-	
-	# If not found through ServiceLocator, try direct node reference
-	if not game_data_manager:
-		game_data_manager = get_node_or_null("/root/Main/GameDataManager")
-		if game_data_manager:
-			game_data = game_data_manager.game_data
-	
-	# Final fallback - try to find it in the scene tree
-	if not game_data_manager:
-		var possible_manager = get_tree().get_root().find_child("GameDataManager", true, false)
-		if possible_manager:
-			game_data_manager = possible_manager
-			game_data = game_data_manager.game_data
-			
-	if not game_data and not game_data_manager:
-		print("OrderManager: WARNING - Could not find GameData or GameDataManager references!")
+		if service_locator.has_service("game_data"):
+			game_data = service_locator.get_service("game_data")
+		if service_locator.has_service("game_data_manager"):
+			game_data_manager = service_locator.get_service("game_data_manager")
+
+	if not game_data_manager: game_data_manager = get_node_or_null("/root/Main/GameDataManager")
+	if game_data_manager and not game_data: game_data = game_data_manager.game_data
+	if not game_data or not game_data_manager:
+		push_warning("OrderManager: Could not find GameData or GameDataManager references!")
 
 func _process(delta):
-	# Update level timer
-	level_timer += delta
-	emit_signal("level_time_updated", level_time_limit - level_timer)
-	
-	# Check if the level is over
-	if level_timer >= level_time_limit:
-		check_level_completion()
-		return
-	
-	# Update active orders
-	for order in active_orders:
+	for i in range(active_orders.size() - 1, -1, -1):
+		var order = active_orders[i]
+		if not is_instance_valid(order):
+			active_orders.remove_at(i)
+			continue
 		order.update(delta)
-		
-		# Check for failed orders
 		if order.state == Order.OrderState.FAILED:
 			handle_failed_order(order)
-	
-	# Process new order timer
+
 	if active_orders.size() < max_active_orders:
 		new_order_timer -= delta
-		
 		if new_order_timer <= 0:
 			create_new_order()
-			# Set new timer for next order - shorter for higher levels
 			var min_delay = max(new_order_min_delay - (current_level * 0.5), 5.0)
 			var max_delay = max(new_order_max_delay - (current_level * 1.0), 10.0)
 			new_order_timer = randf_range(min_delay, max_delay)
 
-# Update available crops based on game data
 func update_available_crops():
-	# Reset and populate list based on unlocked seed dispensers
 	available_crop_types = []
-	
-	# Always have carrots available (starter crop)
 	available_crop_types.append("carrot")
-	
-	# Add tomatoes if unlocked using the new architecture
 	if game_data and game_data.progression_data and game_data.progression_data.unlocked_seeds.has("tomato"):
 		available_crop_types.append("tomato")
-	# Fallback to game_data_manager if game_data is not available
-	elif game_data_manager and game_data_manager.is_seed_unlocked("tomato"):
+	elif game_data_manager and game_data_manager.has_method("is_seed_unlocked") and game_data_manager.is_seed_unlocked("tomato"):
 		available_crop_types.append("tomato")
-	
-	# Future crops can be added here
-	
-	print("Available crops updated: " + str(available_crop_types))
+	print("OrderManager: Available crops updated: " + str(available_crop_types))
 
-# Set level parameters based on current level
 func set_level_parameters():
-	# Adjust required orders based on level
-	required_orders = 3 + (current_level - 1)  # Level 1: 3, Level 2: 4, etc.
-	
-	# Cap at 10 orders
-	required_orders = min(required_orders, 10)
-	
-	# Adjust time limit (more time for higher levels with more orders)
-	level_time_limit = 180.0 + (current_level * 30.0)  # Level 1: 3:30, Level 2: 4:00, etc.
-	
-	# Cap at 8 minutes
-	level_time_limit = min(level_time_limit, 480.0)
-	
-	# Adjust max active orders based on level
-	max_active_orders = min(3 + floor(current_level / 2), 5)  # Level 1-2: 3, Level 3-4: 4, Level 5+: 5
+	max_active_orders = min(3 + floori(current_level / 2.0), 5)
 
-# Create a new order based on current difficulty
 func create_new_order():
-	# Calculate a difficulty factor (0 to 1) based on:
-	# - How far into the level we are
-	# - Current player level
+	if available_crop_types.is_empty():
+		push_warning("OrderManager: Cannot create order, no available crop types!")
+		return
 
-	var time_factor = level_timer / level_time_limit
-	var level_factor = min((current_level - 1) / 5.0, 1.0)  # Caps at level 6
-	
-	# Combined difficulty rises through the level and with player level
-	var difficulty_factor = (time_factor * 0.3) + (level_factor * 0.7)
-	
-	# Determine order parameters based on difficulty
+	var level_factor = min(float(current_level - 1) / 5.0, 1.0)
+	var difficulty_factor = level_factor
+
 	var order_crops = {}
 	var crop_count = 1
-	var crop_types = 1
-	
-	# Scale complexity with difficulty
-	if difficulty_factor > 0.3 or current_level >= 2:
-		crop_count += 1  # Base: 1, After threshold: 2
-		
-	if difficulty_factor > 0.6 or current_level >= 3:
-		crop_count += 1  # Base: 2, After threshold: 3
-		
-	if difficulty_factor > 0.4 or current_level >= 3:
-		crop_types = min(2, available_crop_types.size())  # Introduce mixed orders
-	
-	if difficulty_factor > 0.7 or current_level >= 5:
-		crop_count += 1  # Base: 3, After threshold: 4
-	
-	# Force single-crop simple orders at level 1
+	var crop_types_to_use_count = 1
+
+	if difficulty_factor > 0.3 or current_level >= 2: crop_count += 1
+	if difficulty_factor > 0.6 or current_level >= 3: crop_count += 1
+	if difficulty_factor > 0.4 or current_level >= 3: crop_types_to_use_count = min(2, available_crop_types.size())
+	if difficulty_factor > 0.7 or current_level >= 5: crop_count += 1
 	if current_level == 1:
-		crop_count = 1 + floor(time_factor * 2)  # Level 1: 1-2 crops max
-		crop_types = 1  # Always single type in level 1
-	
-	# Cap crop count based on available types
-	crop_count = min(crop_count, crop_types * 3)  # Maximum 3 of each type
-	
-	# Generate required crops
+		crop_count = 1
+		crop_types_to_use_count = 1
+
 	var types_to_use = []
-	available_crop_types.shuffle()
-	
-	for i in range(min(crop_types, available_crop_types.size())):
-		types_to_use.append(available_crop_types[i])
-	
-	# Distribute crop count among crop types
-	while crop_count > 0:
+	var shuffled_types = available_crop_types.duplicate()
+	shuffled_types.shuffle()
+	for i in range(min(crop_types_to_use_count, shuffled_types.size())):
+		types_to_use.append(shuffled_types[i])
+
+	var remaining_crops = crop_count
+	while remaining_crops > 0 and not types_to_use.is_empty():
 		var crop_type = types_to_use[randi() % types_to_use.size()]
-		
-		if not order_crops.has(crop_type):
-			order_crops[crop_type] = 0
-		
-		order_crops[crop_type] += 1
-		crop_count -= 1
-	
-	# Determine time limit based on difficulty and order size
+		order_crops[crop_type] = order_crops.get(crop_type, 0) + 1
+		remaining_crops -= 1
+
+	if order_crops.is_empty():
+		print("OrderManager: Failed to generate crops for order, using default.")
+		order_crops["carrot"] = 1
+
 	update_timer_multiplier_from_parameters()
 	var total_crop_count = 0
-	for count in order_crops.values():
-		total_crop_count += count
-	
-	# Base time per crop, decreasing with level
+	for count in order_crops.values(): total_crop_count += count
 	var time_per_crop = max(20.0 - (current_level * 1.5), 10.0)
-	
-	# Time limit scales with order size and decreases with level
 	var time_base = max(60.0 - (current_level * 5.0), 30.0)
-	var time_limit = (time_base + (time_per_crop * total_crop_count))*time_multiplier
-	
-	# Create the order
-	var order = Order.new(next_order_id, order_crops, time_limit)
-	
-	# Set difficulty directly for UI purposes
-	order.order_difficulty = 1 + floor(difficulty_factor * 2)  # 1-3
-	
-	# Scale up score value with order complexity
-	order.score_value = 100 * order.order_difficulty * total_crop_count
-	
-	next_order_id += 1
-	
-	# Add to active orders
-	active_orders.append(order)
-	
-	# Emit signal
-	emit_signal("order_created", order)
-	
-	print("New order created: ", order.display_name, " (", order.order_id, ")")
-	print("Required crops: ", order.required_crops)
-	print("Time limit: ", order.time_limit, " seconds")
-	print("Difficulty: ", order.order_difficulty, " (Score value: ", order.score_value, ")")
+	var order_time_limit = (time_base + (time_per_crop * total_crop_count)) * time_multiplier
 
-# Check if a basket EXACTLY matches any current order
-func check_basket_for_exact_order_match(basket) -> Order:
-	if not basket or not basket.has_method("get_crop_count"):
-		return null
-	
-	# Check each active order
+	var order = Order.new(next_order_id, order_crops, order_time_limit)
+	next_order_id += 1
+
+	active_orders.append(order)
+	emit_signal("order_created", order)
+	print("OrderManager: New order %d created: %s, Time: %.1fs" % [order.order_id, order.display_name, order.time_limit])
+
+func check_basket_for_exact_order_match(basket: Basket) -> Order:
+	if not basket or not basket is Basket: return null
 	for order in active_orders:
+		if not is_instance_valid(order): continue
 		var is_exact_match = true
-		
-		# First check if all required crops are in the basket in exact quantities
-		for crop_type in order.required_crops:
-			var required = order.required_crops[crop_type]
-			var available = basket.get_crop_count(crop_type)
-			
-			if available != required:  # Must be exactly the required amount
-				is_exact_match = false
-				break
-		
-		# Then check if the basket has ANY crops not in the order
-		if is_exact_match:
-			for crop_type in basket.contained_crops.keys():
-				if not order.required_crops.has(crop_type):
+		var required = order.required_crops
+		var available_in_basket = basket.contained_crops
+		if required.size() != available_in_basket.size():
+			is_exact_match = false
+		else:
+			for crop_type in required:
+				if not available_in_basket.has(crop_type) or available_in_basket[crop_type] != required[crop_type]:
 					is_exact_match = false
 					break
-		
 		if is_exact_match:
 			return order
-	
 	return null
 
-# Try to complete any order with exact basket match
-func try_complete_any_order(basket, is_express_delivery: bool = false) -> bool:
-	var matching_order = check_basket_for_exact_order_match(basket)
-	
-	if matching_order:
-		return complete_order(matching_order.order_id, basket, is_express_delivery)
-	
-	# If we get here, no exact match was found
-	return false
+# --- NEW: Calculate and register bonus score ---
+func register_order_bonus(order: Order, basket: Basket, is_express_delivery: bool = false):
+	if not order or order.state != Order.OrderState.ACTIVE:
+		push_warning("OrderManager: Cannot register bonus for invalid or non-active order %s" % order)
+		return
 
-# Complete an order
-func complete_order(order_id: int, basket, is_express_delivery: bool = false) -> bool:
-	var order_index = -1
-	var matched_order = null
-	
-	# Find the order
-	for i in range(active_orders.size()):
-		if active_orders[i].order_id == order_id:
-			order_index = i
-			matched_order = active_orders[i]
-			break
-	
-	if matched_order == null:
-		return false
-	
-	# Calculate score
-	var score = matched_order.complete()
-	
-	# Apply express delivery bonus if applicable
+	# --- CORRECTED GameManager Retrieval ---
+	var game_manager = null
+	var service_locator = ServiceLocator.get_instance()
+	if service_locator and service_locator.has_service("game_manager"):
+		game_manager = service_locator.get_service("game_manager")
+	else:
+		game_manager = get_node_or_null("/root/Main") # Fallback
+	# --- End Correction ---
+
+	if not game_manager or not game_manager.has_method("add_score") or not game_manager.game_data:
+		push_error("OrderManager: Cannot calculate bonus score - GameManager invalid or missing methods/data.")
+		return
+
+	var order_base_value = 0
+	var crop_scores = {}
+	# Access GameData via GameManager using the corrected property check logic
+	if game_manager.game_data and \
+	   game_manager.game_data.get("crop_base_scores") != null and \
+	   typeof(game_manager.game_data.crop_base_scores) == TYPE_DICTIONARY:
+		crop_scores = game_manager.game_data.crop_base_scores
+	# If using @export var crop_base_scores: Dictionary = ...
+	# elif game_manager.game_data and game_manager.game_data.crop_base_scores != null and \
+	#	 typeof(game_manager.game_data.crop_base_scores) == TYPE_DICTIONARY:
+	#	 crop_scores = game_manager.game_data.crop_base_scores
+	else:
+		push_warning("OrderManager: Cannot find 'crop_base_scores' Dictionary in GameData! Using fallback.")
+		crop_scores = {"carrot": 10, "tomato": 15} # Fallback
+
+
+	for crop_type in order.required_crops:
+		var quantity = order.required_crops[crop_type]
+		var score_per_crop = crop_scores.get(crop_type, 0)
+		order_base_value += quantity * score_per_crop
+
+	if order_base_value == 0:
+		print("OrderManager: Order base value is 0, no bonus score added.")
+
+	var time_ratio = clamp(order.time_remaining / order.time_limit, 0.0, 1.0) if order.time_limit > 0 else 1.0
+	var bonus_percentage = lerp(0.20, 0.40, time_ratio)
+	var bonus_score = int(order_base_value * bonus_percentage)
+
 	if is_express_delivery:
-		score = int(score * 1.15)  # 15% bonus
-		print("Express delivery bonus applied! Score increased to " + str(score))
-	
-	current_score += score
-	
-	# Clear the basket after successful order completion
-	if basket and basket.has_method("clear_crops"):
-		print("OrderManager: Clearing basket after successful order completion")
-		basket.clear_crops()
-	
-	# Track completion
-	orders_completed_this_run += 1
-	
-	# Move to completed orders
-	completed_orders.append(matched_order)
-	active_orders.remove_at(order_index)
-	
-	# Emit signals
-	emit_signal("order_completed", matched_order, score)
-	emit_signal("score_changed", current_score)
-	
-	# Check if level is complete
-	if orders_completed_this_run >= required_orders:
-		check_level_completion()
-	
-	print("Order completed: ", matched_order.display_name, " (", matched_order.order_id, ")")
-	print("Score: ", score, " | Total score: ", current_score)
-	print("Orders completed: ", orders_completed_this_run, "/", required_orders)
-	
-	return true
+		bonus_score = int(bonus_score * 1.15)
+		print("OrderManager: Express delivery bonus applied to order bonus!")
 
-# Handle a failed order
+	if bonus_score > 0:
+		game_manager.add_score(bonus_score) # Call on instance
+		print("OrderManager: Added %d BONUS score for completing order %d." % [bonus_score, order.order_id])
+
+	# --- Mark Order as Completed Internally ---
+	var order_index = active_orders.find(order)
+	if order_index != -1:
+		order.state = Order.OrderState.COMPLETED
+		completed_orders.append(order)
+		active_orders.remove_at(order_index)
+		emit_signal("order_completed_bonus", order, bonus_score)
+		orders_completed_this_run += 1
+		print("OrderManager: Marked Order %d as completed." % order.order_id)
+	else:
+		push_warning("OrderManager: Could not find order %d in active_orders to mark as complete." % order.order_id)
+
+
 func handle_failed_order(order):
-	# Move to failed orders
 	var index = active_orders.find(order)
 	if index >= 0:
 		active_orders.remove_at(index)
 		failed_orders.append(order)
-		
-		# Emit signal
 		emit_signal("order_failed", order)
-		
-		print("Order failed: ", order.display_name, " (", order.order_id, ")")
+		print("OrderManager: Order %d failed (timer expired)." % order.order_id)
 
-# Check if level is completed
-func check_level_completion():
-	# If we have enough completed orders, level is successful
-	if orders_completed_this_run >= required_orders:
-		print("Level " + str(current_level) + " completed!")
-		
-		# Calculate rewards - base amount plus bonus based on score
-		var base_reward = 100 + (current_level * 50)  # 150, 200, 250, etc.
-		var score_bonus = floor(current_score / 100) * 10  # Every 100 points = 10 currency
-		var total_reward = base_reward + score_bonus
-		
-		# Emit level completed signal with score and reward
-		emit_signal("level_completed", current_score, total_reward)
-		
-		# Update game data stats using new architecture
-		if game_data_manager:
-			game_data_manager.add_stat("orders_completed", orders_completed_this_run)
-			game_data_manager.add_stat("levels_completed", 1)
-			game_data_manager.add_stat("total_score", current_score)
-		elif game_data and game_data.stats_data:
-			game_data.stats_data.add_stat("orders_completed", orders_completed_this_run)
-			game_data.stats_data.add_stat("levels_completed", 1)
-			game_data.stats_data.add_stat("total_score", current_score)
-			game_data.save()
-		
-		# Pause processing
-		set_process(false)
-	else:
-		# Level failed - not enough orders completed
-		print("Level failed! Completed " + str(orders_completed_this_run) + "/" + str(required_orders) + " required orders")
-		emit_signal("level_failed")
-		
-		# Pause processing
-		set_process(false)
-
-# Reset orders for a new level
 func reset_orders():
-	# Clear any existing orders
 	for order in active_orders:
-		if get_signal_connection_list("order_failed").size() > 0:
+		if is_instance_valid(order):
 			emit_signal("order_failed", order)
-	
-	# Reset order lists
 	active_orders.clear()
 	completed_orders.clear()
 	failed_orders.clear()
-	
-	# Reset counters
 	orders_completed_this_run = 0
-	current_score = 0
-	emit_signal("score_changed", current_score)
-	
-	# Reset level timer
-	level_timer = 0.0
-	emit_signal("level_time_updated", level_time_limit)
-	
-	# Reset order ID counter
 	next_order_id = 1
-	
-	# Update available crops
 	update_available_crops()
-	
-	# Set parameters for current level
 	set_level_parameters()
-	
-	# Set initial order timer
 	new_order_timer = initial_order_delay
-	
-	# Resume processing
 	set_process(true)
-	
 	print("OrderManager: Orders reset for level " + str(current_level))
-	print("Required orders: " + str(required_orders))
-	print("Available crops: " + str(available_crop_types))
 
 func update_timer_multiplier_from_parameters():
-	# Try to get parameter manager
 	var parameter_manager = get_parameter_manager()
-	
 	if parameter_manager:
-		# Get the base capacity from parameters
-		var new_time_multiplier = parameter_manager.get_value("order.time_multiplier", time_multiplier)
-		print(new_time_multiplier)
-		# Update the capacity
-		var old_time_multiplier = time_multiplier
-		time_multiplier = new_time_multiplier
-		
-		print("OrderManager: Updated time multiplier from ", old_time_multiplier, " to ", time_multiplier)
-	else:
-		print("OrderManager: No parameter manager found, using default capacity: ", time_multiplier)
+		time_multiplier = parameter_manager.get_value("order.time_multiplier", time_multiplier)
 
 func get_parameter_manager():
-	var service_locator = get_node_or_null("/root/ServiceLocator")
-	if service_locator and service_locator.has_method("get_service"):
+	# Use correct ServiceLocator pattern
+	var service_locator = ServiceLocator.get_instance()
+	if service_locator and service_locator.has_service("parameter_manager"):
 		return service_locator.get_service("parameter_manager")
-		print("parameters found")
-	return null
+	# Fallback
+	var pm = get_node_or_null("/root/ParameterManager")
+	# if not pm: print("OrderManager: ParameterManager service/node not found.") # Optional debug
+	return pm

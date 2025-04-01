@@ -8,6 +8,9 @@ var farm_layout_data: FarmLayoutData
 var upgrades_data: UpgradesData
 var stats_data: StatsData
 
+#BASE SCORE PER CROP DATA
+@export var crop_base_scores: Dictionary = {"carrot": 50, "tomato": 70}
+
 # Signals
 signal data_changed
 
@@ -82,6 +85,13 @@ class ProgressionData extends Resource:
 	@export var unlocked_seeds: Array = ["carrot"]
 	@export var unlocked_tools: Array = ["hoe", "watering_can", "basket"]
 	@export var unlocked_tile_types: Array[int] = [0, 1, 5, 6, 7, 8]
+	
+	# Manually set score requirements for the first few levels
+	@export var level_score_requirements: Dictionary = {
+	1: 250, 2: 300, 3: 350, 4: 400, 5: 500,
+	6: 600, 7: 800, 8: 1200, 9: 3200, 10: 3600
+	}
+	
 	
 	# Save this resource
 	func save(path: String = "user://progression_data.tres"):

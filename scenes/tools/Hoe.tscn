@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://dsf62xuroa55a" path="res://scripts/tools/Hoe.gd" id="2_aq6f5"]
 [ext_resource type="PackedScene" uid="uid://bd35lhcx7nqlo" path="res://assets/meshes/hoe.glb" id="2_atpmf"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_scbd0"]
-[ext_resource type="Resource" uid="uid://snblypif6uor" path="res://resources/hoe_till_soil.tres" id="3_od1nm"]
+[ext_resource type="Resource" uid="uid://snblypif6uor" path="res://resources/tools_interactions/hoe_till_soil.tres" id="3_od1nm"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_3kqux"]
 size = Vector3(0.05, 1, 0.05)
