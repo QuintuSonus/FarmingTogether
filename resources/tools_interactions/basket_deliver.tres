@@ -6,8 +6,8 @@
 script = ExtResource("1_1olk6")
 interaction_id = "deliver_crop"
 display_name = "Deliver"
-interaction_type = 1
-duration = 0.3
+interaction_type = 0
+duration = 1.0
 duration_parameter_id = ""
 required_target_type = "DeliveryTile"
 required_tool_capability = 16

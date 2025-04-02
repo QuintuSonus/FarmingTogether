@@ -35,7 +35,6 @@ var ui_layer: CanvasLayer = null
 # Signals
 signal score_changed(new_score)
 signal level_time_updated(time_remaining)
-signal level_counter_updated(current_level)
 
 func _ready():
 	# Register with ServiceLocator
@@ -137,17 +136,12 @@ func reset_level_score():
 	current_level_score = 0
 	emit_signal("score_changed", current_level_score)
 	print("GameManager: Level score reset to 0.")
-	
-func update_level_label():
-	emit_signal("level_counter_updated", current_level)
-	print("GameManager : Updated level counter ", current_level)
-
 
 # --- NEW/MODIFIED: Level Timer and Completion ---
 func update_level_time_limit():
 	 # Set time limit based on current level
 	level_time_limit = 180.0 + (current_level * 30.0) # Level 1: 3:30, Level 2: 4:00, etc.
-	level_time_limit = min(level_time_limit, 180) # Cap at 8 minutes
+	level_time_limit = min(level_time_limit, 480.0) # Cap at 8 minutes
 	print("GameManager: Time limit for level %d set to %.1f seconds" % [current_level, level_time_limit])
 
 func _process(delta):
@@ -266,7 +260,6 @@ func start_next_level():
 	# --- Core Level Reset Logic ---
 	update_level_time_limit()
 	reset_level_score()
-	update_level_label()
 	level_timer = 0.0
 	game_running = true
 
