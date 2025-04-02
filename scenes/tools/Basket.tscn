@@ -23,11 +23,13 @@ script = ExtResource("1_iugtt")
 possible_interactions = Array[ExtResource("2_548d0")]([ExtResource("3_uficv"), ExtResource("4_moc1j")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.00870764, -0.220643, -0.0100967)
 visible = false
 mesh = SubResource("BoxMesh_g5dny")
 
 [node name="basket" parent="." instance=ExtResource("2_rcxk4")]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, -0.292174, -0.364072)
+transform = Transform3D(-3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, 0.37278, -0.512817, -0.0100967)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0.00870764, -0.220643, -0.0100967)
 shape = SubResource("BoxShape3D_x7hak")

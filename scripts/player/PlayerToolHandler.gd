@@ -161,17 +161,17 @@ func apply_tool_specific_adjustments(tool_obj: Tool):
 	# These values depend heavily on your tool models and tool_holder position/rotation.
 	match tool_obj.name.get_slice(":", 0): # Use name or a more reliable identifier if available
 		"Hoe":
-			tool_obj.position = Vector3(0.1, -0.1, -0.2)
-			tool_obj.rotation_degrees = Vector3(0, -90, -70)
+			tool_obj.position = Vector3(0, 0, 0)
+			tool_obj.rotation_degrees = Vector3(0, 0, 0)
 		"WateringCan":
-			tool_obj.position = Vector3(0.15, -0.1, -0.05)
-			tool_obj.rotation_degrees = Vector3(0, -90, -90)
+			tool_obj.position = Vector3(0, 0, 0)
+			tool_obj.rotation_degrees = Vector3(66, -124, 68.6)
 		"Basket":
-			tool_obj.position = Vector3(-0.1, -0.15, -0.1)
-			tool_obj.rotation_degrees = Vector3(0, 0, -90)
+			tool_obj.position = Vector3(0, 0, 0)
+			tool_obj.rotation_degrees = Vector3(-77, 77.4, -92.2)
 		"SeedBag", "SeedingBag": # Handle potential variations
-			tool_obj.position = Vector3(0.1, -0.1, 0.05)
-			tool_obj.rotation_degrees = Vector3(0, -90, -90)
+			tool_obj.position = Vector3(0, 0, 0)
+			tool_obj.rotation_degrees = Vector3(-74, 83.2, -85.1)
 		_:
 			tool_obj.position = Vector3.ZERO
 			tool_obj.rotation = Vector3.ZERO

@@ -15,14 +15,14 @@ water_capacity = 10.0
 possible_interactions = Array[ExtResource("2_nlpqy")]([ExtResource("3_x7io4"), ExtResource("4_3lhts")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0, 0, 0)
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.0339342, -0.617068, -0.0503268)
 mesh = ExtResource("2_7lab4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.243408, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0339342, -0.37366, -0.0503268)
 shape = SubResource("BoxShape3D_vv5ey")
 
 [node name="WaterLevelLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.918219, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0339342, 0.301151, -0.0503268)
 text = "10/10"
 font_size = 64
