@@ -5,8 +5,8 @@ extends Control
 @onready var prompt_label = $PromptLabel
 
 # Positioning parameters
-@export var vertical_offset: float = 2.0  # Distance above player
-@export var bar_width: float = 200.0
+@export var vertical_offset: float = 1.0  # Distance above player
+@export var bar_width: float = 150.0
 
 # Camera reference
 var camera: Camera3D
@@ -60,7 +60,7 @@ func hide_prompt():
 	prompt_label.visible = false
 	
 func show_progress(value: float):
-	progress_bar.value = value * 100  # Assuming 0-100 range
+	progress_bar.value = value * 100 # Assuming 0-100 range
 	progress_bar.visible = true
 	update_position()
 	print("Progress bar shown with value: ", value * 100)

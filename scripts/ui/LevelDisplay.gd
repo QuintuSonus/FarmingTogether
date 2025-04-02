@@ -29,6 +29,8 @@ func _ready():
 		game_manager.connect("score_changed", update_score_requirement_display)
 	if not game_manager.is_connected("level_time_updated", update_timer_display):
 		game_manager.connect("level_time_updated", update_timer_display)
+	if not game_manager.connect("level_counter_updated", update_level_label):
+		game_manager.connect("level_counter_updated", update_level_label)
 	# NOTE: Assumes GameManager has a 'current_level' property.
 	# If level changes trigger a signal, connect here. Otherwise, update_level might need to be called externally.
 	# Example: if game_manager.has_signal("level_changed"): game_manager.connect("level_changed", update_level_label)
@@ -41,6 +43,7 @@ func _ready():
 
 # Updates the Level Number display
 func update_level_label(level_num : int):
+	print("LevelDisplay : received signal to update level", level_num)
 	if level_label:
 		level_label.text = "Level " + str(level_num)
 

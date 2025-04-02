@@ -23,7 +23,7 @@ _surfaces = [{
 }]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_w4wxe"]
-size = Vector3(0.398499, 0.622284, 0.553101)
+size = Vector3(0.480911, 0.622284, 0.553101)
 
 [node name="SeedingBag" type="RigidBody3D"]
 script = ExtResource("1_kmb7f")
@@ -32,11 +32,11 @@ tomato_seed_mesh = ExtResource("3_8qqef")
 possible_interactions = Array[ExtResource("4_7a07n")]([ExtResource("5_34ipy")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-visible = false
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 mesh = SubResource("ArrayMesh_1pbl0")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0116272, 0.325911, 0.0022583)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00318152, 0.307637, 0.0022583)
 shape = SubResource("BoxShape3D_w4wxe")
 
 [node name="SeedTypeLabel" type="Label3D" parent="."]
@@ -45,3 +45,6 @@ visible = false
 pixel_size = 0.01
 text = "Carrot Seeds"
 outline_size = 2
+
+[node name="AttachmentPoint" type="Node3D" parent="."]
+transform = Transform3D(-0.825852, -0.563886, 0, 0.563886, -0.825852, 0, 0, 0, 1, 0, 0.571976, 0)
