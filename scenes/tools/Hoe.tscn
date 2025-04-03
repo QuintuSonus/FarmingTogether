@@ -9,7 +9,7 @@
 size = Vector3(0.05, 1, 0.05)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_p1khf"]
-size = Vector3(0.1, 1, 0.1)
+size = Vector3(0.251318, 1.05371, 0.412695)
 
 [node name="Hoe" type="RigidBody3D"]
 collision_layer = 3
@@ -26,4 +26,5 @@ layers = 3
 mesh = SubResource("BoxMesh_3kqux")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00471191, 0.0268555, 0.0807617)
 shape = SubResource("BoxShape3D_p1khf")

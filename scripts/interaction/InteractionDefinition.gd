@@ -47,6 +47,7 @@ enum InteractionType {
 ## Example: "_effect_till_soil", "_effect_water_plant", "_effect_fill_can"
 @export var effect_function_name: String = "_default_effect"
 
+@export var animation_name : String = ""
 ## --- Optional Properties ---
 
 ## The name of the animation state to play on the player's AnimationTree during the interaction.

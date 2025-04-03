@@ -12,4 +12,5 @@ duration_parameter_id = "tool.seeding.usage_time"
 required_target_type = "SoilTile"
 required_tool_capability = 2
 effect_function_name = "_effect_plant_seed"
+animation_name = "Planting"
 metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

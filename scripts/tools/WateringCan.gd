@@ -73,7 +73,7 @@ func create_water_indicator():
 	water_indicator.add_child(water_mesh)
 	
 	# Position the indicator inside the watering can
-	water_indicator.position = Vector3(0, 0, 0)  # Slightly lower than center
+	water_indicator.position = Vector3(0, -0.617, 0)  # Slightly lower than center
 	
 	# Update the water level visualization
 	update_water_level()

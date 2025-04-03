@@ -12,4 +12,5 @@ duration_parameter_id = "tool.hoe.usage_time"
 required_target_type = "DirtTile"
 required_tool_capability = 1
 effect_function_name = "_effect_till_soil"
+animation_name = "Hoe"
 metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

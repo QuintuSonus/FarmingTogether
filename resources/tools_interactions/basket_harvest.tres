@@ -12,4 +12,5 @@ duration_parameter_id = ""
 required_target_type = "PlantHarvestable"
 required_tool_capability = 8
 effect_function_name = "_effect_harvest_crop"
+animation_name = "Harvesting"
 metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

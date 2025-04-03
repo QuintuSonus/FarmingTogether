@@ -12,4 +12,5 @@ duration_parameter_id = ""
 required_target_type = "PlantSeed"
 required_tool_capability = 4
 effect_function_name = "_effect_water_plant"
+animation_name = "Watering"
 metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"

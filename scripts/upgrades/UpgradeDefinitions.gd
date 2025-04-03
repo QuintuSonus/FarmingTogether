@@ -78,7 +78,7 @@ static func create_sprinkler_system() -> UpgradeData:
 	upgrade.id = "sprinkler_system"
 	upgrade.name = "Sprinkler System"
 	upgrade.description = "Unlocks Sprinkler tiles that automatically water adjacent plants every 30 seconds."
-	upgrade.cost = 500
+	upgrade.cost = 400
 	upgrade.type = UpgradeData.UpgradeType.TILE
 	upgrade.max_level = 1
 	upgrade.unlocks_tile_type = 11  # SPRINKLER
@@ -142,11 +142,11 @@ static func create_well_worn_hoe() -> UpgradeData:
 	var upgrade = UpgradeData.new()
 	upgrade.id = "well_worn_hoe"
 	upgrade.name = "Well-Worn Hoe"
-	upgrade.description = "Reduces soil tilling time by 25%."
+	upgrade.description = "Reduces soil tilling time by 15%."
 	upgrade.cost = 200
 	upgrade.type = UpgradeData.UpgradeType.TOOL
 	upgrade.max_level = 4
-	upgrade.effects = {"tilling_time_multiplier": 0.75}
+	upgrade.effects = {"tilling_time_multiplier": 0.85}
 	upgrade.icon_path = "res://assets/textures/upgrades/well_worn_hoe_icon.png"
 	return upgrade
 

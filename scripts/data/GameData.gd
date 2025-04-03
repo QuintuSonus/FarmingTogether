@@ -9,7 +9,7 @@ var upgrades_data: UpgradesData
 var stats_data: StatsData
 
 #BASE SCORE PER CROP DATA
-@export var crop_base_scores: Dictionary = {"carrot": 50, "tomato": 70}
+@export var crop_base_scores: Dictionary = {"carrot": 40, "tomato": 75}
 
 # Signals
 signal data_changed
@@ -88,8 +88,8 @@ class ProgressionData extends Resource:
 	
 	# Manually set score requirements for the first few levels
 	@export var level_score_requirements: Dictionary = {
-	1: 250, 2: 500, 3: 750, 4: 1000, 5: 1500,
-	6: 600, 7: 800, 8: 1200, 9: 3200, 10: 3600
+	1: 300, 2: 650, 3: 1000, 4: 1400, 5: 1900,
+	6: 2400, 7: 3000, 8: 3600, 9: 4300, 10: 5000
 	}
 	
 	

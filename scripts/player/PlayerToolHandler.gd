@@ -432,9 +432,9 @@ func start_tool_use():
 		if interaction_feedback: interaction_feedback.show_progress(0.0)
 
 		# Trigger the appropriate player animation.
-		var tool_anim_name = get_tool_animation_name(current_tool) # TODO: Consider getting from interaction_def
-		if animation_controller and tool_anim_name != "":
-			animation_controller.play_action_animation(tool_anim_name)
+		var interaction_animation_name = current_interaction.animation_name # TODO: Consider getting from interaction_def
+		if animation_controller and interaction_animation_name != "":
+			animation_controller.play_action_animation(interaction_animation_name)
 
 	# Handle INSTANT interactions (complete immediately).
 	elif current_interaction.interaction_type == InteractionDefinition.InteractionType.INSTANT:
@@ -442,9 +442,9 @@ func start_tool_use():
 		current_tool.complete_interaction_effect(target_pos, current_interaction.interaction_id)
 
 		# Trigger Animation (optional short animation for instant actions).
-		var tool_anim_name = get_tool_animation_name(current_tool) # TODO: Consider getting from interaction_def
-		if animation_controller and tool_anim_name != "":
-			animation_controller.play_action_animation(tool_anim_name)
+		var interaction_animation_name = current_interaction.animation_name # TODO: Consider getting from interaction_def
+		if animation_controller and interaction_animation_name != "":
+			animation_controller.play_action_animation(interaction_animation_name)
 			# Animation might finish after the effect; stop_action_animation handles return to Idle/Run.
 
 		# Clear the tile lock immediately for instant actions.

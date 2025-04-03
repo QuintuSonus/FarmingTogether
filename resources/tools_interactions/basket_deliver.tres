@@ -12,4 +12,5 @@ duration_parameter_id = ""
 required_target_type = "DeliveryTile"
 required_tool_capability = 16
 effect_function_name = "_effect_deliver_crop"
+animation_name = "Delivering"
 metadata/_custom_type_script = "uid://d0rpfh5vvj8fv"
