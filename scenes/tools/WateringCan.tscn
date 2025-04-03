@@ -1,11 +1,24 @@
-[gd_scene load_steps=8 format=4 uid="uid://37i3fwe8cg5w"]
+[gd_scene load_steps=10 format=4 uid="uid://37i3fwe8cg5w"]
 
 [ext_resource type="Script" uid="uid://cx25egpc2hs72" path="res://scripts/tools/WateringCan.gd" id="1_rj3b4"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_nlpqy"]
 [ext_resource type="Resource" uid="uid://cjh8rdpom40bj" path="res://resources/tools_interactions/can_fill.tres" id="3_x7io4"]
 [ext_resource type="Resource" uid="uid://clf4os2ly74tj" path="res://resources/tools_interactions/can_water_plant.tres" id="4_3lhts"]
+[ext_resource type="Shader" uid="uid://dsq8hs4y4ic0h" path="res://resources/shaders/highlight_outline.gdshader" id="5_nlpqy"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nlpqy"]
+render_priority = 0
+shader = ExtResource("5_nlpqy")
+shader_parameter/shine_color = Color(1, 1, 1, 1)
+shader_parameter/cycle_interval = 5.0
+shader_parameter/shine_speed = 1.5
+shader_parameter/shine_width = 20.0
+shader_parameter/shine_angle_x = 45.0
+shader_parameter/shine_angle_y = 0.0
+shader_parameter/shine_angle_z = 0.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_on4ki"]
+next_pass = SubResource("ShaderMaterial_nlpqy")
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
 

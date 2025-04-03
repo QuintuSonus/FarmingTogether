@@ -9,6 +9,7 @@ extends RigidBody3D
 # These define what the tool can do, to what target, how long it takes, and what effect it has.
 @export var possible_interactions: Array[InteractionDefinition]
 @onready var mesh_instance = $MeshInstance3D
+
 # --- Properties for restoring state when dropped ---
 var original_parent = null
 var original_freeze = false
