@@ -141,7 +141,7 @@ func reset_level_score():
 func update_level_time_limit():
 	 # Set time limit based on current level
 	level_time_limit = 180.0 + (current_level * 30.0) # Level 1: 3:30, Level 2: 4:00, etc.
-	level_time_limit = min(level_time_limit, 480.0) # Cap at 8 minutes
+	level_time_limit = min(level_time_limit, 180.0) # Cap at 8 minutes
 	print("GameManager: Time limit for level %d set to %.1f seconds" % [current_level, level_time_limit])
 
 func _process(delta):
@@ -167,7 +167,35 @@ func check_level_completion_by_score():
 func on_level_completed_score():
 	game_running = false # Ensure game stops
 	print("GameManager: Level " + str(current_level) + " PASSED (Score Requirement Met)")
+# Check if game_data and necessary nested properties exist
+	if game_data and game_data.progression_data:
+		# 1. Get current currency BEFORE adding rewards
+		var old_currency = float(game_data.progression_data.currency) # Convert to float for calculation
 
+		# 2. Get the score earned this level
+		var score_earned = float(current_level_score) # Use float score
+
+		# 3. Calculate interest (10% of old currency)
+		var interest_earned = old_currency * 0.10
+
+		# 4. Calculate the new total currency
+		# Formula: New = Old + Score + Interest
+		# Using floor() to round down the interest ensures currency remains an integer
+		# Change floor() to round() or ceil() if you prefer different rounding,
+		# or change the currency variable in GameData.gd to float if you want decimals.
+		var new_currency = int(floor(old_currency + score_earned + interest_earned))
+
+		# 5. Update the persistent currency value
+		game_data.progression_data.currency = new_currency
+
+		print("GameManager: Currency updated.")
+		print("  Old Currency: ", old_currency)
+		print("  Score Earned: ", score_earned)
+		print("  Interest Earned: ", interest_earned)
+		print("  New Total Currency: ", new_currency)
+
+	else:
+		push_warning("GameManager: Cannot update currency - game_data or progression_data is missing!")
 	# Update game data stats
 	if game_data_manager and game_data:
 		 # Example: Update highest score if needed

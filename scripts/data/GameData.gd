@@ -75,7 +75,7 @@ func reset_all():
 # Individual data classes
 class ProgressionData extends Resource:
 	# Currency and progression
-	@export var currency: int = 10000
+	@export var currency: int = 100
 	@export var current_level: int = 1
 	@export var highest_level_reached: int = 1
 	@export var run_count: int = 0
@@ -88,7 +88,7 @@ class ProgressionData extends Resource:
 	
 	# Manually set score requirements for the first few levels
 	@export var level_score_requirements: Dictionary = {
-	1: 250, 2: 300, 3: 350, 4: 400, 5: 500,
+	1: 250, 2: 500, 3: 750, 4: 1000, 5: 1500,
 	6: 600, 7: 800, 8: 1200, 9: 3200, 10: 3600
 	}
 	
