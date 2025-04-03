@@ -8,7 +8,7 @@ extends RigidBody3D
 # Assign InteractionDefinition resources (.tres files) to this array in the Inspector.
 # These define what the tool can do, to what target, how long it takes, and what effect it has.
 @export var possible_interactions: Array[InteractionDefinition]
-
+@onready var mesh_instance = $MeshInstance3D
 # --- Properties for restoring state when dropped ---
 var original_parent = null
 var original_freeze = false
@@ -208,8 +208,14 @@ func _default_effect(target_position: Vector3i):
 
 # Optional visual feedback when the player looks at the tool.
 func set_highlighted(is_highlighted: bool):
-	# Example: Outline shader or scaling effect.
-	pass # Implement visual highlighting logic here if desired.
+	#if not mesh_instance:
+		#return
+		#
+	#if is_highlighted:
+		#mesh_instance.scale = Vector3(1.1, 1.1, 1.1)
+	#else:
+		#mesh_instance.scale = Vector3.ONE
+	pass
 
 # Gets the global tool speed multiplier (e.g., from "Energy Drink" upgrade).
 func get_global_tool_speed_multiplier() -> float:

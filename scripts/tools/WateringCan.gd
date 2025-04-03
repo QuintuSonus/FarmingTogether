@@ -8,7 +8,6 @@ extends Tool
 @export var water_capacity: float = 5.0
 var current_water: float = 5.0
 
-@onready var mesh_instance = $MeshInstance3D
 @onready var water_indicator = null
 
 func _ready():
@@ -73,7 +72,7 @@ func create_water_indicator():
 	water_indicator.add_child(water_mesh)
 	
 	# Position the indicator inside the watering can
-	water_indicator.position = Vector3(0, -0.617, 0)  # Slightly lower than center
+	water_indicator.position = Vector3(0, -0.574, 0)  # Slightly lower than center
 	
 	# Update the water level visualization
 	update_water_level()
