@@ -51,7 +51,7 @@ func update_appearance():
 	if current_mesh_instance != null:
 		add_child(current_mesh_instance)
 		# Ensure it's positioned correctly
-		current_mesh_instance.position = Vector3.ZERO
+		#current_mesh_instance.position = Vector3.ZERO
 	
 	# Add/update text label if it exists
 	var label = get_node_or_null("SeedTypeLabel")
