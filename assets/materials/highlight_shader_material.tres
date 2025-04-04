@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://dp7age08xepu0"]
+
+[ext_resource type="Shader" uid="uid://dsq8hs4y4ic0h" path="res://resources/shaders/highlight_outline.gdshader" id="1_2acfc"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_2acfc")
+shader_parameter/shine_color = Color(1, 1, 1, 1)
+shader_parameter/cycle_interval = 5.0
+shader_parameter/shine_speed = 1.5
+shader_parameter/shine_width = 20.0
+shader_parameter/shine_angle_x = 60.0
+shader_parameter/shine_angle_y = 60.0
+shader_parameter/shine_angle_z = 45.0

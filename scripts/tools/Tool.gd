@@ -9,7 +9,7 @@ extends RigidBody3D
 # These define what the tool can do, to what target, how long it takes, and what effect it has.
 @export var possible_interactions: Array[InteractionDefinition]
 @onready var mesh_instance = $MeshInstance3D
-
+@export var highlight_material: ShaderMaterial = preload("res://assets/materials/highlight_shader_material.tres")
 # --- Properties for restoring state when dropped ---
 var original_parent = null
 var original_freeze = false
@@ -209,13 +209,24 @@ func _default_effect(target_position: Vector3i):
 
 # Optional visual feedback when the player looks at the tool.
 func set_highlighted(is_highlighted: bool):
-	#if not mesh_instance:
-		#return
-		#
-	#if is_highlighted:
-		#mesh_instance.scale = Vector3(1.1, 1.1, 1.1)
-	#else:
-		#mesh_instance.scale = Vector3.ONE
+	if not mesh_instance:
+		return
+	var base_material = mesh_instance.get_surface_override_material(0) # Assuming surface 0
+	if not base_material:
+		 # Check the mesh resource itself if no override exists
+		if mesh_instance.mesh and mesh_instance.mesh.surface_get_material(0):
+			base_material = mesh_instance.mesh.surface_get_material(0).duplicate() # Duplicate to avoid changing shared resource
+			mesh_instance.set_surface_override_material(0, base_material) # Apply the duplicated material
+		else:
+			  # Create a default material if none exists anywhere
+			base_material = StandardMaterial3D.new() # Or BaseMaterial3D, etc.
+			mesh_instance.set_surface_override_material(0, base_material)
+	if is_highlighted:
+		if base_material and highlight_material:
+			base_material.next_pass = highlight_material
+	else:
+		if base_material:
+			base_material.next_pass = null # Remove the highlight
 	pass
 
 # Gets the global tool speed multiplier (e.g., from "Energy Drink" upgrade).
