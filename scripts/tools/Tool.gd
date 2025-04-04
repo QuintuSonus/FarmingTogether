@@ -10,11 +10,14 @@ extends RigidBody3D
 @export var possible_interactions: Array[InteractionDefinition]
 @onready var mesh_instance = $MeshInstance3D
 @export var highlight_material: ShaderMaterial = preload("res://assets/materials/highlight_shader_material.tres")
+@export var highlight_scaler =1.1
 # --- Properties for restoring state when dropped ---
 var original_parent = null
 var original_freeze = false
 var original_collision_layer = 0
 var original_collision_mask = 0
+var original_scale: Vector3 
+
 
 func _ready():
 	# Add to the 'interactables' group so the player's InteractionManager can detect it for pickup.
@@ -29,6 +32,7 @@ func _ready():
 	# Ensure the 'possible_interactions' array is initialized, even if not set in the editor.
 	if possible_interactions == null:
 		possible_interactions = []
+	original_scale = mesh_instance.scale
 
 # --- Tool Capabilities ---
 # Returns a bitmask representing the fundamental abilities of this tool.
@@ -221,12 +225,21 @@ func set_highlighted(is_highlighted: bool):
 			  # Create a default material if none exists anywhere
 			base_material = StandardMaterial3D.new() # Or BaseMaterial3D, etc.
 			mesh_instance.set_surface_override_material(0, base_material)
+			
 	if is_highlighted:
 		if base_material and highlight_material:
 			base_material.next_pass = highlight_material
+		if mesh_instance:
+			print("SCALING: increase scale after highlight")
+			mesh_instance.scale = mesh_instance.scale*highlight_scaler
+			
 	else:
 		if base_material:
 			base_material.next_pass = null # Remove the highlight
+			
+		if mesh_instance:
+			print("SCALING:reduce scale after highlight")
+			mesh_instance.scale = original_scale
 	pass
 
 # Gets the global tool speed multiplier (e.g., from "Energy Drink" upgrade).

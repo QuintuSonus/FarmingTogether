@@ -1,12 +1,24 @@
-[gd_scene load_steps=7 format=3 uid="uid://7pq2ir7ov7l3"]
+[gd_scene load_steps=7 format=4 uid="uid://7pq2ir7ov7l3"]
 
 [ext_resource type="Script" uid="uid://dsf62xuroa55a" path="res://scripts/tools/Hoe.gd" id="2_aq6f5"]
-[ext_resource type="PackedScene" uid="uid://bd35lhcx7nqlo" path="res://assets/meshes/hoe.glb" id="2_atpmf"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_scbd0"]
 [ext_resource type="Resource" uid="uid://snblypif6uor" path="res://resources/tools_interactions/hoe_till_soil.tres" id="3_od1nm"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_3kqux"]
-size = Vector3(0.05, 1, 0.05)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_omjo2"]
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_scbd0"]
+_surfaces = [{
+"aabb": AABB(-0.1, 0, -0.2, 0.3, 1.5, 0.5),
+"attribute_data": PackedByteArray("VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/akAo/2pAKP9qQCj/akAo/2pAKP9qQCj/ckgy/3JIMv9ySDL/ckgy/3JIMv9ySDL/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/ckgy/3JIMv9ySDL/ckgy/3JIMv9ySDL/akAo/2pAKP9qQCj/akAo/2pAKP9qQCj/ckgy/3JIMv9ySDL/ckgy/3JIMv9ySDL/akAo/2pAKP9qQCj/akAo/2pAKP9qQCj/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/ckgy/3JIMv9ySDL/ckgy/3JIMv9ySDL/akAo/2pAKP9qQCj/akAo/2pAKP9qQCj/ckgy/3JIMv9ySDL/ckgy/3JIMv9ySDL/akAo/2pAKP9qQCj/akAo/2pAKP9qQCj/VVVV/1VVVf9VVVX/VVVV/1VVVf9VVVX/"),
+"format": 34359738383,
+"material": SubResource("StandardMaterial3D_omjo2"),
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 132,
+"vertex_data": PackedByteArray("zczMvTMzsz/NzEy+AAAAADMzsz/NzEy+AAAAADMzsz+amZk+AAAAADMzsz+amZk+zczMvTMzsz+amZk+zczMvTMzsz/NzEy+AAAAADMzsz8AAAAAzcxMPjMzsz8AAAAAzcxMPjMzsz+amZk+zcxMPjMzsz+amZk+AAAAADMzsz+amZk+AAAAADMzsz8AAAAAAAAAADMzsz/NzEy+zcxMPjMzsz/NzEy+zcxMPjMzsz/NzMy9zcxMPjMzsz/NzMy9AAAAADMzsz/NzMy9AAAAADMzsz/NzEy+zczMPTMzsz/NzMy9zcxMPjMzsz/NzMy9zcxMPjMzsz8AAAAAzcxMPjMzsz8AAAAAzczMPTMzsz8AAAAAzczMPTMzsz/NzMy9AAAAAAAAwD/NzMy9zczMPQAAwD/NzMy9zczMPQAAwD8AAAAAzczMPQAAwD8AAAAAAAAAAAAAwD8AAAAAAAAAAAAAwD/NzMy9zczMPQAAAAAAAAAAzczMPQAAAADNzMy9AAAAAAAAAADNzMy9AAAAAAAAAADNzMy9AAAAAAAAAAAAAAAAzczMPQAAAAAAAAAAAAAAAGdmpj+amZk+AAAAAGdmpj/NzEy+zczMvWdmpj/NzEy+zczMvWdmpj/NzEy+zczMvWdmpj+amZk+AAAAAGdmpj+amZk+zcxMPmdmpj+amZk+zcxMPmdmpj8AAAAAAAAAAGdmpj8AAAAAAAAAAGdmpj8AAAAAAAAAAGdmpj+amZk+zcxMPmdmpj+amZk+zcxMPmdmpj/NzMy9zcxMPmdmpj/NzEy+AAAAAGdmpj/NzEy+AAAAAGdmpj/NzEy+AAAAAGdmpj/NzMy9zcxMPmdmpj/NzMy9zcxMPmdmpj8AAAAAzcxMPmdmpj/NzMy9zczMPWdmpj/NzMy9zczMPWdmpj/NzMy9zczMPWdmpj8AAAAAzcxMPmdmpj8AAAAAzczMvTMzsz/NzEy+zczMvTMzsz+amZk+zczMvWdmpj+amZk+zczMvWdmpj+amZk+zczMvWdmpj/NzEy+zczMvTMzsz/NzEy+AAAAAGdmpj/NzMy9AAAAAGdmpj8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADNzMy9AAAAAGdmpj/NzMy9AAAAAAAAwD/NzMy9AAAAAAAAwD8AAAAAAAAAADMzsz8AAAAAAAAAADMzsz8AAAAAAAAAADMzsz/NzMy9AAAAAAAAwD/NzMy9zczMPWdmpj/NzMy9zczMPQAAAADNzMy9zczMPQAAAAAAAAAAzczMPQAAAAAAAAAAzczMPWdmpj8AAAAAzczMPWdmpj/NzMy9zczMPQAAwD/NzMy9zczMPTMzsz/NzMy9zczMPTMzsz8AAAAAzczMPTMzsz8AAAAAzczMPQAAwD8AAAAAzczMPQAAwD/NzMy9zcxMPjMzsz/NzEy+zcxMPmdmpj/NzEy+zcxMPmdmpj+amZk+zcxMPmdmpj+amZk+zcxMPjMzsz+amZk+zcxMPjMzsz/NzEy+zczMvWdmpj+amZk+zczMvTMzsz+amZk+zcxMPjMzsz+amZk+zcxMPjMzsz+amZk+zcxMPmdmpj+amZk+zczMvWdmpj+amZk+AAAAAAAAAAAAAAAAAAAAAGdmpj8AAAAAzczMPWdmpj8AAAAAzczMPWdmpj8AAAAAzczMPQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADMzsz8AAAAAAAAAAAAAwD8AAAAAzczMPQAAwD8AAAAAzczMPQAAwD8AAAAAzczMPTMzsz8AAAAAAAAAADMzsz8AAAAAzczMPWdmpj/NzMy9AAAAAGdmpj/NzMy9AAAAAAAAAADNzMy9AAAAAAAAAADNzMy9zczMPQAAAADNzMy9zczMPWdmpj/NzMy9zczMPQAAwD/NzMy9AAAAAAAAwD/NzMy9AAAAADMzsz/NzMy9AAAAADMzsz/NzMy9zczMPTMzsz/NzMy9zczMPQAAwD/NzMy9zcxMPjMzsz/NzEy+zczMvTMzsz/NzEy+zczMvWdmpj/NzEy+zczMvWdmpj/NzEy+zcxMPmdmpj/NzEy+zcxMPjMzsz/NzEy+/3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//3///wAA/7//f///AAD/v/9///8AAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+//38AAAAA/7//fwAAAAD/v/9/AAAAAP+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/AAD/f/9//78AAP9//3//vwAA/3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+/////f/9//7////9//3//v////3//f/+//3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA/3//f/9/AID/f/9//38AgP9//3//fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA//////9/AID//////38AgP//////fwCA")
+}]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_p1khf"]
 size = Vector3(0.251318, 1.05371, 0.412695)
@@ -17,13 +29,10 @@ collision_mask = 3
 script = ExtResource("2_aq6f5")
 possible_interactions = Array[ExtResource("2_scbd0")]([ExtResource("3_od1nm")])
 
-[node name="hoe" parent="." instance=ExtResource("2_atpmf")]
-transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.030866, -0.514198, 0.0412105)
-
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-visible = false
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.0294366, -0.514, 0.0359782)
 layers = 3
-mesh = SubResource("BoxMesh_3kqux")
+mesh = SubResource("ArrayMesh_scbd0")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00471191, 0.0268555, 0.0807617)

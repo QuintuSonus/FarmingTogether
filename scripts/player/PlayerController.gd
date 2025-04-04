@@ -73,13 +73,22 @@ func get_stored_tool():
 
 # Input handling - delegates to appropriate components
 func _input(event):
+	var potential_interactable = null
+	if interaction.interaction_manager and interaction.interaction_manager.potential_interactable and is_instance_valid(interaction.interaction_manager.potential_interactable):
+		potential_interactable = interaction.interaction_manager.potential_interactable
+	
 	if movement.movement_disabled and not tool_handler.is_tool_use_in_progress: # Allow cancelling tool use even if movement is disabled
 		return
-
+	
 	# Handle tool pickup/drop
 	if event.is_action_pressed(movement.input_prefix + "interact"):
-		if tool_handler.current_tool:
-			tool_handler.drop_tool()
+		if tool_handler.current_tool :
+			if potential_interactable is Tool:
+				tool_handler.pick_up_tool(potential_interactable)
+			elif potential_interactable is SeedBagDispenser:
+				potential_interactable.interact(self)
+			else:
+				tool_handler.drop_tool()
 		elif interaction.interaction_manager:
 			interaction.interaction_manager.start_interaction()
 

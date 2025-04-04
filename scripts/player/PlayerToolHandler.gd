@@ -11,10 +11,10 @@ extends Node
 # Node3D used as the attachment point for the currently held tool. Assign in Inspector.
 @export var tool_holder: Node3D = null
 # Node3D used as the attachment point for the stored tool (on the back). Found automatically.
-@onready var back_tool_holder = $"../BackToolHolder" if $"..".has_node("BackToolHolder") else null
+@export var back_tool_holder: Node3D
 # Reference to the animation controller to trigger tool usage animations. Found automatically.
 @onready var animation_controller: PlayerAnimationController = owner.find_child("PlayerAnimationController") if owner else null
-
+@export var tool_holder_scale: float = 0.5
 
 # --- Tool State ---
 # The tool currently in the player's hand.
@@ -87,7 +87,6 @@ func create_back_tool_holder():
 	player.add_child(holder)
 	back_tool_holder = holder
 	print("PlayerToolHandler: Created BackToolHolder")
-
 
 # --- Tool Pickup / Drop / Swap Logic ---
 
@@ -183,7 +182,7 @@ func apply_tool_specific_adjustments(tool_obj: Tool):
 func store_current_tool():
 	if not current_tool or not tool_belt_enabled(): return false
 	if not is_instance_valid(back_tool_holder):
-		push_warning("Cannot store tool, BackToolHolder is invalid.")
+		print("Cannot store tool, BackToolHolder is invalid.")
 		return false
 
 	var tool_to_store = current_tool
@@ -198,7 +197,8 @@ func store_current_tool():
 
 	# Apply back storage transform (adjust as needed)
 	tool_to_store.position = Vector3(0, 0, 0.1) # Slightly away from back
-	tool_to_store.rotation_degrees = Vector3(90, 0, 0) # Flat against back
+	tool_to_store.rotation_degrees = Vector3(0, 0, 0) # Flat against back
+	tool_to_store.scale = tool_to_store.scale * tool_holder_scale
 
 	stored_tool = tool_to_store # Set back reference
 	return true
@@ -224,6 +224,7 @@ func swap_tools():
 		if tool_from_back.get_parent() == back_tool_holder:
 			back_tool_holder.remove_child(tool_from_back)
 		tool_holder.add_child(tool_from_back)
+		tool_from_back.scale=tool_from_back.scale / tool_holder_scale
 		current_tool = tool_from_back
 		apply_tool_specific_adjustments(current_tool) # Apply hand transform
 		print("Moved %s from back to hand." % current_tool.name)
@@ -236,6 +237,7 @@ func swap_tools():
 		# Apply back transform
 		tool_from_hand.position = Vector3(0, 0, 0.1)
 		tool_from_hand.rotation_degrees = Vector3(90, 0, 0)
+		tool_from_hand.scale = tool_from_hand.scale* tool_holder_scale
 		stored_tool = tool_from_hand
 		print("Moved %s from hand to back." % stored_tool.name)
 
