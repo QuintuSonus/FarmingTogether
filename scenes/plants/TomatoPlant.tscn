@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://cn76l8vqkfhip"]
+[gd_scene load_steps=6 format=3 uid="uid://cn76l8vqkfhip"]
 
 [ext_resource type="Script" uid="uid://caw2jjosxa5wo" path="res://scripts/plants/TomatoPlant.gd" id="1_0cs3t"]
 [ext_resource type="ArrayMesh" uid="uid://cewurf8kgb83m" path="res://assets/meshes/Voxel/tomato.vox" id="2_c36tb"]
@@ -13,9 +13,6 @@ albedo_color = Color(0.601204, 0.220946, 0.267573, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vg4j2"]
 albedo_color = Color(0.352051, 0.798202, 0.135316, 1)
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_o4drc"]
-radius = 0.2
 
 [node name="TomatoPlant" type="StaticBody3D"]
 collision_layer = 3
@@ -53,10 +50,6 @@ material = SubResource("StandardMaterial3D_vg4j2")
 transform = Transform3D(0.987691, 0, -0.156417, 0, 1, 0, 0.156417, 0, 0.987691, 0.0227166, 0.129076, -0.0910912)
 size = Vector3(0.1, 0.01, 0.2)
 material = SubResource("StandardMaterial3D_vg4j2")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.00319943, 0)
-shape = SubResource("SphereShape3D_o4drc")
 
 [node name="GrowingProgressBar" type="Node3D" parent="."]
 

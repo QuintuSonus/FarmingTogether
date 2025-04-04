@@ -1,13 +1,11 @@
-[gd_scene load_steps=9 format=4 uid="uid://37i3fwe8cg5w"]
+[gd_scene load_steps=11 format=4 uid="uid://37i3fwe8cg5w"]
 
 [ext_resource type="Script" uid="uid://cx25egpc2hs72" path="res://scripts/tools/WateringCan.gd" id="1_rj3b4"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_nlpqy"]
 [ext_resource type="Resource" uid="uid://cjh8rdpom40bj" path="res://resources/tools_interactions/can_fill.tres" id="3_x7io4"]
 [ext_resource type="Resource" uid="uid://clf4os2ly74tj" path="res://resources/tools_interactions/can_water_plant.tres" id="4_3lhts"]
-[ext_resource type="Material" uid="uid://dp7age08xepu0" path="res://assets/materials/highlight_shader_material.tres" id="5_nlpqy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_on4ki"]
-next_pass = ExtResource("5_nlpqy")
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
 
@@ -26,6 +24,24 @@ _surfaces = [{
 [sub_resource type="BoxShape3D" id="BoxShape3D_vv5ey"]
 size = Vector3(0.5, 0.5, 0.5)
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_on4ki"]
+emission_shape_scale = Vector3(0.1, 0.1, 0.1)
+emission_shape = 3
+emission_box_extents = Vector3(1, 1, 1)
+angle_min = -294.8
+angle_max = 6.90001
+direction = Vector3(0, 0, 0.1)
+spread = 16.47
+initial_velocity_min = 8.0
+initial_velocity_max = 12.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nlpqy"]
+albedo_color = Color(0, 0.733506, 0.808605, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_x7io4"]
+material = SubResource("StandardMaterial3D_nlpqy")
+size = Vector3(0.1, 0.1, 0.1)
+
 [node name="WateringCan" type="RigidBody3D"]
 script = ExtResource("1_rj3b4")
 water_capacity = 10.0
@@ -43,3 +59,11 @@ shape = SubResource("BoxShape3D_vv5ey")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0339342, 0.301151, -0.0503268)
 text = "10/10"
 font_size = 64
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
+transform = Transform3D(-0.698495, 0, 0.0458798, 0, 0.7, 0, -0.0458798, 0, -0.698495, -0.0339342, -0.220191, -0.371128)
+visible = false
+lifetime = 0.21
+speed_scale = 0.62
+process_material = SubResource("ParticleProcessMaterial_on4ki")
+draw_pass_1 = SubResource("BoxMesh_x7io4")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://coedm0si0il25"]
+[gd_scene load_steps=6 format=3 uid="uid://coedm0si0il25"]
 
 [ext_resource type="Script" uid="uid://cijcxmr84ie2m" path="res://scripts/plants/CarrotPlant.gd" id="1_a4mq8"]
 [ext_resource type="ArrayMesh" uid="uid://v4pxctpt2joc" path="res://assets/meshes/Voxel/carrot.vox" id="2_beah6"]
@@ -13,10 +13,6 @@ albedo_color = Color(0.521569, 0.309804, 0.133333, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vg4j2"]
 albedo_color = Color(0.352051, 0.798202, 0.135316, 1)
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_87cnx"]
-height = 0.3
-radius = 0.1
 
 [node name="CarrotPlant" type="StaticBody3D"]
 collision_layer = 3
@@ -54,10 +50,6 @@ material = SubResource("StandardMaterial3D_vg4j2")
 transform = Transform3D(0.987691, 0, -0.156417, 0, 1, 0, 0.156417, 0, 0.987691, 0.0227166, 0.129076, -0.0910912)
 size = Vector3(0.1, 0.01, 0.2)
 material = SubResource("StandardMaterial3D_vg4j2")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.151158, 0)
-shape = SubResource("CylinderShape3D_87cnx")
 
 [node name="GrowingProgressBar" type="Node3D" parent="."]
 

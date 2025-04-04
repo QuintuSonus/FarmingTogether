@@ -366,6 +366,7 @@ func can_use_tool(tile_position):
 		return true
 	else:
 		return false
+
 # Called when the player presses the 'use tool' action.
 func start_tool_use():
 	# Don't start if no tool held or already using one.

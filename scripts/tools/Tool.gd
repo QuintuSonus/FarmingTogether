@@ -11,6 +11,8 @@ extends RigidBody3D
 @onready var mesh_instance = $MeshInstance3D
 @export var highlight_material: ShaderMaterial = preload("res://assets/materials/highlight_shader_material.tres")
 @export var highlight_scaler =1.1
+
+@onready var in_use: bool = false
 # --- Properties for restoring state when dropped ---
 var original_parent = null
 var original_freeze = false
