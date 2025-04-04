@@ -24,7 +24,7 @@ mesh = SubResource("CylinderMesh_tgj65")
 surface_material_override/0 = SubResource("StandardMaterial3D_wfn3b")
 
 [node name="GrowingMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00777337, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00777337, 0.264454, 0)
 mesh = ExtResource("2_beah6")
 
 [node name="Leaves" type="Node3D" parent="."]

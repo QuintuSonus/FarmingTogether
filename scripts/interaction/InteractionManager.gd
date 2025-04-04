@@ -4,7 +4,7 @@ extends Node3D
 
 # Configuration
 @export var detection_frequency: float = 0.1
-@export var max_detection_distance: float = 1.2
+@export var max_detection_distance: float = 1.5
 @export var detection_angle_degrees: float = 100.0
 
 # State

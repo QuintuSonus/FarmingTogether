@@ -833,8 +833,8 @@ func update_tile_highlight():
 		if is_position_in_bounds(grid_pos):
 			# Position highlighter
 			var world_pos = level_manager.grid_to_world(grid_pos)
-			world_pos.y = 0.6  # Slightly above the ground
-			tile_highlighter.global_position = world_pos
+			world_pos.y = 0.8  # Slightly above the ground
+			tile_highlighter.global_position = world_pos - Vector3(0.5,0,0.5)
 			
 			# Show highlighter
 			tile_highlighter.visible = true
