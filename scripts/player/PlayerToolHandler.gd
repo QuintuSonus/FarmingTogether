@@ -433,7 +433,12 @@ func start_tool_use():
 		# Show progress bar feedback.
 		var interaction_feedback = player.get_node_or_null("InteractionFeedback")
 		if interaction_feedback: interaction_feedback.show_progress(0.0)
-
+		
+		# --- NEW: Call start_progress_effects on the tool ---
+		if current_tool.has_method("start_progress_effects"):
+			current_tool.start_progress_effects(current_interaction.interaction_id)
+		# --- End NEW ---
+		
 		# Trigger the appropriate player animation.
 		var interaction_animation_name = current_interaction.animation_name # TODO: Consider getting from interaction_def
 		if animation_controller and interaction_animation_name != "":
@@ -510,6 +515,10 @@ func _on_tool_use_completed(position: Vector3i):
 	var interaction_feedback = player.get_node_or_null("InteractionFeedback")
 	if interaction_feedback: interaction_feedback.hide_progress()
 
+	# Check current_tool is still valid before calling
+	if is_instance_valid(current_tool) and current_tool.has_method("stop_progress_effects"):
+		current_tool.stop_progress_effects(current_interaction.interaction_id)
+
 	# Call the tool's specific effect function via the base Tool class method.
 	if is_instance_valid(current_tool):
 		current_tool.complete_interaction_effect(position, current_interaction.interaction_id)
@@ -546,6 +555,10 @@ func cancel_tool_use():
 	var interaction_feedback = player.get_node_or_null("InteractionFeedback")
 	if interaction_feedback: interaction_feedback.hide_progress()
 
+	# Check current_tool is still valid before calling
+	if is_instance_valid(current_tool) and current_tool.has_method("stop_progress_effects"):
+		current_tool.stop_progress_effects(current_interaction.interaction_id)
+		
 	# Optional: Call a specific cancel effect on the tool if needed.
 	# if is_instance_valid(current_tool) and current_tool.has_method("cancel_interaction_effect"):
 	#     current_tool.cancel_interaction_effect(tool_use_position, current_interaction.interaction_id)

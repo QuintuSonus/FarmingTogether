@@ -1,9 +1,10 @@
-[gd_scene load_steps=11 format=4 uid="uid://37i3fwe8cg5w"]
+[gd_scene load_steps=12 format=4 uid="uid://37i3fwe8cg5w"]
 
 [ext_resource type="Script" uid="uid://cx25egpc2hs72" path="res://scripts/tools/WateringCan.gd" id="1_rj3b4"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_nlpqy"]
 [ext_resource type="Resource" uid="uid://cjh8rdpom40bj" path="res://resources/tools_interactions/can_fill.tres" id="3_x7io4"]
 [ext_resource type="Resource" uid="uid://clf4os2ly74tj" path="res://resources/tools_interactions/can_water_plant.tres" id="4_3lhts"]
+[ext_resource type="AudioStream" uid="uid://cm4thnks646cb" path="res://assets/audio/sfx/Watering_SFX.mp3" id="5_nlpqy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_on4ki"]
 vertex_color_use_as_albedo = true
@@ -42,9 +43,11 @@ albedo_color = Color(0, 0.733506, 0.808605, 1)
 material = SubResource("StandardMaterial3D_nlpqy")
 size = Vector3(0.1, 0.1, 0.1)
 
-[node name="WateringCan" type="RigidBody3D"]
+[node name="WateringCan" type="RigidBody3D" node_paths=PackedStringArray("watering_particles", "watering_sfx_player")]
 script = ExtResource("1_rj3b4")
 water_capacity = 10.0
+watering_particles = NodePath("GPUParticles3D")
+watering_sfx_player = NodePath("AudioStreamPlayer3D")
 possible_interactions = Array[ExtResource("2_nlpqy")]([ExtResource("3_x7io4"), ExtResource("4_3lhts")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
@@ -62,8 +65,10 @@ font_size = 64
 
 [node name="GPUParticles3D" type="GPUParticles3D" parent="."]
 transform = Transform3D(-0.698495, 0, 0.0458798, 0, 0.7, 0, -0.0458798, 0, -0.698495, -0.0339342, -0.220191, -0.371128)
-visible = false
 lifetime = 0.21
 speed_scale = 0.62
 process_material = SubResource("ParticleProcessMaterial_on4ki")
 draw_pass_1 = SubResource("BoxMesh_x7io4")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("5_nlpqy")

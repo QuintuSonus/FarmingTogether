@@ -36,6 +36,17 @@ func _ready():
 		possible_interactions = []
 	original_scale = mesh_instance.scale
 
+
+# --- NEW: Virtual methods for progress-based effects ---
+# Called by PlayerToolHandler when a progress interaction starts.
+func start_progress_effects(interaction_id: String):
+	# Base implementation does nothing. Override in specific tools like WateringCan.
+	pass
+
+# Called by PlayerToolHandler when a progress interaction stops (completed or canceled).
+func stop_progress_effects(interaction_id: String):
+	# Base implementation does nothing. Override in specific tools.
+	pass
 # --- Tool Capabilities ---
 # Returns a bitmask representing the fundamental abilities of this tool.
 # This is overridden by specific tool types (Hoe, WateringCan, etc.).

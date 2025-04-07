@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/Tiling_SFX.mp3-d55de4a670ece19487f82ae2d1f8dc
 
 [params]
 
-loop=false
+loop=true
 loop_offset=0
 bpm=0
 beat_count=0

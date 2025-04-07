@@ -9,6 +9,9 @@ extends Tool
 var current_water: float = 5.0
 
 @onready var water_indicator = null
+@export var watering_particles: GPUParticles3D
+@export var watering_sfx_player: AudioStreamPlayer3D # Should be set to LOOP
+@export var fill_sfx_player: AudioStreamPlayer3D
 
 func _ready():
 	super._ready()
@@ -16,6 +19,10 @@ func _ready():
 	update_water_capacity_from_parameters()
 	create_water_indicator()
 	update_appearance()
+	if watering_particles:
+		watering_particles.emitting = false
+	if watering_sfx_player:
+		watering_sfx_player.stop()
 	# print("WateringCan initialized...") # Optional debug
 # Custom method to identify this as a watering can
 func get_tool_type():
@@ -209,3 +216,18 @@ func _effect_fill_can(_target_position: Vector3i): # Target position might not b
 	current_water = water_capacity
 	update_appearance()
 	print("WateringCan effect 'fill_can': REFILLED from %f to %f" % [old_water, current_water])
+
+func start_progress_effects(interaction_id: String):
+	if interaction_id=="water_plant":
+		watering_particles.emitting=true
+		watering_sfx_player.play()
+	# Base implementation does nothing. Override in specific tools like WateringCan.
+	pass
+
+# Called by PlayerToolHandler when a progress interaction stops (completed or canceled).
+func stop_progress_effects(interaction_id: String):
+	if interaction_id=="water_plant":
+		watering_particles.emitting=false
+		watering_sfx_player.stop()
+	# Base implementation does nothing. Override in specific tools.
+	pass
