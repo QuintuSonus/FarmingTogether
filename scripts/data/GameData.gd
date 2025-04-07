@@ -88,8 +88,8 @@ class ProgressionData extends Resource:
 	
 	# Manually set score requirements for the first few levels
 	@export var level_score_requirements: Dictionary = {
-	1: 300, 2: 600, 3: 1000, 4: 1400, 5: 1900,
-	6: 2400, 7: 3000, 8: 3600, 9: 4300, 10: 5000
+	1: 300, 2: 500, 3: 750, 4: 750, 5: 750,
+	6: 750, 7: 750, 8: 750, 9: 4300, 10: 5000
 	}
 	
 	

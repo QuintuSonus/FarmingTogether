@@ -18,6 +18,7 @@ albedo_color = Color(0.352051, 0.798202, 0.135316, 1)
 collision_layer = 3
 collision_mask = 3
 script = ExtResource("1_0cs3t")
+crop_type = "tomato"
 
 [node name="SeedMesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("CylinderMesh_tgj65")

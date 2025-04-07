@@ -10,7 +10,7 @@ extends Plant
 func _ready():
 	# Set carrot specific properties
 	crop_type = "carrot"
-	growth_time = 20.0  # Seconds to grow
+	growth_time = 15.0  # Seconds to grow
 	spoil_time = 15.0   # Seconds until spoiled
 	
 	# Call super._ready() after setting properties

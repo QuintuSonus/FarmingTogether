@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=4 uid="uid://7pq2ir7ov7l3"]
+[gd_scene load_steps=8 format=4 uid="uid://7pq2ir7ov7l3"]
 
 [ext_resource type="Script" uid="uid://dsf62xuroa55a" path="res://scripts/tools/Hoe.gd" id="2_aq6f5"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_scbd0"]
 [ext_resource type="Resource" uid="uid://snblypif6uor" path="res://resources/tools_interactions/hoe_till_soil.tres" id="3_od1nm"]
+[ext_resource type="Resource" uid="uid://bv7k3fombogb8" path="res://resources/tools_interactions/hoe_remove_spoiled_plant.tres" id="4_scbd0"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_omjo2"]
 vertex_color_use_as_albedo = true
@@ -27,7 +28,7 @@ size = Vector3(0.251318, 1.05371, 0.412695)
 collision_layer = 3
 collision_mask = 3
 script = ExtResource("2_aq6f5")
-possible_interactions = Array[ExtResource("2_scbd0")]([ExtResource("3_od1nm")])
+possible_interactions = Array[ExtResource("2_scbd0")]([ExtResource("3_od1nm"), ExtResource("4_scbd0")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.0294366, -0.514, 0.0359782)

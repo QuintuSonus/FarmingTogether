@@ -419,7 +419,8 @@ func activate_sprinklers():
 # Water tiles adjacent to a position (Unchanged)
 func water_adjacent_tiles(center_pos: Vector3i):
 	var directions = [
-		Vector3i(0, 0, -1), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(-1, 0, 0)
+		Vector3i(0, 0, -1), Vector3i(1, 0, 0), Vector3i(0, 0, 1), Vector3i(-1, 0, 0),
+		Vector3i(-1, 0, -1), Vector3i(1, 0, 1), Vector3i(1, 0, -1), Vector3i(-1, 0, 1)
 	]
 	for dir in directions:
 		var adjacent_pos = center_pos + dir

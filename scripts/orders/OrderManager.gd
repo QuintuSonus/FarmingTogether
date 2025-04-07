@@ -5,8 +5,8 @@ extends Node
 # Configuration
 @export var max_active_orders: int = 3
 @export var initial_order_delay: float = 20.0
-@export var new_order_min_delay: float = 20.0
-@export var new_order_max_delay: float = 30.0
+@export var new_order_min_delay: float = 30.0
+@export var new_order_max_delay: float = 40.0
 @export var time_multiplier: float = 1.0 # Multiplier for individual order timers
 
 # State

@@ -11,7 +11,7 @@ func _ready():
 	# Set Tomato specific properties
 	crop_type = "tomato"
 	growth_time = 20.0  # Seconds to grow
-	spoil_time = 15.0   # Seconds until spoiled
+	spoil_time = 12.0   # Seconds until spoiled
 	
 	# Call super._ready() after setting properties
 	super._ready()
