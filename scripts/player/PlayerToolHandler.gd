@@ -16,6 +16,8 @@ extends Node
 @onready var animation_controller: PlayerAnimationController = owner.find_child("PlayerAnimationController") if owner else null
 @export var tool_holder_scale: float = 0.5
 
+@export var tool_pick_up_sfx_player: AudioStreamPlayer3D
+
 # --- Tool State ---
 # The tool currently in the player's hand.
 var current_tool: Tool = null
@@ -51,6 +53,8 @@ func _ready():
 	# Create the back tool holder node if the tool belt upgrade is active and the node doesn't exist.
 	if tool_belt_enabled() and not back_tool_holder:
 		create_back_tool_holder()
+	if tool_pick_up_sfx_player:
+		tool_pick_up_sfx_player.stop()
 
 	# Assign tool_holder if not set in editor (example fallback)
 	if not tool_holder and is_instance_valid(player):
@@ -146,6 +150,7 @@ func pick_up_tool(tool_obj: Tool):
 	# Apply specific position/rotation adjustments for holding.
 	apply_tool_specific_adjustments(tool_obj)
 	tool_obj.visible = true # Ensure visibility.
+	tool_pick_up_sfx_player.play()
 
 
 # Applies specific local transforms to the tool when held.
@@ -459,10 +464,13 @@ func start_tool_use():
 		if tiles_being_used.has(pos_key) and tiles_being_used[pos_key] == player:
 			tiles_being_used.erase(pos_key)
 			# print("Cleared tile usage for instant action on %s" % pos_key) # Optional Debug
-
+		
+		if current_tool.has_method("start_progress_effects"):
+			current_tool.start_progress_effects(current_interaction.interaction_id)
 		# Reset interaction state (no longer needed).
 		current_interaction = null
 		# is_tool_use_in_progress remains false.
+		
 
 
 # Called every frame to update progress for active interactions.

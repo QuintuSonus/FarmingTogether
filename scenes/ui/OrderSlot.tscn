@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://dcca63bmubtv8"]
+[gd_scene load_steps=6 format=3 uid="uid://dcca63bmubtv8"]
 
 [ext_resource type="Script" uid="uid://d4nh850pr267d" path="res://scripts/ui/OrderSlot.gd" id="1_l2n1l"]
 [ext_resource type="Texture2D" uid="uid://cvf6cmbxma8l6" path="res://assets/textures/crops/carrot_icon.png" id="2_1x6e3"]
 [ext_resource type="Texture2D" uid="uid://bb4r1mosdf8mb" path="res://assets/textures/crops/tomato_icon.png" id="3_e1y3u"]
 [ext_resource type="PackedScene" uid="uid://8e5d0gghaeji" path="res://scenes/ui/CropItem.tscn" id="4_lj3l8"]
+[ext_resource type="AudioStream" uid="uid://dk0ccjx8a2nnw" path="res://assets/audio/sfx/New_Order_SFX.wav" id="5_bbams"]
 
 [node name="OrderSlot" type="MarginContainer"]
 custom_minimum_size = Vector2(200, 120)
@@ -54,3 +55,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
 columns = 3
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("5_bbams")
+autoplay = true

@@ -3,6 +3,8 @@ class_name Basket
 extends Tool
 
 var contained_crops = {}  # Dictionary of crop_type: count
+@export var harvesting_sfx_player: AudioStreamPlayer3D
+@export var delivering_sfx_player: AudioStreamPlayer3D
 
 # Visual feedback variables
 @onready var slots_container = $SlotsContainer # Assuming SlotsContainer node exists as child
@@ -24,7 +26,6 @@ var crop_colors = {
 
 func _ready():
 	super._ready()
-	print("Basket initialized")
 	add_to_group("basket_tools")
 
 	if not slots_container:
@@ -32,9 +33,12 @@ func _ready():
 		slots_container.name = "SlotsContainer"
 		slots_container.position = Vector3(0, 0.6, 0) # Initial position
 		add_child(slots_container)
-		print("Basket: Created SlotsContainer node.")
 
 	update_appearance() # Calls update_slots
+	if harvesting_sfx_player:
+		harvesting_sfx_player.stop()
+	if delivering_sfx_player:
+		delivering_sfx_player.stop()
 
 func _process(delta):
 	var is_held = false
@@ -322,3 +326,19 @@ func get_parameter_manager():
 	var pm = get_node_or_null("/root/ParameterManager") # Assuming ParameterManager might be an autoload
 	if not pm: push_warning("Basket: ParameterManager service/node not found.")
 	return pm
+	
+func start_progress_effects(interaction_id: String):
+	if interaction_id=="harvest_crop":
+		harvesting_sfx_player.play()
+	
+	if interaction_id=="deliver_crop":
+		delivering_sfx_player.play()
+	# Base implementation does nothing. Override in specific tools like WateringCan.
+	pass
+
+# Called by PlayerToolHandler when a progress interaction stops (completed or canceled).
+func stop_progress_effects(interaction_id: String):
+	if interaction_id=="harvest_crop":
+		harvesting_sfx_player.stop()
+	# Base implementation does nothing. Override in specific tools.
+	pass

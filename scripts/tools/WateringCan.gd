@@ -221,6 +221,8 @@ func start_progress_effects(interaction_id: String):
 	if interaction_id=="water_plant":
 		watering_particles.emitting=true
 		watering_sfx_player.play()
+	if interaction_id=="fill_can":
+		fill_sfx_player.play()
 	# Base implementation does nothing. Override in specific tools like WateringCan.
 	pass
 
@@ -229,5 +231,8 @@ func stop_progress_effects(interaction_id: String):
 	if interaction_id=="water_plant":
 		watering_particles.emitting=false
 		watering_sfx_player.stop()
+	
+	if interaction_id=="fill_can":
+		fill_sfx_player.stop()
 	# Base implementation does nothing. Override in specific tools.
 	pass

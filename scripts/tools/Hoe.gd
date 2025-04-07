@@ -2,10 +2,14 @@
 class_name Hoe
 extends Tool
 
+
+@export var tiling_sfx_player: AudioStreamPlayer3D # Should be set to LOOP
 # Note: possible_interactions array is assigned in the editor Inspector
 
 func _ready():
 	super._ready()
+	if tiling_sfx_player:
+		tiling_sfx_player.stop()
 	# print("Hoe initialized with capabilities:", get_capabilities()) # Optional debug
 
 # --- Keep get_capabilities ---
@@ -44,3 +48,16 @@ func get_parameter_manager():
 		return service_locator.get_service("parameter_manager")
 		print("parameters found")
 	return null
+	
+func start_progress_effects(interaction_id: String):
+	if interaction_id=="till_soil" or interaction_id=="removing_spoiled_plant":
+		tiling_sfx_player.play()
+	# Base implementation does nothing. Override in specific tools like WateringCan.
+	pass
+
+# Called by PlayerToolHandler when a progress interaction stops (completed or canceled).
+func stop_progress_effects(interaction_id: String):
+	if interaction_id=="till_soil" or interaction_id=="removing_spoiled_plant":
+		tiling_sfx_player.stop()
+	# Base implementation does nothing. Override in specific tools.
+	pass
