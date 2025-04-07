@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=4 uid="uid://dte7i6vc4ohbf"]
+[gd_scene load_steps=11 format=4 uid="uid://dte7i6vc4ohbf"]
 
 [ext_resource type="Script" uid="uid://q6q4w2rho7pe" path="res://scripts/tools/Basket.gd" id="1_iugtt"]
 [ext_resource type="Script" uid="uid://d0rpfh5vvj8fv" path="res://scripts/interaction/InteractionDefinition.gd" id="2_548d0"]
@@ -6,6 +6,7 @@
 [ext_resource type="Resource" uid="uid://b5d6l4u488xlw" path="res://resources/tools_interactions/basket_harvest.tres" id="4_moc1j"]
 [ext_resource type="AudioStream" uid="uid://oymado6upj5l" path="res://assets/audio/sfx/Harvesting_SFX.mp3" id="5_548d0"]
 [ext_resource type="AudioStream" uid="uid://btwqc1m1u0cde" path="res://assets/audio/sfx/Delivery_SFX.mp3" id="6_uficv"]
+[ext_resource type="AudioStream" uid="uid://ibgxxl3vdewc" path="res://assets/audio/sfx/Harvested_SFX.mp3" id="7_moc1j"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3p52u"]
 vertex_color_use_as_albedo = true
@@ -26,12 +27,13 @@ _surfaces = [{
 [sub_resource type="BoxShape3D" id="BoxShape3D_x7hak"]
 size = Vector3(0.5, 0.5, 0.5)
 
-[node name="Basket" type="RigidBody3D" node_paths=PackedStringArray("harvesting_sfx_player", "delivering_sfx_player")]
+[node name="Basket" type="RigidBody3D" node_paths=PackedStringArray("harvesting_sfx_player", "delivering_sfx_player", "harvested_sfx_player")]
 collision_layer = 3
 collision_mask = 3
 script = ExtResource("1_iugtt")
 harvesting_sfx_player = NodePath("Harvesting_SFX")
 delivering_sfx_player = NodePath("Delivery_SFX")
+harvested_sfx_player = NodePath("Harvested_SFX")
 possible_interactions = Array[ExtResource("2_548d0")]([ExtResource("3_uficv"), ExtResource("4_moc1j")])
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
@@ -47,3 +49,6 @@ stream = ExtResource("5_548d0")
 
 [node name="Delivery_SFX" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("6_uficv")
+
+[node name="Harvested_SFX" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("7_moc1j")

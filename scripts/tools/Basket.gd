@@ -5,6 +5,7 @@ extends Tool
 var contained_crops = {}  # Dictionary of crop_type: count
 @export var harvesting_sfx_player: AudioStreamPlayer3D
 @export var delivering_sfx_player: AudioStreamPlayer3D
+@export var harvested_sfx_player: AudioStreamPlayer3D
 
 # Visual feedback variables
 @onready var slots_container = $SlotsContainer # Assuming SlotsContainer node exists as child
@@ -39,6 +40,8 @@ func _ready():
 		harvesting_sfx_player.stop()
 	if delivering_sfx_player:
 		delivering_sfx_player.stop()
+	if harvested_sfx_player:
+		harvested_sfx_player.stop()
 
 func _process(delta):
 	var is_held = false
@@ -239,6 +242,7 @@ func _effect_harvest_crop(target_position: Vector3i):
 				obj.queue_free()
 				harvested = true
 				break
+	harvested_sfx_player.play()
 
 	if not harvested:
 		print("Basket: No harvestable plant found at target position %s" % str(target_position))
