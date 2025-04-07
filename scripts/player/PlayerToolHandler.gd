@@ -42,6 +42,9 @@ var current_interaction_final_duration: float = 0.0
 # Key: String "x,z", Value: Player node instance.
 static var tiles_being_used = {}
 
+var seed_bag_scene: PackedScene = preload("res://scenes/tools/SeedingBag.tscn") # Adjust path if needed
+
+
 # --- Initialization ---
 func _ready():
 	# Ensure player reference is valid.
@@ -95,62 +98,100 @@ func create_back_tool_holder():
 # --- Tool Pickup / Drop / Swap Logic ---
 
 # Handles picking up a tool instance.
-func pick_up_tool(tool_obj: Tool):
-	if not is_instance_valid(tool_obj):
-		push_error("ERROR: Tool object to pick up is not valid!")
-		return
-	if not is_instance_valid(tool_holder):
-		push_error("ERROR: ToolHolder node is not valid or not found!")
-		return
+func pick_up_tool(tool_obj: Tool): # Modified to handle potential null for dispenser tiles
+	# --- Existing Pickup Logic ---
+	if is_instance_valid(tool_obj): # Standard tool pickup
+		# ... (keep the existing logic for picking up a Tool instance) ...
+		# ... (disable physics, reparent, apply adjustments, etc.) ...
+		if not is_instance_valid(tool_holder):
+			push_error("ERROR: ToolHolder node is not valid or not found!")
+			return
 
-	print("Attempting to pick up tool: " + tool_obj.name)
+		print("Attempting to pick up tool: " + tool_obj.name)
 
-	# If holding a tool and tool belt is active & empty, store current tool first.
-	if current_tool and tool_belt_enabled() and not stored_tool:
-		print("Storing current tool (%s) in belt" % current_tool.name)
-		store_current_tool()
-	# Otherwise, if holding a tool, drop it before picking up the new one.
-	elif current_tool:
-		print("Dropping current tool (%s) before picking up new one" % current_tool.name)
-		drop_tool()
+		# If holding a tool and tool belt is active & empty, store current tool first.
+		if current_tool and tool_belt_enabled() and not stored_tool:
+			print("Storing current tool (%s) in belt" % current_tool.name)
+			store_current_tool()
+		# Otherwise, if holding a tool, drop it before picking up the new one.
+		elif current_tool:
+			print("Dropping current tool (%s) before picking up new one" % current_tool.name)
+			drop_tool()
 
-	# --- Prepare Tool for Holding ---
-	# Store original parent path for dropping later.
-	var original_parent = tool_obj.get_parent()
-	if is_instance_valid(original_parent):
-		tool_obj.set_meta("original_parent_path", original_parent.get_path())
-	else:
-		tool_obj.set_meta("original_parent_path", null)
+		# --- Prepare Tool for Holding ---
+		var original_parent = tool_obj.get_parent()
+		if is_instance_valid(original_parent):
+			tool_obj.set_meta("original_parent_path", original_parent.get_path())
+		else:
+			tool_obj.set_meta("original_parent_path", null)
 
-	# Disable physics/collision while holding.
-	if tool_obj is RigidBody3D:
-		tool_obj.set_meta("original_freeze", tool_obj.freeze)
-		tool_obj.set_meta("original_collision_layer", tool_obj.collision_layer)
-		tool_obj.set_meta("original_collision_mask", tool_obj.collision_mask)
-		tool_obj.freeze = true
-		tool_obj.collision_layer = 0
-		tool_obj.collision_mask = 0
-	elif tool_obj is CollisionObject3D:
-		tool_obj.set_meta("original_collision_layer", tool_obj.collision_layer)
-		tool_obj.set_meta("original_collision_mask", tool_obj.collision_mask)
-		tool_obj.collision_layer = 0
-		tool_obj.collision_mask = 0
-		if tool_obj.has_method("set_monitoring"): tool_obj.set_monitoring(false)
-		if tool_obj.has_method("set_monitorable"): tool_obj.set_monitorable(false)
+		# Disable physics/collision while holding.
+		if tool_obj is RigidBody3D:
+			tool_obj.set_meta("original_freeze", tool_obj.freeze)
+			tool_obj.set_meta("original_collision_layer", tool_obj.collision_layer)
+			tool_obj.set_meta("original_collision_mask", tool_obj.collision_mask)
+			tool_obj.freeze = true
+			tool_obj.collision_layer = 0
+			tool_obj.collision_mask = 0
+		elif tool_obj is CollisionObject3D:
+			tool_obj.set_meta("original_collision_layer", tool_obj.collision_layer)
+			tool_obj.set_meta("original_collision_mask", tool_obj.collision_mask)
+			tool_obj.collision_layer = 0
+			tool_obj.collision_mask = 0
+			if tool_obj.has_method("set_monitoring"): tool_obj.set_monitoring(false)
+			if tool_obj.has_method("set_monitorable"): tool_obj.set_monitorable(false)
 
-	# Reparent the tool to the tool holder.
-	if is_instance_valid(original_parent):
-		original_parent.remove_child(tool_obj)
-	tool_holder.add_child(tool_obj)
+		if is_instance_valid(original_parent):
+			original_parent.remove_child(tool_obj)
+		tool_holder.add_child(tool_obj)
 
-	# Set current tool reference.
-	current_tool = tool_obj
-	print("Tool (%s) added to tool holder." % current_tool.name)
+		current_tool = tool_obj
+		print("Tool (%s) added to tool holder." % current_tool.name)
+		apply_tool_specific_adjustments(tool_obj)
+		tool_obj.visible = true
+		tool_pick_up_sfx_player.play()
 
-	# Apply specific position/rotation adjustments for holding.
-	apply_tool_specific_adjustments(tool_obj)
-	tool_obj.visible = true # Ensure visibility.
-	tool_pick_up_sfx_player.play()
+	# --- NEW: Dispenser Tile Interaction ---
+	elif not is_instance_valid(tool_obj): # tool_obj is null, check if we are facing a dispenser tile
+		var grid_tracker = player.get_node_or_null("PlayerGridTracker")
+		if not grid_tracker: return
+
+		var target_pos = grid_tracker.get_front_grid_position()
+		var level_manager = grid_tracker.level_manager # Assumes grid_tracker has level_manager reference
+		if not level_manager: return
+
+		var tile_type = level_manager.get_tile_type(target_pos)
+		var seed_type_to_set = ""
+
+		if tile_type == LevelManager.TileType.CARROT_DISPENSER:
+			seed_type_to_set = "carrot"
+		elif tile_type == LevelManager.TileType.TOMATO_DISPENSER:
+			seed_type_to_set = "tomato"
+
+		if seed_bag_scene and seed_type_to_set != "":
+			print("Player interacting with %s dispenser tile." % seed_type_to_set)
+			var new_seed_bag = seed_bag_scene.instantiate()
+			if not new_seed_bag:
+				push_error("Failed to instantiate seed bag for %s dispenser" % seed_type_to_set)
+				return
+
+			# Configure the seed bag
+			if new_seed_bag.has_method("set_seed_type"):
+				new_seed_bag.set_seed_type(seed_type_to_set)
+			else: # Fallback if method doesn't exist (less ideal)
+				new_seed_bag.seed_type = seed_type_to_set
+				if new_seed_bag.has_method("update_appearance"):
+					new_seed_bag.call_deferred("update_appearance") # Update visuals
+
+			# Add to scene temporarily (needed for pickup logic)
+			# The pickup logic will reparent it correctly.
+			# Choose a suitable temporary parent, e.g., the player's parent (Main?)
+			var temp_parent = player.get_parent() if is_instance_valid(player.get_parent()) else get_tree().root
+			temp_parent.add_child(new_seed_bag)
+			new_seed_bag.global_position = player.global_position + Vector3(0, 0.5, 0) # Place near player
+
+			# Now call the pickup logic with the newly created seed bag instance
+			pick_up_tool(new_seed_bag) # Recursive call, but now tool_obj is valid
 
 
 # Applies specific local transforms to the tool when held.

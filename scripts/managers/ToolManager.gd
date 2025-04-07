@@ -10,8 +10,6 @@ var tool_scenes = {
 	"hoe": "res://scenes/tools/Hoe.tscn",
 	"watering_can": "res://scenes/tools/WateringCan.tscn",
 	"basket": "res://scenes/tools/Basket.tscn",
-	"carrot_seeds": "res://scenes/tools/CarrotSeedDispenser.tscn",
-	"tomato_seeds": "res://scenes/tools/TomatoSeedDispenser.tscn"
 }
 
 func _ready():

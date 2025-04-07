@@ -15,7 +15,11 @@ enum TileType {
 	MUD = 7,
 	DELIVERY = 8,
 	DELIVERY_EXPRESS = 10, # New: Enhanced delivery with bonus points
-	SPRINKLER = 11        # New: Automatic watering of adjacent tiles
+	SPRINKLER = 11,        # New: Automatic watering of adjacent tiles
+	
+	#Seed Dispensers
+	CARROT_DISPENSER = 12,
+	TOMATO_DISPENSER = 13
 }
 
 # Reference to the GridMap node
@@ -39,6 +43,9 @@ const MUD_MESH_ID = 7
 const DELIVERY_MESH_ID = 8
 const DELIVERY_EXPRESS_MESH_ID = 9
 const SPRINKLER_MESH_ID = 10
+#Seed Dispensers
+const CARROT_DISPENSER_MESH_ID = 11
+const TOMATO_DISPENSER_MESH_ID = 12
 
 var sprinkler_timer: float = 0.0
 @export var sprinkler_interval: float = 30.0
@@ -135,6 +142,8 @@ func get_tile_type_from_mesh_id(mesh_id: int) -> int:
 		DELIVERY_MESH_ID: return TileType.DELIVERY
 		DELIVERY_EXPRESS_MESH_ID: return TileType.DELIVERY_EXPRESS
 		SPRINKLER_MESH_ID: return TileType.SPRINKLER
+		CARROT_DISPENSER_MESH_ID: return TileType.CARROT_DISPENSER
+		TOMATO_DISPENSER_MESH_ID: return TileType.TOMATO_DISPENSER
 		_:
 			print("Warning: Unknown mesh ID: ", mesh_id)
 			return TileType.REGULAR_GROUND # Fallback
@@ -247,6 +256,8 @@ func set_tile_type(grid_position: Vector3i, type: int) -> bool:
 		TileType.DELIVERY: mesh_id = DELIVERY_MESH_ID
 		TileType.DELIVERY_EXPRESS: mesh_id = DELIVERY_EXPRESS_MESH_ID
 		TileType.SPRINKLER: mesh_id = SPRINKLER_MESH_ID
+		TileType.CARROT_DISPENSER: mesh_id = CARROT_DISPENSER_MESH_ID
+		TileType.TOMATO_DISPENSER: mesh_id = TOMATO_DISPENSER_MESH_ID
 		_:
 			print("Warning: set_tile_type called with invalid type: ", type)
 			# Decide whether to clear the tile or do nothing
@@ -383,6 +394,8 @@ func print_level_state():
 				TileType.DELIVERY: row_string += "X "
 				TileType.DELIVERY_EXPRESS: row_string += "X+" # Added Express
 				TileType.SPRINKLER: row_string += "~ " # Added Sprinkler
+				TileType.CARROT_DISPENSER: row_string += "Cd"
+				TileType.TOMATO_DISPENSER: row_string += "Td"
 				-1: row_string += ". " # Use '.' for empty/outside bounds
 				_: row_string += "? " # Unknown type
 		print(row_string)

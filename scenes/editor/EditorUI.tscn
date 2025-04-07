@@ -116,6 +116,19 @@ text = "Mud (150)"
 layout_mode = 2
 text = "Delivery (300)"
 
+[node name="HSeparator4" type="HSeparator" parent="LeftPanel/TabContainer/Tiles"]
+layout_mode = 2
+
+[node name="Seed Dispensers" type="Label" parent="LeftPanel/TabContainer/Tiles"]
+layout_mode = 2
+text = "Seed Dispensers"
+
+[node name="CarrotDispenserButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+layout_mode = 2
+
+[node name="TomatoDispenserButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+layout_mode = 2
+
 [node name="HSeparator" type="HSeparator" parent="LeftPanel/TabContainer/Tiles"]
 layout_mode = 2
 theme_override_constants/separation = 20
@@ -186,24 +199,6 @@ layout_mode = 2
 theme_override_constants/separation = 10
 theme_override_styles/separator = SubResource("StyleBoxFlat_separator")
 
-[node name="SeedsLabel" type="Label" parent="LeftPanel/TabContainer/Tools"]
-layout_mode = 2
-text = "Seed Dispensers:"
-horizontal_alignment = 1
-
-[node name="CarrotSeedButton" type="Button" parent="LeftPanel/TabContainer/Tools"]
-layout_mode = 2
-text = "Carrot Seeds (100)"
-
-[node name="TomatoSeedButton" type="Button" parent="LeftPanel/TabContainer/Tools"]
-layout_mode = 2
-text = "Tomato Seeds (150)"
-
-[node name="HSeparator2" type="HSeparator" parent="LeftPanel/TabContainer/Tools"]
-layout_mode = 2
-theme_override_constants/separation = 20
-theme_override_styles/separator = SubResource("StyleBoxFlat_separator")
-
 [node name="SelectedToolLabel" type="Label" parent="LeftPanel/TabContainer/Tools"]
 layout_mode = 2
 text = "Selected: None"
@@ -213,30 +208,10 @@ horizontal_alignment = 1
 layout_mode = 2
 text = "Remove Tool Mode"
 
-[node name="Settings" type="VBoxContainer" parent="LeftPanel/TabContainer"]
-visible = false
-layout_mode = 2
-metadata/_tab_index = 2
-
-[node name="Label" type="Label" parent="LeftPanel/TabContainer/Settings"]
-layout_mode = 2
-text = "Farm Settings"
-horizontal_alignment = 1
-
-[node name="HSeparator" type="HSeparator" parent="LeftPanel/TabContainer/Settings"]
-layout_mode = 2
-theme_override_constants/separation = 20
-theme_override_styles/separator = SubResource("StyleBoxFlat_separator")
-
-[node name="ResetProgressionButton" type="Button" parent="LeftPanel/TabContainer/Settings"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
-text = "Reset All Progression"
-
 [node name="Upgrades" type="VBoxContainer" parent="LeftPanel/TabContainer"]
 visible = false
 layout_mode = 2
-metadata/_tab_index = 3
+metadata/_tab_index = 2
 
 [node name="Label" type="Label" parent="LeftPanel/TabContainer/Upgrades"]
 layout_mode = 2
@@ -321,6 +296,26 @@ horizontal_alignment = 1
 layout_mode = 2
 disabled = true
 text = "Purchase"
+
+[node name="Settings" type="VBoxContainer" parent="LeftPanel/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 3
+
+[node name="Label" type="Label" parent="LeftPanel/TabContainer/Settings"]
+layout_mode = 2
+text = "Farm Settings"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="LeftPanel/TabContainer/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 20
+theme_override_styles/separator = SubResource("StyleBoxFlat_separator")
+
+[node name="ResetProgressionButton" type="Button" parent="LeftPanel/TabContainer/Settings"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+text = "Reset All Progression"
 
 [node name="BottomPanel" type="Panel" parent="."]
 layout_mode = 1

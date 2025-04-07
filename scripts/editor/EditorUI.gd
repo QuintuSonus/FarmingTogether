@@ -58,8 +58,6 @@ func connect_tool_buttons():
 		"HoeButton": "hoe",
 		"WateringCanButton": "watering_can",
 		"BasketButton": "basket",
-		"CarrotSeedButton": "carrot_seeds",
-		"TomatoSeedButton": "tomato_seeds",
 	}
 	
 	for button_name in tool_buttons:
@@ -82,7 +80,9 @@ func connect_tile_buttons():
 		"DirtPreservedButton": "dirt_preserved",
 		"DirtPersistentButton": "dirt_persistent", 
 		"DeliveryExpressButton": "delivery_express",
-		"SprinklerButton": "sprinkler"
+		"SprinklerButton": "sprinkler",
+		"CarrotDispenserButton": "carrot_dispenser", # Ensure you create these buttons in the scene
+		"TomatoDispenserButton": "tomato_dispenser"  # Ensure you create these buttons in the scene
 	}
 	
 	# Connect each button
@@ -157,15 +157,15 @@ func update_button_states(currency: int):
 		"DirtPreservedButton": "dirt_preserved",
 		"DirtPersistentButton": "dirt_persistent", 
 		"DeliveryExpressButton": "delivery_express",
-		"SprinklerButton": "sprinkler"
+		"SprinklerButton": "sprinkler",
+		"CarrotDispenserButton": "carrot_dispenser",
+		"TomatoDispenserButton": "tomato_dispenser"
 	}
 	
 	var tool_buttons = {
 		"HoeButton": "hoe",
 		"WateringCanButton": "watering_can",
 		"BasketButton": "basket",
-		"CarrotSeedButton": "carrot_seeds",
-		"TomatoSeedButton": "tomato_seeds",
 	}
 	
 	# Update tile buttons
@@ -272,7 +272,9 @@ func update_tile_buttons_visibility(available_tiles = null):
 		"DirtPreservedButton": "dirt_preserved",
 		"DirtPersistentButton": "dirt_persistent",
 		"DeliveryExpressButton": "delivery_express",
-		"SprinklerButton": "sprinkler"
+		"SprinklerButton": "sprinkler",
+		"CarrotDispenserButton": "carrot_dispenser",
+		"TomatoDispenserButton": "tomato_dispenser"
 	}
 	
 	# Update buttons visibility and text

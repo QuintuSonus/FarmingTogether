@@ -24,8 +24,6 @@ var tool_scenes = {
 	"hoe": "res://scenes/tools/Hoe.tscn",
 	"watering_can": "res://scenes/tools/WateringCan.tscn",
 	"basket": "res://scenes/tools/Basket.tscn",
-	"carrot_seeds": "res://scenes/tools/CarrotSeedDispenser.tscn",
-	"tomato_seeds": "res://scenes/tools/TomatoSeedDispenser.tscn"
 }
 
 # Game state management
@@ -55,7 +53,9 @@ var tile_type_mapping = {
 	"mud": 7,            # MUD
 	"delivery": 8,       # DELIVERY
 	"delivery_express": 10, # DELIVERY_EXPRESS
-	"sprinkler": 11      # SPRINKLER
+	"sprinkler": 11,      # SPRINKLER
+	"carrot_dispenser": 12,
+	"tomato_dispenser": 13
 }
 
 # Costs of different tile types
@@ -70,7 +70,9 @@ var tile_prices = {
 	"mud": 150,
 	"delivery": 300,
 	"delivery_express": 400,
-	"sprinkler": 500
+	"sprinkler": 500,
+	"carrot_dispenser": 100,
+	"tomato_dispenser": 150
 }
 
 # Costs of different tool types
@@ -78,8 +80,6 @@ var tool_prices = {
 	"hoe": 150,
 	"watering_can": 200,
 	"basket": 250,
-	"carrot_seeds": 100,
-	"tomato_seeds": 150
 }
 
 func _ready():
@@ -562,6 +562,23 @@ func place_tile(grid_pos: Vector3i, type_name: String) -> bool:
 		# Update game data
 		if game_data_manager:
 			game_data_manager.set_tile(grid_pos.x, grid_pos.z, new_type)
+		
+		if type_name == "tomato_dispenser":
+			if game_data and game_data.progression_data:
+				if not game_data.progression_data.unlocked_seeds.has("tomato"):
+					game_data.progression_data.unlocked_seeds.append("tomato")
+					print("LevelEditor: Unlocked 'tomato' seeds.")
+					# Notify OrderManager to update its available crops
+					var order_manager = get_node_or_null("/root/Main/OrderManager") # Adjust path if needed
+					if order_manager and order_manager.has_method("update_available_crops"):
+						order_manager.update_available_crops()
+						print("LevelEditor: Notified OrderManager to update crops.")
+					elif ServiceLocator.get_instance() and ServiceLocator.get_instance().has_service("order_manager"):
+						order_manager = ServiceLocator.get_instance().get_service("order_manager")
+						if order_manager and order_manager.has_method("update_available_crops"):
+							order_manager.update_available_crops()
+							print("LevelEditor: Notified OrderManager (via ServiceLocator) to update crops.")
+		
 		
 		# Expand farm bounds if needed
 		if grid_pos.x < farm_bounds.position.x or grid_pos.x >= farm_bounds.position.x + farm_bounds.size.x or \
@@ -1295,35 +1312,26 @@ func get_tile_name_from_type(type_id: int) -> String:
 # Get available tile types based on unlocked tiles
 func get_available_tile_types() -> Array:
 	var available_tiles = []
-	
-	# Always include basic tiles
-	var basic_tiles = ["regular", "dirt", "soil", "water", "mud", "delivery"]
+	var basic_tiles = ["regular", "dirt", "soil", "water", "mud", "delivery","carrot_dispenser", "tomato_dispenser"]
 	available_tiles.append_array(basic_tiles)
-	
-	# Check for special tiles with the upgrade system
+
+	# Check for special tiles with the upgrade system (existing logic)
 	var upgrade_system = get_upgrade_system()
 	if upgrade_system:
-		# Map upgrade IDs to tile types
 		var upgrade_to_tile_map = {
 			"fertile_soil": "dirt_fertile",
-			"preservation_mulch": "dirt_preserved", 
+			"preservation_mulch": "dirt_preserved",
 			"persistent_soil": "dirt_persistent",
 			"express_delivery": "delivery_express",
 			"sprinkler_system": "sprinkler"
 		}
-		
-		# Check each upgrade
 		for upgrade_id in upgrade_to_tile_map:
 			var level = 0
 			if upgrade_system.has_method("get_upgrade_level"):
 				level = upgrade_system.get_upgrade_level(upgrade_id)
-				
 			if level > 0:
 				available_tiles.append(upgrade_to_tile_map[upgrade_id])
-				print("Unlocked special tile: " + upgrade_to_tile_map[upgrade_id])
-	else:
-		print("LevelEditor: No upgrade system found when getting available tiles")
-	
+
 	return available_tiles
 
 
