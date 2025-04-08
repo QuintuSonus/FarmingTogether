@@ -774,12 +774,15 @@ func remove_editor_tools():
 	print("LevelEditor: Removed " + str(editor_tools.size()) + " editor tools")
 
 # Process input for tile/tool placement
-func _input(event):
+func _unhandled_input(event):
 	if not is_editing or not visible:
 		return
 	
 	# Handle mouse input for tile/tool placement
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if get_viewport().get_gui_at_point(event.position) != null:
+			print("Click detected over GUI, ignoring in LevelEditor.") # Optional debug print
+			return 
 		var mouse_pos = get_viewport().get_mouse_position()
 		var from = editor_camera.project_ray_origin(mouse_pos)
 		var to = from + editor_camera.project_ray_normal(mouse_pos) * 100

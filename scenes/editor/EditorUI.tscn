@@ -23,6 +23,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 script = ExtResource("1_q5e6r")
 
 [node name="TopPanel" type="Panel" parent="."]
@@ -80,11 +81,13 @@ offset_right = -10.0
 offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 0
 current_tab = 1
 
 [node name="Tiles" type="VBoxContainer" parent="LeftPanel/TabContainer"]
 visible = false
 layout_mode = 2
+mouse_filter = 0
 metadata/_tab_index = 0
 
 [node name="Label" type="Label" parent="LeftPanel/TabContainer/Tiles"]
@@ -175,6 +178,7 @@ horizontal_alignment = 1
 
 [node name="Tools" type="VBoxContainer" parent="LeftPanel/TabContainer"]
 layout_mode = 2
+mouse_filter = 0
 metadata/_tab_index = 1
 
 [node name="Label" type="Label" parent="LeftPanel/TabContainer/Tools"]
@@ -211,6 +215,7 @@ text = "Remove Tool Mode"
 [node name="Upgrades" type="VBoxContainer" parent="LeftPanel/TabContainer"]
 visible = false
 layout_mode = 2
+mouse_filter = 0
 metadata/_tab_index = 2
 
 [node name="Label" type="Label" parent="LeftPanel/TabContainer/Upgrades"]
