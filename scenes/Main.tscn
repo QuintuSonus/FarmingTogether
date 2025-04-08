@@ -116,7 +116,7 @@ script = ExtResource("10_r0qmd")
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("22_yxlcp")
-volume_db = -3.657
+volume_db = -37.515
 autoplay = true
 
 [node name="CosmeticLevel" type="Node" parent="."]
