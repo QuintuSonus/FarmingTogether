@@ -11,8 +11,8 @@
 [ext_resource type="ArrayMesh" uid="uid://dsxgdra15f8bg" path="res://assets/meshes/Voxel/delivery.vox" id="9_0h36a"]
 [ext_resource type="ArrayMesh" uid="uid://byatqfeb4mqqa" path="res://assets/meshes/Voxel/delivery_express.vox" id="10_lonx1"]
 [ext_resource type="ArrayMesh" uid="uid://cybgeqgeldsl7" path="res://assets/meshes/Voxel/sprinkler.vox" id="11_mq7ra"]
-[ext_resource type="ArrayMesh" uid="uid://cteynonci0wpy" path="res://assets/meshes/Voxel/carrot_dispenser.vox" id="12_eynl6"]
-[ext_resource type="ArrayMesh" uid="uid://swmhx8ptvnl4" path="res://assets/meshes/Voxel/tomato_dispenser.vox" id="13_ttr18"]
+[ext_resource type="ArrayMesh" uid="uid://c3rvjg4aqdamw" path="res://assets/meshes/Voxel/carrot_dispenser_tile.vox" id="12_eynl6"]
+[ext_resource type="ArrayMesh" uid="uid://bejjf8pjl6p8v" path="res://assets/meshes/Voxel/tomato_dispenser_tile.vox" id="13_ttr18"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_6duis"]
 size = Vector3(1, 0.5, 1)
@@ -20,10 +20,9 @@ size = Vector3(1, 0.5, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_ga7jl"]
 size = Vector3(1, 1.09082, 1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_c8swe"]
-size = Vector3(1, 1.27332, 1)
+[sub_resource type="BoxShape3D" id="BoxShape3D_t4ffn"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_5a2r7"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_ew1a1"]
 
 [node name="Tiles" type="Node3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.8021, 0, 0)
@@ -143,24 +142,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.29541, 0)
 shape = SubResource("BoxShape3D_ga7jl")
 
-[node name="CarrotDispenser" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2127, 0, 2.00003)
+[node name="CarrotDispenserTile" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2503, 0, 1.98964)
 mesh = ExtResource("12_eynl6")
-skeleton = NodePath("")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="CarrotDispenser"]
+[node name="StaticBody3D" type="StaticBody3D" parent="CarrotDispenserTile"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CarrotDispenser/StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.664252, 0)
-shape = SubResource("BoxShape3D_c8swe")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CarrotDispenserTile/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.468678, 0)
+shape = SubResource("BoxShape3D_t4ffn")
 
-[node name="TomatoDispenser" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.24211, 0, 1.92697)
+[node name="TomatoDispenserTile" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3761, 0, 1.98964)
 mesh = ExtResource("13_ttr18")
-skeleton = NodePath("")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="TomatoDispenser"]
+[node name="StaticBody3D" type="StaticBody3D" parent="TomatoDispenserTile"]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TomatoDispenser/StaticBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.792656, 0)
-shape = SubResource("BoxShape3D_5a2r7")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TomatoDispenserTile/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.529754, 0)
+shape = SubResource("BoxShape3D_ew1a1")
