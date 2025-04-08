@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://cn1pfmba77kb1"]
+[gd_scene load_steps=7 format=3 uid="uid://cn1pfmba77kb1"]
 
 [ext_resource type="Script" uid="uid://egkw631gl8i2" path="res://scripts/editor/EditorUI.gd" id="1_q5e6r"]
 
@@ -8,6 +8,12 @@ corner_radius_top_left = 2
 corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
+
+[sub_resource type="Theme" id="Theme_ibxlg"]
+
+[sub_resource type="Theme" id="Theme_tx3w2"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_oqbnv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_infopanel"]
 bg_color = Color(0.15, 0.15, 0.15, 1)
@@ -82,7 +88,7 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
-current_tab = 1
+current_tab = 2
 
 [node name="Tiles" type="VBoxContainer" parent="LeftPanel/TabContainer"]
 visible = false
@@ -177,6 +183,7 @@ text = "Selected: None"
 horizontal_alignment = 1
 
 [node name="Tools" type="VBoxContainer" parent="LeftPanel/TabContainer"]
+visible = false
 layout_mode = 2
 mouse_filter = 0
 metadata/_tab_index = 1
@@ -213,9 +220,9 @@ layout_mode = 2
 text = "Remove Tool Mode"
 
 [node name="Upgrades" type="VBoxContainer" parent="LeftPanel/TabContainer"]
-visible = false
 layout_mode = 2
 mouse_filter = 0
+theme = SubResource("Theme_ibxlg")
 metadata/_tab_index = 2
 
 [node name="Label" type="Label" parent="LeftPanel/TabContainer/Upgrades"]
@@ -226,6 +233,8 @@ horizontal_alignment = 1
 [node name="CategoryTabs" type="TabContainer" parent="LeftPanel/TabContainer/Upgrades"]
 layout_mode = 2
 size_flags_vertical = 3
+theme = SubResource("Theme_tx3w2")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_oqbnv")
 tab_alignment = 1
 current_tab = 0
 

@@ -14,6 +14,8 @@ corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
 [node name="UpgradeItem" type="MarginContainer"]
+z_index = 5
+z_as_relative = false
 custom_minimum_size = Vector2(0, 60)
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5

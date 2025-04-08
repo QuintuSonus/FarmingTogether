@@ -116,7 +116,7 @@ func _ready():
 	print("LevelEditor: Initialized with UI hidden")
 	
 	 # Initialize the upgrades list 
-	initialize_upgrades()
+
 
 # Connect to all required nodes after they are available in the scene
 func connect_nodes():
@@ -255,7 +255,8 @@ func start_editing():
 			print("LevelEditor: editor_ui does not have update_currency_display method")
 	else:
 		print("LevelEditor: editor_ui is null, cannot show UI")
-	
+		
+	initialize_upgrades()
 	# DIAGNOSTIC #5: Check game UI hiding
 	print("LevelEditor: About to hide game UI")
 	
@@ -1184,7 +1185,22 @@ func populate_tab_with_upgrades(tab, all_upgrades, current_levels, currency, typ
 
 # Called when an upgrade is selected
 func _on_upgrade_selected(upgrade_id, upgrade_data):
-	# Update the info panel and handle purchase logic
+	var upgrade_lists = find_upgrade_tabs() # Use your existing helper
+	var list_to_clear = null
+	match upgrade_data.type:
+		UpgradeData.UpgradeType.TILE:
+			list_to_clear = upgrade_lists.get("tile_upgrades")
+		UpgradeData.UpgradeType.TOOL:
+			list_to_clear = upgrade_lists.get("tool_upgrades")
+		UpgradeData.UpgradeType.PLAYER:
+			list_to_clear = upgrade_lists.get("player_upgrades")
+
+	# Iterate through items in the correct list and deselect them
+	if list_to_clear:
+		for item in list_to_clear.get_children():
+			if item is UpgradeItem and item.upgrade_id != upgrade_id: # Don't deselect the one just clicked
+				if item.has_method("set_selected"):
+					item.set_selected(false) # Tell item to use default style# Update the info panel and handle purchase logic
 	var info_panel = find_upgrade_info_panel()
 	if not info_panel:
 		return
