@@ -1,6 +1,19 @@
-[gd_scene load_steps=7 format=3 uid="uid://cn1pfmba77kb1"]
+[gd_scene load_steps=18 format=3 uid="uid://cn1pfmba77kb1"]
 
 [ext_resource type="Script" uid="uid://egkw631gl8i2" path="res://scripts/editor/EditorUI.gd" id="1_q5e6r"]
+[ext_resource type="Texture2D" uid="uid://cqaojtdhabhcu" path="res://assets/ui/icons/regular_ground.png" id="2_p6yxs"]
+[ext_resource type="Texture2D" uid="uid://cwtxbro3vb1b0" path="res://assets/ui/icons/dirt.png" id="3_a7q8x"]
+[ext_resource type="Texture2D" uid="uid://cpvmykdtkkvwk" path="res://assets/ui/icons/water.png" id="4_dn60b"]
+[ext_resource type="Texture2D" uid="uid://dtgrrrh7ok1lk" path="res://assets/ui/icons/delivery.png" id="5_0vbhd"]
+[ext_resource type="Texture2D" uid="uid://djsd1f7xt633e" path="res://assets/ui/icons/carrot_dispenser.png" id="6_dn60b"]
+[ext_resource type="Texture2D" uid="uid://rbipa15u1or1" path="res://assets/ui/icons/dirt_fertile.png" id="6_ts2x6"]
+[ext_resource type="Texture2D" uid="uid://cyclcw6ntslqg" path="res://assets/ui/icons/tomato_dispenser.png" id="7_0vbhd"]
+[ext_resource type="Texture2D" uid="uid://cjx2cqosr6v7r" path="res://assets/ui/icons/dirt_preserved.png" id="7_vlxwq"]
+[ext_resource type="Texture2D" uid="uid://bnpgipmbeuxfo" path="res://assets/ui/icons/dirt_persistent.png" id="8_cx4t3"]
+[ext_resource type="Texture2D" uid="uid://dyy5yl7ujvubs" path="res://assets/ui/icons/delivery_express.png" id="9_soq6v"]
+
+[sub_resource type="Theme" id="Theme_tw24e"]
+Button/font_sizes/font_size = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_separator"]
 bg_color = Color(0.2, 0.2, 0.2, 1)
@@ -30,6 +43,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
+theme = SubResource("Theme_tw24e")
 script = ExtResource("1_q5e6r")
 
 [node name="TopPanel" type="Panel" parent="."]
@@ -88,10 +102,9 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
-current_tab = 2
+current_tab = 0
 
 [node name="Tiles" type="VBoxContainer" parent="LeftPanel/TabContainer"]
-visible = false
 layout_mode = 2
 mouse_filter = 0
 metadata/_tab_index = 0
@@ -101,29 +114,58 @@ layout_mode = 2
 text = "Tile Types:"
 horizontal_alignment = 1
 
-[node name="RegularButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="HBoxContainer" type="HBoxContainer" parent="LeftPanel/TabContainer/Tiles"]
+layout_mode = 2
+
+[node name="RegularButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Regular Ground"
+icon = ExtResource("2_p6yxs")
+text_overrun_behavior = 1
+autowrap_mode = 2
+clip_text = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
-[node name="DirtButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="DirtButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Dirt Ground (100)"
+icon = ExtResource("3_a7q8x")
+clip_text = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
-[node name="SoilButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="SoilButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer"]
+visible = false
 layout_mode = 2
 text = "Soil (150)"
 
-[node name="WaterButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="WaterButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Water (250)"
+icon = ExtResource("4_dn60b")
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
-[node name="MudButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="MudButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer"]
+visible = false
 layout_mode = 2
 text = "Mud (150)"
 
-[node name="DeliveryButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="DeliveryButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Delivery (300)"
+icon = ExtResource("5_0vbhd")
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="HSeparator4" type="HSeparator" parent="LeftPanel/TabContainer/Tiles"]
 layout_mode = 2
@@ -132,11 +174,28 @@ layout_mode = 2
 layout_mode = 2
 text = "Seed Dispensers"
 
-[node name="CarrotDispenserButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="HBoxContainer3" type="HBoxContainer" parent="LeftPanel/TabContainer/Tiles"]
 layout_mode = 2
 
-[node name="TomatoDispenserButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="CarrotDispenserButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer3"]
+custom_minimum_size = Vector2(128, 128)
 layout_mode = 2
+text = "Carrot Dispenser"
+icon = ExtResource("6_dn60b")
+clip_text = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
+
+[node name="TomatoDispenserButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer3"]
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+text = "Tomato Dispenser"
+icon = ExtResource("7_0vbhd")
+clip_text = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="HSeparator" type="HSeparator" parent="LeftPanel/TabContainer/Tiles"]
 layout_mode = 2
@@ -148,27 +207,49 @@ layout_mode = 2
 text = "Upgraded Tiles"
 horizontal_alignment = 1
 
-[node name="HSeparator3" type="HSeparator" parent="LeftPanel/TabContainer/Tiles"]
-layout_mode = 2
-theme_override_constants/separation = 20
-theme_override_styles/separator = SubResource("StyleBoxFlat_separator")
-
-[node name="DirtFertileButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="LeftPanel/TabContainer/Tiles"]
 layout_mode = 2
 
-[node name="DirtPreservedButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="DirtFertileButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer2"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+text = "Fertile Dirt"
+icon = ExtResource("6_ts2x6")
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
+
+[node name="DirtPreservedButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer2"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Preserved Dirt (200)"
+icon = ExtResource("7_vlxwq")
+text_overrun_behavior = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
-[node name="DirtPersistentButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="DirtPersistentButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer2"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Persistent Dirt (250)"
+icon = ExtResource("8_cx4t3")
+text_overrun_behavior = 1
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
-[node name="DeliveryExpressButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="DeliveryExpressButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer2"]
+custom_minimum_size = Vector2(64, 64)
 layout_mode = 2
 text = "Express Delivery  (400)"
+icon = ExtResource("9_soq6v")
+clip_text = true
+icon_alignment = 1
+vertical_icon_alignment = 0
+expand_icon = true
 
-[node name="SprinklerButton" type="Button" parent="LeftPanel/TabContainer/Tiles"]
+[node name="SprinklerButton" type="Button" parent="LeftPanel/TabContainer/Tiles/HBoxContainer2"]
 layout_mode = 2
 text = "Sprinkler  (500)"
 
@@ -220,6 +301,7 @@ layout_mode = 2
 text = "Remove Tool Mode"
 
 [node name="Upgrades" type="VBoxContainer" parent="LeftPanel/TabContainer"]
+visible = false
 layout_mode = 2
 mouse_filter = 0
 theme = SubResource("Theme_ibxlg")
